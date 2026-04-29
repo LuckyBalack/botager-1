@@ -27,16 +27,19 @@ import { DataImportView } from "@/components/views/data-import-view"
 import { InspectionsView } from "@/components/views/inspections-view"
 import { VendorsView } from "@/components/views/vendors-view"
 import { SettingsView } from "@/components/views/settings-view"
+import { UtilityTrackingView } from "@/components/views/utility-tracking-view"
+import { LeaseSettlementView } from "@/components/views/lease-settlement-view"
+import { WaitlistView } from "@/components/views/waitlist-view"
 import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
 import { SystemAdminSidebar, type SystemAdminViewKey } from "@/components/system-admin-sidebar"
 import { SystemAdminView } from "@/components/views/system-admin-view"
 import { getPropertyById, getTenantById } from "@/lib/data"
 
-type ActiveView = ViewKey | "detail" | "add-tenant" | "system-subscription"
+type ActiveView = ViewKey | "detail" | "add-tenant" | "system-subscription" | "lease-settlement"
 type DetailKind = "tenant" | "property"
 type Selected = { kind: DetailKind; id: string } | null
 
-const titleMap: Record<ViewKey | "system-subscription", string> = {
+const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", string> = {
   dashboard: "Dashboard",
   properties: "Properties",
   tenants: "Tenants",
@@ -55,6 +58,9 @@ const titleMap: Record<ViewKey | "system-subscription", string> = {
   inspections: "Property Inspections",
   vendors: "External Vendors & Contacts",
   "system-subscription": "System Subscription",
+  "utility-tracking": "Utility Meter Readings",
+  "waitlist": "Prospective Tenants & Waitlist",
+  "lease-settlement": "Final Lease Settlement",
 }
 
 export function DashboardApp() {
@@ -103,14 +109,19 @@ export function DashboardApp() {
     setActiveView("add-tenant")
   }
 
+  const openLeaseSettlement = (tenantId: string) => {
+    setSelected({ kind: "tenant", id: tenantId })
+    setActiveView("lease-settlement")
+  }
+
   const sidebarActive: ViewKey =
     activeView === "detail"
       ? selected?.kind === "tenant"
         ? "tenants"
         : "properties"
-      : activeView === "add-tenant"
+      : activeView === "add-tenant" || activeView === "lease-settlement"
         ? "tenants"
-        : activeView
+        : activeView as ViewKey
 
   const headerTitle =
     activeView === "detail"
@@ -119,7 +130,9 @@ export function DashboardApp() {
         : "Properties"
       : activeView === "add-tenant"
         ? "Add Tenants"
-        : titleMap[activeView]
+        : activeView === "lease-settlement"
+          ? "Final Lease Settlement"
+          : titleMap[activeView as keyof typeof titleMap]
 
   const showAddTenant =
     activeView === "dashboard" ||
@@ -256,7 +269,10 @@ export function DashboardApp() {
           {activeView === "documents" && <DocumentsView />}
           {activeView === "messages" && <MessagesView />}
           {activeView === "detail" && selectedTenant && (
-            <TenantDetailView tenant={selectedTenant} />
+            <TenantDetailView
+              tenant={selectedTenant}
+              onTerminateLease={openLeaseSettlement}
+            />
           )}
           {activeView === "detail" && selectedProperty && (
             <PropertyDetailView property={selectedProperty} />
@@ -275,6 +291,21 @@ export function DashboardApp() {
           {activeView === "inspections" && <InspectionsView />}
           {activeView === "vendors" && <VendorsView />}
           {activeView === "system-subscription" && <SystemSubscriptionView />}
+          {activeView === "utility-tracking" && <UtilityTrackingView />}
+          {activeView === "waitlist" && (
+            <WaitlistView
+              onInviteToLease={(leadData) => {
+                // Here we would typically pass the lead data to the add tenant form
+                openAddTenant()
+              }}
+            />
+          )}
+          {activeView === "lease-settlement" && selectedTenant && (
+            <LeaseSettlementView
+              tenant={selectedTenant}
+              onClose={() => navigate("tenants")}
+            />
+          )}
         </main>
       </div>
 

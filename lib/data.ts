@@ -25,42 +25,123 @@ export const buildings: Building[] = [
   },
 ]
 
-// System Subscription Data (Step 25)
-export type SubscriptionPlan = {
+// Utility Meter Readings Data (Step 29)
+export type UtilityReading = {
   id: string
-  name: string
-  price: string
-  billingCycle: "monthly" | "yearly"
-  features: string[]
-  isCurrent: boolean
+  roomNo: string
+  tenantId: string
+  tenantName: string
+  previousReading: number
+  currentReading: number
+  ratePerUnit: number // ETB per kWh
+  readingDate: string
 }
 
-export const subscriptionPlans: SubscriptionPlan[] = [
+export const utilityReadings: UtilityReading[] = [
   {
-    id: "plan-basic",
-    name: "Basic",
-    price: "ETB 5,000",
-    billingCycle: "monthly",
-    features: ["Up to 50 units", "Basic reporting", "Email support"],
-    isCurrent: false,
+    id: "ur-001",
+    roomNo: "310",
+    tenantId: "t-alemu",
+    tenantName: "Getachew Temesgen",
+    previousReading: 1250,
+    currentReading: 1380,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
   },
   {
-    id: "plan-pro",
-    name: "Professional",
-    price: "ETB 12,000",
-    billingCycle: "monthly",
-    features: ["Up to 200 units", "Advanced analytics", "Priority support", "API access"],
-    isCurrent: true,
+    id: "ur-002",
+    roomNo: "510",
+    tenantId: "t-alemayehu",
+    tenantName: "Alemayehu Goshu",
+    previousReading: 890,
+    currentReading: 945,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
   },
   {
-    id: "plan-enterprise",
-    name: "Enterprise",
-    price: "ETB 25,000",
-    billingCycle: "monthly",
-    features: ["Unlimited units", "Custom integrations", "Dedicated account manager", "SLA guarantee"],
-    isCurrent: false,
+    id: "ur-003",
+    roomNo: "212",
+    tenantId: "t-gete",
+    tenantName: "Gete Alemayehu",
+    previousReading: 720,
+    currentReading: 810,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
+  },
+  {
+    id: "ur-004",
+    roomNo: "405",
+    tenantId: "t-jenbere",
+    tenantName: "Jenbere Gutu",
+    previousReading: 560,
+    currentReading: 620,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
   },
 ]
+
+// Waitlist / Lead Data (Step 32)
+export type LeadStatus = "Contacted" | "Interested" | "Waiting"
+
+export type WaitlistLead = {
+  id: string
+  name: string
+  phone: string
+  email: string
+  desiredSize: string
+  budgetRange: string
+  desiredFloor: string
+  dateJoined: string
+  status: LeadStatus
+}
+
+export const waitlistLeads: WaitlistLead[] = [
+  {
+    id: "lead-001",
+    name: "Abebe Kebede",
+    phone: "+251 911 23 45 67",
+    email: "abebe.k@gmail.com",
+    desiredSize: "30 sq.m",
+    budgetRange: "ETB 12,000 - 18,000",
+    desiredFloor: "3rd Floor",
+    dateJoined: "Apr 25, 2024",
+    status: "Interested",
+  },
+  {
+    id: "lead-002",
+    name: "Tigist Haile",
+    phone: "+251 922 34 56 78",
+    email: "tigist.h@gmail.com",
+    desiredSize: "20 sq.m",
+    budgetRange: "ETB 8,000 - 12,000",
+    desiredFloor: "2nd Floor",
+    dateJoined: "Apr 22, 2024",
+    status: "Contacted",
+  },
+  {
+    id: "lead-003",
+    name: "Yonas Tesfaye",
+    phone: "+251 933 45 67 89",
+    email: "yonas.t@gmail.com",
+    desiredSize: "40 sq.m",
+    budgetRange: "ETB 20,000 - 25,000",
+    desiredFloor: "5th Floor",
+    dateJoined: "Apr 20, 2024",
+    status: "Waiting",
+  },
+  {
+    id: "lead-004",
+    name: "Hana Mengistu",
+    phone: "+251 944 56 78 90",
+    email: "hana.m@gmail.com",
+    desiredSize: "25 sq.m",
+    budgetRange: "ETB 10,000 - 15,000",
+    desiredFloor: "4th Floor",
+    dateJoined: "Apr 18, 2024",
+    status: "Interested",
+  },
+]
+
 
 export type SubscriptionPayment = {
   id: string

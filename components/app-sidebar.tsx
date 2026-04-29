@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutGrid, Building2, Users, Settings, LogOut, Receipt, Wrench, BarChart3, FolderOpen, MessageSquare, Store, Zap, HelpCircle, ClipboardCheck, Truck, Upload } from "lucide-react"
+import { LayoutGrid, Building2, Users, Settings, LogOut, Receipt, Wrench, BarChart3, FolderOpen, MessageSquare, Store, Zap, HelpCircle, ClipboardCheck, Truck, Upload, Plug, UserPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Select,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select"
 import { buildings } from "@/lib/data"
 
-export type ViewKey = "dashboard" | "properties" | "tenants" | "billing" | "maintenance" | "accounting" | "documents" | "messages" | "marketplace" | "settings" | "portfolio-dashboard" | "team-settings" | "automations" | "help-center" | "data-import" | "inspections" | "vendors"
+export type ViewKey = "dashboard" | "properties" | "tenants" | "billing" | "maintenance" | "accounting" | "documents" | "messages" | "marketplace" | "settings" | "portfolio-dashboard" | "team-settings" | "automations" | "help-center" | "data-import" | "inspections" | "vendors" | "utility-tracking" | "waitlist"
 export type BuildingSelection = string // building id or "all"
 
 type NavItem = {
@@ -25,7 +25,9 @@ const primaryNav: NavItem[] = [
   { key: "properties", label: "Properties", icon: Building2 },
   { key: "inspections", label: "Inspections", icon: ClipboardCheck },
   { key: "tenants", label: "Tenants", icon: Users },
+  { key: "waitlist", label: "Waitlist", icon: UserPlus },
   { key: "billing", label: "Billing", icon: Receipt },
+  { key: "utility-tracking", label: "Utilities", icon: Plug },
   { key: "maintenance", label: "Maintenance", icon: Wrench },
   { key: "vendors", label: "Vendors", icon: Truck },
   { key: "accounting", label: "Accounting", icon: BarChart3 },
