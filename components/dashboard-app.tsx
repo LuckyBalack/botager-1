@@ -1,18 +1,21 @@
 "use client"
 
 import { useState } from "react"
-import { Settings } from "lucide-react"
+
 import { AppSidebar, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
 import { AppHeader, type UserRole } from "@/components/app-header"
 import { TenantSidebar, type TenantViewKey } from "@/components/tenant-sidebar"
 import { TenantDashboardView } from "@/components/views/tenant-dashboard-view"
+import { TenantInvoicesView } from "@/components/views/tenant-invoices-view"
+import { TenantMaintenanceView } from "@/components/views/tenant-maintenance-view"
+import { TenantMessagesView } from "@/components/views/tenant-messages-view"
 import { DashboardView } from "@/components/views/dashboard-view"
 import { PropertiesView } from "@/components/views/properties-view"
 import { TenantsView } from "@/components/views/tenants-view"
 import { TenantDetailView } from "@/components/views/tenant-detail-view"
 import { PropertyDetailView } from "@/components/views/property-detail-view"
 import { AddTenantView } from "@/components/views/add-tenant-view"
-import { PlaceholderView } from "@/components/views/placeholder-view"
+
 import { PortfolioDashboardView } from "@/components/views/portfolio-dashboard-view"
 import { BillingView } from "@/components/views/billing-view"
 import { MaintenanceView } from "@/components/views/maintenance-view"
@@ -72,6 +75,8 @@ export function DashboardApp() {
   const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")
   const [selected, setSelected] = useState<Selected>(null)
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingSelection>("abuki")
+  // Track if user came from admin side (to show "Back to Admin" button in marketplace)
+  const [cameFromAdmin, setCameFromAdmin] = useState(false)
 
   const handleRoleToggle = () => {
     setUserRole((prev) => {
@@ -204,31 +209,49 @@ export function DashboardApp() {
           />
 
           <main className="flex-1 px-10 py-8">
-            {tenantView === "my-lease" && <TenantDashboardView />}
-            {tenantView === "invoices" && (
-              <PlaceholderView
-                title="Invoices & Payments"
-                description="View your invoices and make payments."
-                icon={Settings}
-              />
-            )}
-            {tenantView === "maintenance" && (
-              <PlaceholderView
-                title="Maintenance Requests"
-                description="Submit and track maintenance requests."
-                icon={Settings}
-              />
-            )}
-            {tenantView === "messages" && (
-              <PlaceholderView
-                title="Messages"
-                description="Communicate with your property manager."
-                icon={Settings}
-              />
-            )}
+            {tenantView === "my-lease" && <TenantDashboardView onNavigate={setTenantView} />}
+            {tenantView === "invoices" && <TenantInvoicesView />}
+            {tenantView === "maintenance" && <TenantMaintenanceView />}
+            {tenantView === "messages" && <TenantMessagesView />}
           </main>
         </div>
       </div>
+    )
+  }
+
+  const navigateToMarketplace = () => {
+    setCameFromAdmin(true)
+    setActiveView("marketplace")
+  }
+
+  const handleMarketplaceSignIn = () => {
+    setCameFromAdmin(false)
+    setActiveView("dashboard")
+  }
+
+  const handleBackToAdmin = () => {
+    setCameFromAdmin(false)
+    setActiveView("dashboard")
+  }
+
+  // Override navigate for marketplace
+  const handleNavigate = (view: ViewKey) => {
+    if (view === "marketplace") {
+      navigateToMarketplace()
+    } else {
+      setCameFromAdmin(false)
+      navigate(view)
+    }
+  }
+
+  // Public Marketplace View (Full Width, No Sidebar)
+  if (activeView === "marketplace") {
+    return (
+      <MarketplaceView
+        onSignIn={handleMarketplaceSignIn}
+        showBackToAdmin={cameFromAdmin}
+        onBackToAdmin={handleBackToAdmin}
+      />
     )
   }
 
@@ -237,7 +260,7 @@ export function DashboardApp() {
     <div className="flex min-h-screen bg-slate-50 text-slate-900">
       <AppSidebar
         activeView={sidebarActive}
-        onNavigate={navigate}
+        onNavigate={handleNavigate}
         selectedBuilding={selectedBuilding}
         onBuildingChange={handleBuildingChange}
       />
@@ -254,7 +277,7 @@ export function DashboardApp() {
         <main className="flex-1 px-10 py-8">
           {activeView === "portfolio-dashboard" && <PortfolioDashboardView />}
           {activeView === "dashboard" && (
-            <DashboardView onNavigate={navigate} />
+            <DashboardView onNavigate={handleNavigate} />
           )}
           {activeView === "properties" && (
             <PropertiesView onSelectProperty={openPropertyDetail} />
@@ -264,9 +287,6 @@ export function DashboardApp() {
           )}
           {activeView === "billing" && <BillingView />}
           {activeView === "maintenance" && <MaintenanceView />}
-          {activeView === "marketplace" && (
-            <MarketplaceView onSignIn={() => setUserRole("admin")} />
-          )}
           {activeView === "accounting" && <AccountingView />}
           {activeView === "documents" && <DocumentsView />}
           {activeView === "messages" && <MessagesView />}
@@ -282,7 +302,7 @@ export function DashboardApp() {
           {activeView === "add-tenant" && <AddTenantView />}
           {activeView === "settings" && (
             <SettingsView
-              onNavigate={navigate}
+              onNavigate={handleNavigate}
               onSystemSubscription={() => setActiveView("system-subscription")}
             />
           )}

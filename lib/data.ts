@@ -717,12 +717,28 @@ export type MarketplaceListing = {
   id: string
   buildingName: string
   location: string
+  subcity: string
   officeSize: string
   floor: string
+  roomNo: string
   monthlyRent: string
+  monthlyRentNumber: number
   amenities: string[]
   available: boolean
   image?: string
+  spaceType: "Shop" | "Office" | "Co-working" | "Event Space"
+  description: string
+  buildingFeatures: string[]
+  ownerPhone: string
+  ownerName: string
+  reviews: {
+    rating: number
+    text: string
+    reviewerName: string
+    date: string
+  }[]
+  images: string[]
+  listedOnMarketplace: boolean
 }
 
 export const marketplaceListings: MarketplaceListing[] = [
@@ -730,63 +746,171 @@ export const marketplaceListings: MarketplaceListing[] = [
     id: "ml-001",
     buildingName: "Abuki Bldg.",
     location: "Bole, Addis Ababa",
+    subcity: "Bole",
     officeSize: "25 sq.m",
     floor: "3rd Floor",
+    roomNo: "302",
     monthlyRent: "ETB 12,000",
-    amenities: ["WiFi", "Parking", "24/7 Security"],
+    monthlyRentNumber: 12000,
+    amenities: ["WiFi", "Parking", "24/7 Security", "Elevator"],
     available: true,
+    spaceType: "Office",
+    description: "Modern office space with excellent natural lighting and city views. Perfect for small teams or startups looking for a professional environment in the heart of Bole.",
+    buildingFeatures: ["24/7 Security", "Backup Generator", "Elevator Access", "On-site Parking", "Cleaning Services"],
+    ownerPhone: "+251 911 23 45 67",
+    ownerName: "Kebede Teshome",
+    reviews: [
+      { rating: 5, text: "Great location and very responsive management. Highly recommend!", reviewerName: "Abebe K.", date: "Mar 2024" },
+      { rating: 4, text: "Clean and professional space. The generator backup is a lifesaver.", reviewerName: "Sara M.", date: "Feb 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
   {
     id: "ml-002",
     buildingName: "Zefmesh Grand Mall",
     location: "Kazanchis, Addis Ababa",
+    subcity: "Kirkos",
     officeSize: "40 sq.m",
     floor: "5th Floor",
+    roomNo: "512",
     monthlyRent: "ETB 22,000",
-    amenities: ["WiFi", "Parking", "Conference Room"],
+    monthlyRentNumber: 22000,
+    amenities: ["WiFi", "Parking", "Conference Room", "Generator"],
     available: true,
+    spaceType: "Office",
+    description: "Spacious premium office in the prestigious Zefmesh Grand Mall. Features include access to shared conference rooms and premium finishes throughout.",
+    buildingFeatures: ["Premium Finishes", "Conference Room Access", "High-Speed Internet", "Central AC", "24/7 Access"],
+    ownerPhone: "+251 922 34 56 78",
+    ownerName: "Almaz Bekele",
+    reviews: [
+      { rating: 5, text: "Beautiful space in a great building. Very professional atmosphere.", reviewerName: "Daniel T.", date: "Apr 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
   {
     id: "ml-003",
     buildingName: "Merkato Tower",
     location: "Merkato, Addis Ababa",
+    subcity: "Addis Ketema",
     officeSize: "15 sq.m",
     floor: "2nd Floor",
+    roomNo: "205",
     monthlyRent: "ETB 8,500",
+    monthlyRentNumber: 8500,
     amenities: ["WiFi", "Elevator"],
     available: true,
+    spaceType: "Shop",
+    description: "Compact shop space ideal for retail or small service businesses. Located in the bustling Merkato area with high foot traffic.",
+    buildingFeatures: ["High Foot Traffic", "Elevator Access", "Loading Area", "Security Guard"],
+    ownerPhone: "+251 933 45 67 89",
+    ownerName: "Dawit Hailu",
+    reviews: [
+      { rating: 4, text: "Great location for my small business. Lots of customers!", reviewerName: "Meron A.", date: "Jan 2024" },
+      { rating: 3, text: "Good price but parking can be difficult.", reviewerName: "Tesfaye G.", date: "Dec 2023" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
   {
     id: "ml-004",
     buildingName: "Abuki Bldg.",
     location: "Bole, Addis Ababa",
+    subcity: "Bole",
     officeSize: "50 sq.m",
     floor: "6th Floor",
+    roomNo: "601",
     monthlyRent: "ETB 28,000",
-    amenities: ["WiFi", "Parking", "Private Bathroom", "Kitchen"],
+    monthlyRentNumber: 28000,
+    amenities: ["WiFi", "Parking", "Private Bathroom", "Kitchen", "Generator"],
     available: true,
+    spaceType: "Office",
+    description: "Premium executive office suite with private bathroom and kitchenette. Top floor location with panoramic city views. Ideal for established businesses.",
+    buildingFeatures: ["Private Bathroom", "Kitchenette", "Panoramic Views", "Premium Security", "Reserved Parking"],
+    ownerPhone: "+251 911 23 45 67",
+    ownerName: "Kebede Teshome",
+    reviews: [
+      { rating: 5, text: "Absolutely fantastic office. The views alone are worth it!", reviewerName: "Helen Y.", date: "Apr 2024" },
+      { rating: 5, text: "Best office I have rented. Very professional building management.", reviewerName: "Samuel G.", date: "Mar 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
   {
     id: "ml-005",
     buildingName: "Zefmesh Grand Mall",
     location: "Kazanchis, Addis Ababa",
+    subcity: "Kirkos",
     officeSize: "30 sq.m",
     floor: "4th Floor",
+    roomNo: "408",
     monthlyRent: "ETB 18,000",
-    amenities: ["WiFi", "Parking"],
+    monthlyRentNumber: 18000,
+    amenities: ["WiFi", "Parking", "Elevator"],
     available: true,
+    spaceType: "Co-working",
+    description: "Flexible co-working space perfect for freelancers and remote teams. Includes access to shared amenities and meeting rooms.",
+    buildingFeatures: ["Shared Meeting Rooms", "Coffee/Tea Station", "High-Speed WiFi", "Flexible Hours", "Community Events"],
+    ownerPhone: "+251 922 34 56 78",
+    ownerName: "Almaz Bekele",
+    reviews: [
+      { rating: 4, text: "Nice community of professionals. Great for networking.", reviewerName: "Tigist H.", date: "Feb 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
   {
     id: "ml-006",
     buildingName: "Merkato Tower",
     location: "Merkato, Addis Ababa",
+    subcity: "Addis Ketema",
     officeSize: "20 sq.m",
     floor: "3rd Floor",
+    roomNo: "315",
     monthlyRent: "ETB 10,000",
+    monthlyRentNumber: 10000,
     amenities: ["WiFi", "24/7 Security"],
     available: true,
+    spaceType: "Shop",
+    description: "Well-maintained shop space suitable for various retail businesses. Good visibility and easy access for customers.",
+    buildingFeatures: ["Good Visibility", "Customer Parking", "Security", "Loading Access"],
+    ownerPhone: "+251 933 45 67 89",
+    ownerName: "Dawit Hailu",
+    reviews: [
+      { rating: 4, text: "Good value for the price. Management is helpful.", reviewerName: "Yonas T.", date: "Mar 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
+  },
+  {
+    id: "ml-007",
+    buildingName: "Sunshine Plaza",
+    location: "Piassa, Addis Ababa",
+    subcity: "Arada",
+    officeSize: "100 sq.m",
+    floor: "Ground Floor",
+    roomNo: "G-05",
+    monthlyRent: "ETB 45,000",
+    monthlyRentNumber: 45000,
+    amenities: ["WiFi", "Parking", "Generator", "AC"],
+    available: true,
+    spaceType: "Event Space",
+    description: "Large event space perfect for conferences, workshops, and corporate gatherings. Fully equipped with audio-visual equipment and flexible seating arrangements.",
+    buildingFeatures: ["AV Equipment", "Flexible Seating", "Catering Kitchen", "Lobby Area", "Dedicated Restrooms"],
+    ownerPhone: "+251 944 56 78 90",
+    ownerName: "Hana Mengistu",
+    reviews: [
+      { rating: 5, text: "Hosted our company retreat here. Everything was perfect!", reviewerName: "Corporate Events Ltd.", date: "Apr 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
 ]
+
+export function getMarketplaceListingById(id: string): MarketplaceListing | undefined {
+  return marketplaceListings.find((l) => l.id === id)
+}
 
 // Financial Reports Data
 export type FinancialReport = {

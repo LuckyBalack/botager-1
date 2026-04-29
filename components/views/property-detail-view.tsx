@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Camera, Check, AlertTriangle, Package } from "lucide-react"
+import { Plus, Camera, Check, AlertTriangle, Package, Store, Eye, EyeOff } from "lucide-react"
 import { LeaseAgreementCard } from "@/components/lease-agreement-card"
 import { LeasePill, PaymentPill } from "@/components/status-pills"
 import { getTenantById, getAssetsForProperty, type Property, type PropertyAsset, type AssetCondition } from "@/lib/data"
@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
+import { Switch } from "@/components/ui/switch"
 
 type PropertyDetailViewProps = {
   property: Property
@@ -85,6 +86,20 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
   const [newAssetName, setNewAssetName] = useState("")
   const [newAssetSerial, setNewAssetSerial] = useState("")
   const [newAssetCondition, setNewAssetCondition] = useState<AssetCondition>("New")
+  const [listedOnMarketplace, setListedOnMarketplace] = useState(false)
+
+  const handleMarketplaceToggle = (checked: boolean) => {
+    setListedOnMarketplace(checked)
+    if (checked) {
+      toast.success("Listed on Marketplace", {
+        description: `Room ${property.room} is now visible to the public on the Marketplace.`,
+      })
+    } else {
+      toast.info("Removed from Marketplace", {
+        description: `Room ${property.room} is no longer visible on the Marketplace.`,
+      })
+    }
+  }
 
   const handleAddAsset = () => {
     if (newAssetName && newAssetSerial) {
@@ -118,6 +133,10 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
           <TabsTrigger value="assets" className="px-6">
             <Package className="mr-2 h-4 w-4" />
             Assets ({assetsList.length})
+          </TabsTrigger>
+          <TabsTrigger value="marketplace" className="px-6">
+            <Store className="mr-2 h-4 w-4" />
+            Marketplace
           </TabsTrigger>
         </TabsList>
 
@@ -308,6 +327,99 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
                 </p>
               </div>
             </div>
+          </div>
+        </TabsContent>
+
+        {/* Marketplace Tab */}
+        <TabsContent value="marketplace">
+          <div className="flex flex-col gap-6">
+            {/* Header */}
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">Marketplace Visibility</h3>
+              <p className="text-sm text-slate-500">
+                Control whether this property is visible to the public on the Workspace Marketplace
+              </p>
+            </div>
+
+            {/* Main Toggle Card */}
+            <div className="rounded-lg border border-slate-200 bg-white p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                    listedOnMarketplace ? "bg-green-100" : "bg-slate-100"
+                  }`}>
+                    {listedOnMarketplace ? (
+                      <Eye className="h-6 w-6 text-green-600" />
+                    ) : (
+                      <EyeOff className="h-6 w-6 text-slate-400" />
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-900">List on Marketplace</h4>
+                    <p className="text-sm text-slate-500">
+                      {listedOnMarketplace
+                        ? "This property is visible to prospective tenants"
+                        : "This property is hidden from the public marketplace"}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={listedOnMarketplace}
+                  onCheckedChange={handleMarketplaceToggle}
+                  className="data-[state=checked]:bg-orange-500"
+                />
+              </div>
+            </div>
+
+            {/* Listing Preview */}
+            {listedOnMarketplace && (
+              <div className="rounded-lg border border-slate-200 bg-white p-6">
+                <h4 className="font-semibold text-slate-900 mb-4">Listing Preview</h4>
+                <div className="flex gap-4">
+                  <div className="h-24 w-24 flex-shrink-0 rounded-lg bg-slate-200 flex items-center justify-center">
+                    <Store className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h5 className="font-semibold text-slate-900">Room {property.room}</h5>
+                    <p className="text-sm text-slate-500">{property.floor} Floor • {property.squareFootage}</p>
+                    <p className="mt-2 font-semibold text-orange-600">ETB {property.rentNumber}/month</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                        <Check className="mr-1 h-3 w-3" />
+                        Active
+                      </Badge>
+                      <span className="text-xs text-slate-500">Visible on marketplace</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Info Note */}
+            <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <Store className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-blue-800">About the Marketplace</p>
+                <p className="text-sm text-blue-700 mt-1">
+                  When listed, prospective tenants can view this property on the public Marketplace, 
+                  see details, and send pre-occupy requests directly to you.
+                </p>
+              </div>
+            </div>
+
+            {/* Warning for Occupied Properties */}
+            {property.occupancy === "Occupied" && (
+              <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-800">Property Currently Occupied</p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    This property has an active tenant. Listing it on the marketplace will show it as 
+                    &quot;Available Soon&quot; rather than &quot;Available Now&quot;.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>
