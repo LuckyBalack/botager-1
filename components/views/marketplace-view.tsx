@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, MapPin, Wifi, Car, Building2 } from "lucide-react"
+import { Search, MapPin, Wifi, Car, Building2, Globe } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,6 +13,12 @@ import {
 } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { marketplaceListings } from "@/lib/data"
 
 type MarketplaceViewProps = {
@@ -25,6 +31,8 @@ export function MarketplaceView({ onSignIn }: MarketplaceViewProps) {
   const [priceRange, setPriceRange] = useState<string>("all")
   const [squareMeters, setSquareMeters] = useState<string>("all")
   const [amenities, setAmenities] = useState<string>("all")
+  const [spaceType, setSpaceType] = useState<string>("all")
+  const [language, setLanguage] = useState<"en" | "am">("en")
 
   const filteredListings = marketplaceListings.filter((listing) => {
     const matchesSearch =
@@ -67,11 +75,29 @@ export function MarketplaceView({ onSignIn }: MarketplaceViewProps) {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {/* Language Switcher */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Globe className="h-4 w-4" />
+                  {language === "en" ? "EN" : "AM"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setLanguage("en")}>
+                  English
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage("am")}>
+                  Amharic
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <Button variant="outline" onClick={onSignIn}>
-              Sign In
+              {language === "en" ? "Sign In" : "ግባ"}
             </Button>
             <Button className="bg-orange-500 text-white hover:bg-orange-600">
-              Post a Listing
+              {language === "en" ? "Post a Listing" : "ዝርዝር ያስቀምጡ"}
             </Button>
           </div>
         </div>
@@ -108,6 +134,19 @@ export function MarketplaceView({ onSignIn }: MarketplaceViewProps) {
       {/* Filters Bar */}
       <section className="border-b border-slate-200 bg-white px-6 py-4">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4">
+          <Select value={spaceType} onValueChange={setSpaceType}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Space Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Space Types</SelectItem>
+              <SelectItem value="shop">Shop</SelectItem>
+              <SelectItem value="office">Office</SelectItem>
+              <SelectItem value="coworking">Co-working</SelectItem>
+              <SelectItem value="event">Event Space</SelectItem>
+            </SelectContent>
+          </Select>
+
           <Select value={propertyType} onValueChange={setPropertyType}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Property Type" />

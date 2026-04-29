@@ -1,15 +1,21 @@
 "use client"
 
 import { useState } from "react"
-import { Bell, ChevronDown, Plus, AlertCircle, CheckCircle, Wrench, X } from "lucide-react"
+import { Bell, ChevronDown, Plus, AlertCircle, CheckCircle, Wrench, X, Globe } from "lucide-react"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-export type UserRole = "admin" | "tenant"
+export type UserRole = "admin" | "tenant" | "system-admin"
 
 interface Notification {
   id: string
@@ -97,6 +103,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   const [notificationList, setNotificationList] = useState(notifications)
   const [isOpen, setIsOpen] = useState(false)
+  const [language, setLanguage] = useState<"en" | "am">("en")
 
   const unreadCount = notificationList.filter((n) => !n.read).length
 
@@ -115,6 +122,27 @@ export function AppHeader({
       <h2 className="text-3xl font-semibold tracking-tight text-slate-900">{title}</h2>
 
       <div className="flex items-center gap-6">
+        {/* Language Switcher */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+            >
+              <Globe className="h-4 w-4" />
+              {language === "en" ? "English" : "Amharic"}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setLanguage("en")}>
+              English
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLanguage("am")}>
+              Amharic
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* Role Toggle */}
         {onRoleToggle && (
           <button
@@ -122,7 +150,9 @@ export function AppHeader({
             onClick={onRoleToggle}
             className="rounded-md border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
           >
-            {userRole === "admin" ? "Switch to Tenant View" : "Switch to Admin View"}
+            {userRole === "admin" && "Switch to Tenant View"}
+            {userRole === "tenant" && "Switch to System Admin"}
+            {userRole === "system-admin" && "Switch to Admin View"}
           </button>
         )}
 
