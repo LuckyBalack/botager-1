@@ -93,18 +93,18 @@ export function BrokersView() {
   const paidCommissions = commissionsList.filter((c) => c.status === "Paid")
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4 sm:gap-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl 2xl:text-3xl">
             Brokers & Commissions
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs text-slate-500 sm:text-sm">
             Manage broker referrals and commission payments
           </p>
         </div>
         <Button
-          className="gap-2 bg-orange-600 hover:bg-orange-700"
+          className="w-full gap-2 bg-orange-600 hover:bg-orange-700 sm:w-auto"
           onClick={() => setAddBrokerModalOpen(true)}
         >
           <Plus className="h-4 w-4" />
@@ -188,7 +188,7 @@ export function BrokersView() {
         <TabsContent value="commissions">
           <div className="flex flex-col gap-6">
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4">
               <Card>
                 <CardContent className="flex items-center gap-4 p-6">
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100">

@@ -2,6 +2,12 @@
 
 import { ShieldCheck, Building2, CreditCard, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export type SystemAdminViewKey = "moderation" | "credit-partners" | "settings"
 
@@ -11,7 +17,7 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>
 }
 
-const navItems: NavItem[] = [
+export const systemAdminNav: NavItem[] = [
   { key: "moderation", label: "Moderation Queue", icon: ShieldCheck },
   { key: "credit-partners", label: "Credit Partners", icon: CreditCard },
   { key: "settings", label: "Settings", icon: Settings },
@@ -21,39 +27,180 @@ type SystemAdminSidebarProps = {
   activeView: SystemAdminViewKey
   onNavigate: (view: SystemAdminViewKey) => void
   onLogout?: () => void
+  collapsed?: boolean
 }
 
 export function SystemAdminSidebar({
   activeView,
   onNavigate,
   onLogout,
+  collapsed = false,
 }: SystemAdminSidebarProps) {
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-slate-900 px-6 py-8">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500">
-            <Building2 className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <span className="text-xl font-extrabold tracking-tight text-white">WRM</span>
-            <p className="text-xs text-slate-400">System Admin</p>
-          </div>
+    <TooltipProvider delayDuration={0}>
+      <aside
+        className={cn(
+          "hidden shrink-0 flex-col border-r border-slate-200 bg-slate-900 transition-all duration-200 md:flex",
+          collapsed ? "w-16 px-2 py-6" : "w-64 px-6 py-8"
+        )}
+      >
+        {/* Header */}
+        <div className={cn("flex flex-col", collapsed ? "items-center gap-2" : "gap-2")}>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500">
+                  <Building2 className="h-5 w-5 text-white" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p className="font-semibold">WRM System Admin</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500">
+                  <Building2 className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <span className="text-lg font-extrabold tracking-tight text-white lg:text-xl">WRM</span>
+                  <p className="text-xs text-slate-400">System Admin</p>
+                </div>
+              </div>
+              <p className="mt-2 text-sm text-slate-400">Nicomas Digitals Platform</p>
+            </>
+          )}
         </div>
-        <p className="mt-2 text-sm text-slate-400">Nicomas Digitals Platform</p>
+
+        <div className={cn("h-px w-full bg-slate-700", collapsed ? "my-4" : "mt-6")} />
+
+        {/* Navigation */}
+        <nav
+          className={cn("flex flex-col gap-1", collapsed ? "mt-2" : "mt-6")}
+          aria-label="System Admin Navigation"
+        >
+          {systemAdminNav.map((item) => {
+            const Icon = item.icon
+            const isActive = activeView === item.key
+
+            if (collapsed) {
+              return (
+                <Tooltip key={item.key}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(item.key)}
+                      aria-current={isActive ? "page" : undefined}
+                      className={cn(
+                        "flex h-10 w-10 items-center justify-center rounded-md transition-colors",
+                        isActive
+                          ? "bg-slate-800 text-white"
+                          : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                      )}
+                    >
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>{item.label}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )
+            }
+
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => onNavigate(item.key)}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors",
+                  isActive
+                    ? "bg-slate-800 font-semibold text-white"
+                    : "font-medium text-slate-400 hover:bg-slate-800 hover:text-white",
+                )}
+              >
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className={cn("mt-auto flex flex-col gap-1", collapsed && "items-center")}>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="flex h-10 w-10 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+                >
+                  <LogOut className="h-5 w-5" aria-hidden="true" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Exit Admin</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onLogout}
+                className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+              >
+                <LogOut className="h-5 w-5" aria-hidden="true" />
+                <span>Exit Admin</span>
+              </button>
+              <p className="mt-6 text-xs text-slate-500">WRM Platform v2.0</p>
+              <p className="text-xs text-slate-600">© 2024 Nicomas Digitals</p>
+            </>
+          )}
+        </div>
+      </aside>
+    </TooltipProvider>
+  )
+}
+
+// Mobile sidebar content
+export function SystemAdminSidebarMobile({
+  activeView,
+  onNavigate,
+  onLogout,
+  onClose,
+}: SystemAdminSidebarProps & { onClose?: () => void }) {
+  const handleNavigate = (view: SystemAdminViewKey) => {
+    onNavigate(view)
+    onClose?.()
+  }
+
+  return (
+    <div className="flex h-full flex-col bg-slate-900 px-4 py-6">
+      <div className="flex items-center gap-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500">
+          <Building2 className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <span className="text-xl font-extrabold tracking-tight text-white">WRM</span>
+          <p className="text-xs text-slate-400">System Admin</p>
+        </div>
       </div>
 
       <div className="mt-6 h-px w-full bg-slate-700" />
 
       <nav className="mt-6 flex flex-col gap-1" aria-label="System Admin Navigation">
-        {navItems.map((item) => {
+        {systemAdminNav.map((item) => {
           const Icon = item.icon
           const isActive = activeView === item.key
           return (
             <button
               key={item.key}
               type="button"
-              onClick={() => onNavigate(item.key)}
+              onClick={() => handleNavigate(item.key)}
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors",
@@ -78,10 +225,9 @@ export function SystemAdminSidebar({
           <LogOut className="h-5 w-5" aria-hidden="true" />
           <span>Exit Admin</span>
         </button>
-
         <p className="mt-6 text-xs text-slate-500">WRM Platform v2.0</p>
         <p className="text-xs text-slate-600">© 2024 Nicomas Digitals</p>
       </div>
-    </aside>
+    </div>
   )
 }
