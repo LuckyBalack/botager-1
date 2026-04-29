@@ -72,6 +72,8 @@ export function DashboardApp() {
   const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")
   const [selected, setSelected] = useState<Selected>(null)
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingSelection>("abuki")
+  // Track if user came from admin side (to show "Back to Admin" button in marketplace)
+  const [cameFromAdmin, setCameFromAdmin] = useState(false)
 
   const handleRoleToggle = () => {
     setUserRole((prev) => {
@@ -232,12 +234,48 @@ export function DashboardApp() {
     )
   }
 
+  const navigateToMarketplace = () => {
+    setCameFromAdmin(true)
+    setActiveView("marketplace")
+  }
+
+  const handleMarketplaceSignIn = () => {
+    setCameFromAdmin(false)
+    setActiveView("dashboard")
+  }
+
+  const handleBackToAdmin = () => {
+    setCameFromAdmin(false)
+    setActiveView("dashboard")
+  }
+
+  // Override navigate for marketplace
+  const handleNavigate = (view: ViewKey) => {
+    if (view === "marketplace") {
+      navigateToMarketplace()
+    } else {
+      setCameFromAdmin(false)
+      navigate(view)
+    }
+  }
+
+  // Public Marketplace View (Full Width, No Sidebar)
+  if (activeView === "marketplace") {
+    return (
+      <MarketplaceView
+        onSignIn={handleMarketplaceSignIn}
+        showBackToAdmin={cameFromAdmin}
+        onBackToAdmin={handleBackToAdmin}
+      />
+    )
+  }
+
   // Admin View Render
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900">
       <AppSidebar
         activeView={sidebarActive}
-        onNavigate={navigate}
+        onNavigate={handleNavigate}
         selectedBuilding={selectedBuilding}
         onBuildingChange={handleBuildingChange}
       />
@@ -254,7 +292,7 @@ export function DashboardApp() {
         <main className="flex-1 px-10 py-8">
           {activeView === "portfolio-dashboard" && <PortfolioDashboardView />}
           {activeView === "dashboard" && (
-            <DashboardView onNavigate={navigate} />
+            <DashboardView onNavigate={handleNavigate} />
           )}
           {activeView === "properties" && (
             <PropertiesView onSelectProperty={openPropertyDetail} />
@@ -264,9 +302,6 @@ export function DashboardApp() {
           )}
           {activeView === "billing" && <BillingView />}
           {activeView === "maintenance" && <MaintenanceView />}
-          {activeView === "marketplace" && (
-            <MarketplaceView onSignIn={() => setUserRole("admin")} />
-          )}
           {activeView === "accounting" && <AccountingView />}
           {activeView === "documents" && <DocumentsView />}
           {activeView === "messages" && <MessagesView />}
@@ -282,7 +317,7 @@ export function DashboardApp() {
           {activeView === "add-tenant" && <AddTenantView />}
           {activeView === "settings" && (
             <SettingsView
-              onNavigate={navigate}
+              onNavigate={handleNavigate}
               onSystemSubscription={() => setActiveView("system-subscription")}
             />
           )}

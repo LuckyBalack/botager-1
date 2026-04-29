@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, MapPin, Wifi, Car, Building2, Globe } from "lucide-react"
+import { Search, MapPin, Wifi, Car, Building2, Globe, ArrowLeft } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,9 +23,11 @@ import { marketplaceListings } from "@/lib/data"
 
 type MarketplaceViewProps = {
   onSignIn?: () => void
+  showBackToAdmin?: boolean
+  onBackToAdmin?: () => void
 }
 
-export function MarketplaceView({ onSignIn }: MarketplaceViewProps) {
+export function MarketplaceView({ onSignIn, showBackToAdmin, onBackToAdmin }: MarketplaceViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [propertyType, setPropertyType] = useState<string>("all")
   const [priceRange, setPriceRange] = useState<string>("all")
@@ -263,6 +265,18 @@ export function MarketplaceView({ onSignIn }: MarketplaceViewProps) {
           </div>
         </div>
       </section>
+
+      {/* Floating Back to Admin Button - Only visible if user came from admin side */}
+      {showBackToAdmin && (
+        <button
+          type="button"
+          onClick={onBackToAdmin}
+          className="fixed bottom-6 left-6 z-50 flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg transition-all hover:bg-slate-800 hover:shadow-xl"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Admin Dashboard
+        </button>
+      )}
     </div>
   )
 }
