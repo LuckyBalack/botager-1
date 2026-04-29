@@ -143,6 +143,40 @@ export const waitlistLeads: WaitlistLead[] = [
 ]
 
 
+export type SubscriptionPlan = {
+  id: string
+  name: string
+  price: string
+  period: string
+  features: string[]
+  recommended?: boolean
+}
+
+export const subscriptionPlans: SubscriptionPlan[] = [
+  {
+    id: "plan-basic",
+    name: "Basic",
+    price: "ETB 5,000",
+    period: "per month",
+    features: ["Up to 20 units", "Basic reporting", "Email support"],
+  },
+  {
+    id: "plan-pro",
+    name: "Professional",
+    price: "ETB 12,000",
+    period: "per month",
+    features: ["Up to 100 units", "Advanced reporting", "Priority support", "API access"],
+    recommended: true,
+  },
+  {
+    id: "plan-enterprise",
+    name: "Enterprise",
+    price: "ETB 25,000",
+    period: "per month",
+    features: ["Unlimited units", "Custom reporting", "Dedicated support", "Full API access", "Custom integrations"],
+  },
+]
+
 export type SubscriptionPayment = {
   id: string
   date: string
