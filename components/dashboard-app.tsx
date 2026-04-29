@@ -1,0 +1,238 @@
+"use client"
+
+import { useState } from "react"
+import { Settings } from "lucide-react"
+import { AppSidebar, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
+import { AppHeader, type UserRole } from "@/components/app-header"
+import { TenantSidebar, type TenantViewKey } from "@/components/tenant-sidebar"
+import { TenantDashboardView } from "@/components/views/tenant-dashboard-view"
+import { DashboardView } from "@/components/views/dashboard-view"
+import { PropertiesView } from "@/components/views/properties-view"
+import { TenantsView } from "@/components/views/tenants-view"
+import { TenantDetailView } from "@/components/views/tenant-detail-view"
+import { PropertyDetailView } from "@/components/views/property-detail-view"
+import { AddTenantView } from "@/components/views/add-tenant-view"
+import { PlaceholderView } from "@/components/views/placeholder-view"
+import { PortfolioDashboardView } from "@/components/views/portfolio-dashboard-view"
+import { BillingView } from "@/components/views/billing-view"
+import { MaintenanceView } from "@/components/views/maintenance-view"
+import { MarketplaceView } from "@/components/views/marketplace-view"
+import { AccountingView } from "@/components/views/accounting-view"
+import { DocumentsView } from "@/components/views/documents-view"
+import { MessagesView } from "@/components/views/messages-view"
+import { TeamSettingsView } from "@/components/views/team-settings-view"
+import { AutomationsView } from "@/components/views/automations-view"
+import { HelpCenterView, LiveChatWidget } from "@/components/views/help-center-view"
+import { DataImportView } from "@/components/views/data-import-view"
+import { InspectionsView } from "@/components/views/inspections-view"
+import { VendorsView } from "@/components/views/vendors-view"
+import { SettingsView } from "@/components/views/settings-view"
+import { getPropertyById, getTenantById } from "@/lib/data"
+
+type ActiveView = ViewKey | "detail" | "add-tenant"
+type DetailKind = "tenant" | "property"
+type Selected = { kind: DetailKind; id: string } | null
+
+const titleMap: Record<ViewKey, string> = {
+  dashboard: "Dashboard",
+  properties: "Properties",
+  tenants: "Tenants",
+  billing: "Financials & Billing",
+  maintenance: "Work Orders & Maintenance",
+  accounting: "Accounting & Reports",
+  documents: "Documents",
+  messages: "Messages",
+  marketplace: "Marketplace",
+  settings: "Settings",
+  "portfolio-dashboard": "Portfolio Overview",
+  "team-settings": "Staff & Branch Management",
+  automations: "Automated Workflows",
+  "help-center": "Help Center & Support",
+  "data-import": "Data Migration & Import",
+  inspections: "Property Inspections",
+  vendors: "External Vendors & Contacts",
+}
+
+export function DashboardApp() {
+  const [userRole, setUserRole] = useState<UserRole>("admin")
+  const [activeView, setActiveView] = useState<ActiveView>("dashboard")
+  const [tenantView, setTenantView] = useState<TenantViewKey>("my-lease")
+  const [selected, setSelected] = useState<Selected>(null)
+  const [selectedBuilding, setSelectedBuilding] = useState<BuildingSelection>("abuki")
+
+  const handleRoleToggle = () => {
+    setUserRole((prev) => (prev === "admin" ? "tenant" : "admin"))
+  }
+
+  const handleBuildingChange = (building: BuildingSelection) => {
+    setSelectedBuilding(building)
+    if (building === "all") {
+      setActiveView("portfolio-dashboard")
+      setSelected(null)
+    } else if (activeView === "portfolio-dashboard") {
+      setActiveView("dashboard")
+    }
+  }
+
+  const navigate = (view: ViewKey) => {
+    setSelected(null)
+    setActiveView(view)
+  }
+
+  const openTenantDetail = (id: string) => {
+    setSelected({ kind: "tenant", id })
+    setActiveView("detail")
+  }
+
+  const openPropertyDetail = (id: string) => {
+    setSelected({ kind: "property", id })
+    setActiveView("detail")
+  }
+
+  const openAddTenant = () => {
+    setSelected(null)
+    setActiveView("add-tenant")
+  }
+
+  const sidebarActive: ViewKey =
+    activeView === "detail"
+      ? selected?.kind === "tenant"
+        ? "tenants"
+        : "properties"
+      : activeView === "add-tenant"
+        ? "tenants"
+        : activeView
+
+  const headerTitle =
+    activeView === "detail"
+      ? selected?.kind === "tenant"
+        ? "Tenants"
+        : "Properties"
+      : activeView === "add-tenant"
+        ? "Add Tenants"
+        : titleMap[activeView]
+
+  const showAddTenant =
+    activeView === "dashboard" ||
+    activeView === "tenants" ||
+    (activeView === "detail" && selected?.kind === "tenant")
+
+  const selectedTenant =
+    activeView === "detail" && selected?.kind === "tenant"
+      ? getTenantById(selected.id)
+      : undefined
+  const selectedProperty =
+    activeView === "detail" && selected?.kind === "property"
+      ? getPropertyById(selected.id)
+      : undefined
+
+  // Tenant view titles
+  const tenantTitleMap: Record<TenantViewKey, string> = {
+    "my-lease": "My Lease",
+    invoices: "Invoices & Payments",
+    maintenance: "Maintenance",
+    messages: "Messages",
+  }
+
+  // Tenant Portal Render
+  if (userRole === "tenant") {
+    return (
+      <div className="flex min-h-screen bg-slate-50 text-slate-900">
+        <TenantSidebar activeView={tenantView} onNavigate={setTenantView} />
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <AppHeader
+            title={tenantTitleMap[tenantView]}
+            userRole={userRole}
+            onRoleToggle={handleRoleToggle}
+          />
+
+          <main className="flex-1 px-10 py-8">
+            {tenantView === "my-lease" && <TenantDashboardView />}
+            {tenantView === "invoices" && (
+              <PlaceholderView
+                title="Invoices & Payments"
+                description="View your invoices and make payments."
+                icon={Settings}
+              />
+            )}
+            {tenantView === "maintenance" && (
+              <PlaceholderView
+                title="Maintenance Requests"
+                description="Submit and track maintenance requests."
+                icon={Settings}
+              />
+            )}
+            {tenantView === "messages" && (
+              <PlaceholderView
+                title="Messages"
+                description="Communicate with your property manager."
+                icon={Settings}
+              />
+            )}
+          </main>
+        </div>
+      </div>
+    )
+  }
+
+  // Admin View Render
+  return (
+    <div className="flex min-h-screen bg-slate-50 text-slate-900">
+      <AppSidebar
+        activeView={sidebarActive}
+        onNavigate={navigate}
+        selectedBuilding={selectedBuilding}
+        onBuildingChange={handleBuildingChange}
+      />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <AppHeader
+          title={headerTitle}
+          showAddTenant={showAddTenant}
+          onAddTenant={openAddTenant}
+          userRole={userRole}
+          onRoleToggle={handleRoleToggle}
+        />
+
+        <main className="flex-1 px-10 py-8">
+          {activeView === "portfolio-dashboard" && <PortfolioDashboardView />}
+          {activeView === "dashboard" && (
+            <DashboardView onNavigate={navigate} />
+          )}
+          {activeView === "properties" && (
+            <PropertiesView onSelectProperty={openPropertyDetail} />
+          )}
+          {activeView === "tenants" && (
+            <TenantsView onSelectTenant={openTenantDetail} />
+          )}
+          {activeView === "billing" && <BillingView />}
+          {activeView === "maintenance" && <MaintenanceView />}
+          {activeView === "marketplace" && (
+            <MarketplaceView onSignIn={() => setUserRole("admin")} />
+          )}
+          {activeView === "accounting" && <AccountingView />}
+          {activeView === "documents" && <DocumentsView />}
+          {activeView === "messages" && <MessagesView />}
+          {activeView === "detail" && selectedTenant && (
+            <TenantDetailView tenant={selectedTenant} />
+          )}
+          {activeView === "detail" && selectedProperty && (
+            <PropertyDetailView property={selectedProperty} />
+          )}
+          {activeView === "add-tenant" && <AddTenantView />}
+          {activeView === "settings" && <SettingsView onNavigate={navigate} />}
+          {activeView === "team-settings" && <TeamSettingsView />}
+          {activeView === "automations" && <AutomationsView />}
+          {activeView === "help-center" && <HelpCenterView />}
+          {activeView === "data-import" && <DataImportView />}
+          {activeView === "inspections" && <InspectionsView />}
+          {activeView === "vendors" && <VendorsView />}
+        </main>
+      </div>
+
+      {/* Live Chat Widget - Always visible */}
+      <LiveChatWidget />
+    </div>
+  )
+}
