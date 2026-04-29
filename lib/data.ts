@@ -23,25 +23,155 @@ export const buildings: Building[] = [
     openMaintenanceTickets: 12,
     monthlyRevenue: "ETB 1.8M",
   },
+]
+
+// System Subscription Data (Step 25)
+export type SubscriptionPlan = {
+  id: string
+  name: string
+  price: string
+  billingCycle: "monthly" | "yearly"
+  features: string[]
+  isCurrent: boolean
+}
+
+export const subscriptionPlans: SubscriptionPlan[] = [
   {
-    id: "zefmesh",
-    name: "Zefmesh Grand Mall",
-    location: "Kazanchis, Addis Ababa",
-    totalUnits: 85,
-    occupiedUnits: 80,
-    openMaintenanceTickets: 5,
-    monthlyRevenue: "ETB 2.2M",
+    id: "plan-basic",
+    name: "Basic",
+    price: "ETB 5,000",
+    billingCycle: "monthly",
+    features: ["Up to 50 units", "Basic reporting", "Email support"],
+    isCurrent: false,
   },
   {
-    id: "merkato-tower",
-    name: "Merkato Tower",
-    location: "Merkato, Addis Ababa",
-    totalUnits: 45,
-    occupiedUnits: 42,
-    openMaintenanceTickets: 8,
-    monthlyRevenue: "ETB 500K",
+    id: "plan-pro",
+    name: "Professional",
+    price: "ETB 12,000",
+    billingCycle: "monthly",
+    features: ["Up to 200 units", "Advanced analytics", "Priority support", "API access"],
+    isCurrent: true,
+  },
+  {
+    id: "plan-enterprise",
+    name: "Enterprise",
+    price: "ETB 25,000",
+    billingCycle: "monthly",
+    features: ["Unlimited units", "Custom integrations", "Dedicated account manager", "SLA guarantee"],
+    isCurrent: false,
   },
 ]
+
+export type SubscriptionPayment = {
+  id: string
+  date: string
+  amount: string
+  status: "Paid" | "Pending" | "Failed"
+  method: string
+}
+
+export const subscriptionPayments: SubscriptionPayment[] = [
+  { id: "sp-001", date: "Apr 1, 2024", amount: "ETB 12,000", status: "Paid", method: "Telebirr" },
+  { id: "sp-002", date: "Mar 1, 2024", amount: "ETB 12,000", status: "Paid", method: "CBE Birr" },
+  { id: "sp-003", date: "Feb 1, 2024", amount: "ETB 12,000", status: "Paid", method: "Telebirr" },
+  { id: "sp-004", date: "Jan 1, 2024", amount: "ETB 12,000", status: "Paid", method: "Chapa" },
+]
+
+// Tax Rules Data (Step 25)
+export type TaxRule = {
+  id: string
+  name: string
+  rate: number
+  active: boolean
+}
+
+export const taxRules: TaxRule[] = [
+  { id: "tax-001", name: "VAT", rate: 15, active: true },
+  { id: "tax-002", name: "Service Tax", rate: 2, active: true },
+  { id: "tax-003", name: "Withholding Tax", rate: 2, active: false },
+]
+
+// Workspace Verification Queue (Step 27)
+export type WorkspaceSubmission = {
+  id: string
+  ownerName: string
+  buildingName: string
+  location: string
+  submittedDate: string
+  status: "Pending" | "Approved" | "Rejected"
+  documentCount: number
+}
+
+export const workspaceSubmissions: WorkspaceSubmission[] = [
+  {
+    id: "ws-001",
+    ownerName: "Kebede Teshome",
+    buildingName: "Sunshine Tower",
+    location: "Bole, Addis Ababa",
+    submittedDate: "Apr 28, 2024",
+    status: "Pending",
+    documentCount: 5,
+  },
+  {
+    id: "ws-002",
+    ownerName: "Almaz Bekele",
+    buildingName: "Unity Plaza",
+    location: "Piassa, Addis Ababa",
+    submittedDate: "Apr 27, 2024",
+    status: "Pending",
+    documentCount: 4,
+  },
+  {
+    id: "ws-003",
+    ownerName: "Dawit Hailu",
+    buildingName: "Commerce Center",
+    location: "Mexico, Addis Ababa",
+    submittedDate: "Apr 25, 2024",
+    status: "Pending",
+    documentCount: 6,
+  },
+]
+
+// Credit Service Partners (Step 27)
+export type CreditPartner = {
+  id: string
+  name: string
+  type: "Bank" | "Fintech"
+  integrationStatus: "Active" | "Inactive" | "Pending"
+  totalCreditIssued: string
+  apiKeyStatus: "Configured" | "Needs Setup"
+}
+
+export const creditPartners: CreditPartner[] = [
+  {
+    id: "cp-001",
+    name: "Commercial Bank of Ethiopia",
+    type: "Bank",
+    integrationStatus: "Active",
+    totalCreditIssued: "ETB 2.4M",
+    apiKeyStatus: "Configured",
+  },
+  {
+    id: "cp-002",
+    name: "Awash Bank",
+    type: "Bank",
+    integrationStatus: "Active",
+    totalCreditIssued: "ETB 1.8M",
+    apiKeyStatus: "Configured",
+  },
+  {
+    id: "cp-003",
+    name: "M-Birr",
+    type: "Fintech",
+    integrationStatus: "Pending",
+    totalCreditIssued: "ETB 0",
+    apiKeyStatus: "Needs Setup",
+  },
+]
+
+// Space Type for Marketplace (Step 28)
+export type SpaceType = "Shop" | "Office" | "Co-working" | "Event Space"
+
 
 export function getBuildingById(id: string): Building | undefined {
   return buildings.find((b) => b.id === id)

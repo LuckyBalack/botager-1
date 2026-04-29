@@ -10,12 +10,13 @@ import { LandingFooter } from "@/components/landing/landing-footer"
 
 type LandingPageProps = {
   onGetStarted: () => void
+  onLogin?: () => void
 }
 
-export function LandingPage({ onGetStarted }: LandingPageProps) {
+export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
   return (
     <div className="relative min-h-screen bg-white text-slate-900">
-      <LandingHeader onGetStarted={onGetStarted} />
+      <LandingHeader onGetStarted={onGetStarted} onLogin={onLogin} />
       <main>
         <HeroSection onGetStarted={onGetStarted} />
         <KeyFeaturesSection />

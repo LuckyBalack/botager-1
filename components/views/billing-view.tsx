@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MoreHorizontal, Plus } from "lucide-react"
+import { MoreHorizontal, Plus, FileText } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
@@ -29,6 +29,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import {
   invoices,
@@ -82,9 +83,14 @@ const paymentMethods = [
 
 export function BillingView() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+  const [invoiceDetailModalOpen, setInvoiceDetailModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
   const [paymentAmount, setPaymentAmount] = useState("")
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("chapa")
+
+  // Tax calculations (would normally come from settings)
+  const vatRate = 15
+  const serviceRate = 2
 
   const handleRecordPayment = (invoiceId: string) => {
     const invoice = invoices.find((inv) => inv.id === invoiceId)
@@ -92,6 +98,27 @@ export function BillingView() {
       setSelectedInvoice(invoiceId)
       setPaymentAmount(invoice.amountDue.replace("ETB ", "").replace(",", ""))
       setPaymentModalOpen(true)
+    }
+  }
+
+  const handleViewInvoiceDetails = (invoiceId: string) => {
+    setSelectedInvoice(invoiceId)
+    setInvoiceDetailModalOpen(true)
+  }
+
+  const getInvoiceTaxDetails = (invoiceId: string) => {
+    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    if (!invoice) return null
+    const subtotal = parseFloat(invoice.amountDue.replace("ETB ", "").replace(",", ""))
+    // Calculate backwards from total (assume total includes tax)
+    const baseAmount = subtotal / (1 + (vatRate + serviceRate) / 100)
+    const vatAmount = baseAmount * (vatRate / 100)
+    const serviceAmount = baseAmount * (serviceRate / 100)
+    return {
+      subtotal: baseAmount.toFixed(2),
+      vat: vatAmount.toFixed(2),
+      service: serviceAmount.toFixed(2),
+      grandTotal: subtotal.toFixed(2),
     }
   }
 
@@ -203,7 +230,11 @@ export function BillingView() {
                           >
                             Record Payment
                           </DropdownMenuItem>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleViewInvoiceDetails(invoice.id)}
+                          >
+                            View Details
+                          </DropdownMenuItem>
                           <DropdownMenuItem>Send Reminder</DropdownMenuItem>
                           <DropdownMenuItem className="text-red-600">
                             Void Invoice
@@ -429,6 +460,82 @@ export function BillingView() {
             >
               Confirm Payment
             </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoice Detail Modal with Tax Breakdown */}
+      <Dialog open={invoiceDetailModalOpen} onOpenChange={setInvoiceDetailModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Invoice Details
+            </DialogTitle>
+            <DialogDescription>
+              Invoice {selectedInvoice}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedInvoice && (() => {
+            const invoice = invoices.find((inv) => inv.id === selectedInvoice)
+            const taxDetails = getInvoiceTaxDetails(selectedInvoice)
+            if (!invoice || !taxDetails) return null
+            return (
+              <div className="flex flex-col gap-4 py-4">
+                {/* Invoice Info */}
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-slate-500">Tenant</p>
+                    <p className="font-medium text-slate-900">{invoice.tenantName}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Room</p>
+                    <p className="font-medium text-slate-900">{invoice.roomNo}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Due Date</p>
+                    <p className="font-medium text-slate-900">{invoice.dueDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Status</p>
+                    <InvoiceStatusBadge status={invoice.status} />
+                  </div>
+                </div>
+
+                {/* Tax Breakdown */}
+                <div className="mt-4 rounded-lg border border-slate-200 p-4">
+                  <h4 className="font-semibold text-slate-900 mb-3">Amount Breakdown</h4>
+                  <div className="flex flex-col gap-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Subtotal (Base Rent)</span>
+                      <span className="font-medium text-slate-900">ETB {taxDetails.subtotal}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">VAT ({vatRate}%)</span>
+                      <span className="font-medium text-slate-900">ETB {taxDetails.vat}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Service Tax ({serviceRate}%)</span>
+                      <span className="font-medium text-slate-900">ETB {taxDetails.service}</span>
+                    </div>
+                    <div className="border-t border-slate-200 pt-2 mt-2">
+                      <div className="flex justify-between">
+                        <span className="font-semibold text-slate-900">Grand Total</span>
+                        <span className="font-bold text-slate-900">ETB {taxDetails.grandTotal}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInvoiceDetailModalOpen(false)}>
+              Close
+            </Button>
+            <Button className="bg-orange-500 hover:bg-orange-600">
+              Download PDF
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -27,13 +27,16 @@ import { DataImportView } from "@/components/views/data-import-view"
 import { InspectionsView } from "@/components/views/inspections-view"
 import { VendorsView } from "@/components/views/vendors-view"
 import { SettingsView } from "@/components/views/settings-view"
+import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
+import { SystemAdminSidebar, type SystemAdminViewKey } from "@/components/system-admin-sidebar"
+import { SystemAdminView } from "@/components/views/system-admin-view"
 import { getPropertyById, getTenantById } from "@/lib/data"
 
-type ActiveView = ViewKey | "detail" | "add-tenant"
+type ActiveView = ViewKey | "detail" | "add-tenant" | "system-subscription"
 type DetailKind = "tenant" | "property"
 type Selected = { kind: DetailKind; id: string } | null
 
-const titleMap: Record<ViewKey, string> = {
+const titleMap: Record<ViewKey | "system-subscription", string> = {
   dashboard: "Dashboard",
   properties: "Properties",
   tenants: "Tenants",
@@ -51,17 +54,23 @@ const titleMap: Record<ViewKey, string> = {
   "data-import": "Data Migration & Import",
   inspections: "Property Inspections",
   vendors: "External Vendors & Contacts",
+  "system-subscription": "System Subscription",
 }
 
 export function DashboardApp() {
   const [userRole, setUserRole] = useState<UserRole>("admin")
   const [activeView, setActiveView] = useState<ActiveView>("dashboard")
   const [tenantView, setTenantView] = useState<TenantViewKey>("my-lease")
+  const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")
   const [selected, setSelected] = useState<Selected>(null)
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingSelection>("abuki")
 
   const handleRoleToggle = () => {
-    setUserRole((prev) => (prev === "admin" ? "tenant" : "admin"))
+    setUserRole((prev) => {
+      if (prev === "admin") return "tenant"
+      if (prev === "tenant") return "system-admin"
+      return "admin"
+    })
   }
 
   const handleBuildingChange = (building: BuildingSelection) => {
@@ -132,6 +141,38 @@ export function DashboardApp() {
     invoices: "Invoices & Payments",
     maintenance: "Maintenance",
     messages: "Messages",
+  }
+
+  // System Admin View Titles
+  const systemAdminTitleMap: Record<SystemAdminViewKey, string> = {
+    moderation: "Workspace Verifications",
+    "credit-partners": "Credit Service Partners",
+    settings: "System Settings",
+  }
+
+  // System Admin Portal Render
+  if (userRole === "system-admin") {
+    return (
+      <div className="flex min-h-screen bg-slate-50 text-slate-900">
+        <SystemAdminSidebar
+          activeView={systemAdminView}
+          onNavigate={setSystemAdminView}
+          onLogout={() => setUserRole("admin")}
+        />
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <AppHeader
+            title={systemAdminTitleMap[systemAdminView]}
+            userRole={userRole}
+            onRoleToggle={handleRoleToggle}
+          />
+
+          <main className="flex-1 px-10 py-8">
+            <SystemAdminView view={systemAdminView} />
+          </main>
+        </div>
+      </div>
+    )
   }
 
   // Tenant Portal Render
@@ -221,13 +262,19 @@ export function DashboardApp() {
             <PropertyDetailView property={selectedProperty} />
           )}
           {activeView === "add-tenant" && <AddTenantView />}
-          {activeView === "settings" && <SettingsView onNavigate={navigate} />}
+          {activeView === "settings" && (
+            <SettingsView
+              onNavigate={navigate}
+              onSystemSubscription={() => setActiveView("system-subscription")}
+            />
+          )}
           {activeView === "team-settings" && <TeamSettingsView />}
           {activeView === "automations" && <AutomationsView />}
           {activeView === "help-center" && <HelpCenterView />}
           {activeView === "data-import" && <DataImportView />}
           {activeView === "inspections" && <InspectionsView />}
           {activeView === "vendors" && <VendorsView />}
+          {activeView === "system-subscription" && <SystemSubscriptionView />}
         </main>
       </div>
 
