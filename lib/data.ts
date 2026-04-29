@@ -25,14 +25,131 @@ export const buildings: Building[] = [
   },
 ]
 
-// System Subscription Data (Step 25)
+// Utility Meter Readings Data (Step 29)
+export type UtilityReading = {
+  id: string
+  roomNo: string
+  tenantId: string
+  tenantName: string
+  previousReading: number
+  currentReading: number
+  ratePerUnit: number // ETB per kWh
+  readingDate: string
+}
+
+export const utilityReadings: UtilityReading[] = [
+  {
+    id: "ur-001",
+    roomNo: "310",
+    tenantId: "t-alemu",
+    tenantName: "Getachew Temesgen",
+    previousReading: 1250,
+    currentReading: 1380,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
+  },
+  {
+    id: "ur-002",
+    roomNo: "510",
+    tenantId: "t-alemayehu",
+    tenantName: "Alemayehu Goshu",
+    previousReading: 890,
+    currentReading: 945,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
+  },
+  {
+    id: "ur-003",
+    roomNo: "212",
+    tenantId: "t-gete",
+    tenantName: "Gete Alemayehu",
+    previousReading: 720,
+    currentReading: 810,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
+  },
+  {
+    id: "ur-004",
+    roomNo: "405",
+    tenantId: "t-jenbere",
+    tenantName: "Jenbere Gutu",
+    previousReading: 560,
+    currentReading: 620,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
+  },
+]
+
+// Waitlist / Lead Data (Step 32)
+export type LeadStatus = "Contacted" | "Interested" | "Waiting"
+
+export type WaitlistLead = {
+  id: string
+  name: string
+  phone: string
+  email: string
+  desiredSize: string
+  budgetRange: string
+  desiredFloor: string
+  dateJoined: string
+  status: LeadStatus
+}
+
+export const waitlistLeads: WaitlistLead[] = [
+  {
+    id: "lead-001",
+    name: "Abebe Kebede",
+    phone: "+251 911 23 45 67",
+    email: "abebe.k@gmail.com",
+    desiredSize: "30 sq.m",
+    budgetRange: "ETB 12,000 - 18,000",
+    desiredFloor: "3rd Floor",
+    dateJoined: "Apr 25, 2024",
+    status: "Interested",
+  },
+  {
+    id: "lead-002",
+    name: "Tigist Haile",
+    phone: "+251 922 34 56 78",
+    email: "tigist.h@gmail.com",
+    desiredSize: "20 sq.m",
+    budgetRange: "ETB 8,000 - 12,000",
+    desiredFloor: "2nd Floor",
+    dateJoined: "Apr 22, 2024",
+    status: "Contacted",
+  },
+  {
+    id: "lead-003",
+    name: "Yonas Tesfaye",
+    phone: "+251 933 45 67 89",
+    email: "yonas.t@gmail.com",
+    desiredSize: "40 sq.m",
+    budgetRange: "ETB 20,000 - 25,000",
+    desiredFloor: "5th Floor",
+    dateJoined: "Apr 20, 2024",
+    status: "Waiting",
+  },
+  {
+    id: "lead-004",
+    name: "Hana Mengistu",
+    phone: "+251 944 56 78 90",
+    email: "hana.m@gmail.com",
+    desiredSize: "25 sq.m",
+    budgetRange: "ETB 10,000 - 15,000",
+    desiredFloor: "4th Floor",
+    dateJoined: "Apr 18, 2024",
+    status: "Interested",
+  },
+]
+
+
 export type SubscriptionPlan = {
   id: string
   name: string
   price: string
-  billingCycle: "monthly" | "yearly"
+  period: string
   features: string[]
-  isCurrent: boolean
+  recommended?: boolean
 }
 
 export const subscriptionPlans: SubscriptionPlan[] = [
@@ -40,25 +157,23 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     id: "plan-basic",
     name: "Basic",
     price: "ETB 5,000",
-    billingCycle: "monthly",
-    features: ["Up to 50 units", "Basic reporting", "Email support"],
-    isCurrent: false,
+    period: "per month",
+    features: ["Up to 20 units", "Basic reporting", "Email support"],
   },
   {
     id: "plan-pro",
     name: "Professional",
     price: "ETB 12,000",
-    billingCycle: "monthly",
-    features: ["Up to 200 units", "Advanced analytics", "Priority support", "API access"],
-    isCurrent: true,
+    period: "per month",
+    features: ["Up to 100 units", "Advanced reporting", "Priority support", "API access"],
+    recommended: true,
   },
   {
     id: "plan-enterprise",
     name: "Enterprise",
     price: "ETB 25,000",
-    billingCycle: "monthly",
-    features: ["Unlimited units", "Custom integrations", "Dedicated account manager", "SLA guarantee"],
-    isCurrent: false,
+    period: "per month",
+    features: ["Unlimited units", "Custom reporting", "Dedicated support", "Full API access", "Custom integrations"],
   },
 ]
 
@@ -987,3 +1102,168 @@ export const maintenanceTickets: MaintenanceTicket[] = [
     },
   },
 ]
+
+// Broker (Delala) Data (Step 33)
+export type Broker = {
+  id: string
+  name: string
+  phone: string
+  licenseNo: string
+  totalReferrals: number
+  unpaidCommissions: string
+}
+
+export const brokers: Broker[] = [
+  {
+    id: "broker-001",
+    name: "Meseret Taye",
+    phone: "+251 911 22 33 44",
+    licenseNo: "BRK-2024-001",
+    totalReferrals: 8,
+    unpaidCommissions: "ETB 45,000",
+  },
+  {
+    id: "broker-002",
+    name: "Samuel Girma",
+    phone: "+251 922 33 44 55",
+    licenseNo: "BRK-2024-002",
+    totalReferrals: 12,
+    unpaidCommissions: "ETB 15,000",
+  },
+  {
+    id: "broker-003",
+    name: "Helen Yohannes",
+    phone: "+251 933 44 55 66",
+    licenseNo: "BRK-2024-003",
+    totalReferrals: 5,
+    unpaidCommissions: "ETB 0",
+  },
+]
+
+export type CommissionRecord = {
+  id: string
+  brokerId: string
+  brokerName: string
+  leaseId: string
+  roomNo: string
+  tenantName: string
+  commissionAmount: string
+  dateEarned: string
+  status: "Pending" | "Paid"
+  paidDate?: string
+}
+
+export const commissionRecords: CommissionRecord[] = [
+  {
+    id: "comm-001",
+    brokerId: "broker-001",
+    brokerName: "Meseret Taye",
+    leaseId: "lease-310",
+    roomNo: "310",
+    tenantName: "Getachew Temesgen",
+    commissionAmount: "ETB 15,000",
+    dateEarned: "Mar 15, 2024",
+    status: "Pending",
+  },
+  {
+    id: "comm-002",
+    brokerId: "broker-001",
+    brokerName: "Meseret Taye",
+    leaseId: "lease-405",
+    roomNo: "405",
+    tenantName: "Jenbere Gutu",
+    commissionAmount: "ETB 15,000",
+    dateEarned: "Feb 28, 2024",
+    status: "Pending",
+  },
+  {
+    id: "comm-003",
+    brokerId: "broker-002",
+    brokerName: "Samuel Girma",
+    leaseId: "lease-510",
+    roomNo: "510",
+    tenantName: "Alemayehu Goshu",
+    commissionAmount: "ETB 15,000",
+    dateEarned: "Jan 20, 2024",
+    status: "Paid",
+    paidDate: "Feb 5, 2024",
+  },
+]
+
+// Property Assets Data (Step 35)
+export type AssetCondition = "New" | "Good" | "Damaged"
+
+export type PropertyAsset = {
+  id: string
+  propertyId: string
+  name: string
+  serialNumber: string
+  condition: AssetCondition
+  photoUrl: string
+  lastInspected: string
+}
+
+export const propertyAssets: PropertyAsset[] = [
+  {
+    id: "asset-001",
+    propertyId: "p-310",
+    name: "Split A/C Unit",
+    serialNumber: "AC-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 15, 2024",
+  },
+  {
+    id: "asset-002",
+    propertyId: "p-310",
+    name: "Office Desk",
+    serialNumber: "DSK-2024-001",
+    condition: "New",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 15, 2024",
+  },
+  {
+    id: "asset-003",
+    propertyId: "p-310",
+    name: "Office Chair",
+    serialNumber: "CHR-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 15, 2024",
+  },
+  {
+    id: "asset-004",
+    propertyId: "p-405",
+    name: "Backup Generator",
+    serialNumber: "GEN-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 10, 2024",
+  },
+  {
+    id: "asset-005",
+    propertyId: "p-405",
+    name: "Window A/C Unit",
+    serialNumber: "AC-2024-002",
+    condition: "Damaged",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 10, 2024",
+  },
+  {
+    id: "asset-006",
+    propertyId: "p-510",
+    name: "Ceiling Fan",
+    serialNumber: "FAN-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 12, 2024",
+  },
+]
+
+export function getAssetsForProperty(propertyId: string): PropertyAsset[] {
+  return propertyAssets.filter((a) => a.propertyId === propertyId)
+}
+
+export function getBrokerById(id: string): Broker | undefined {
+  return brokers.find((b) => b.id === id)
+}

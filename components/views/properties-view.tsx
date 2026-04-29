@@ -4,13 +4,15 @@ import { useMemo, useState } from "react"
 import { ListToolbar } from "@/components/list-toolbar"
 import { TablePagination } from "@/components/table-pagination"
 import { LeasePill } from "@/components/status-pills"
-import { properties, getTenantNameForProperty } from "@/lib/data"
+import { properties, getTenantNameForProperty, type Property } from "@/lib/data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { Calculator, DollarSign } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calculator, DollarSign, LayoutGrid, List, Building2, User } from "lucide-react"
 
 const floorOptions = [
   { value: "all", label: "All floors" },
@@ -37,6 +39,7 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
   const [floor, setFloor] = useState("all")
   const [lease, setLease] = useState("all")
   const [page, setPage] = useState(1)
+  const [viewMode, setViewMode] = useState<"list" | "map">("list")
   
   // Pricing Logic State
   const [isDimensionBased, setIsDimensionBased] = useState(false)
@@ -48,6 +51,30 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
   const autoCalculatedTotal = isDimensionBased 
     ? (parseFloat(pricePerSqMeter || "0") * parseFloat(roomSize || "0")).toFixed(2)
     : fixedRate
+
+  // Get unit color based on status
+  const getUnitColor = (property: Property) => {
+    if (property.occupancy === "Vacant") return "bg-slate-200 border-slate-300 text-slate-600"
+    if (property.lease === "Expired" || property.lease === "Terminated") 
+      return "bg-orange-100 border-orange-400 text-orange-700"
+    return "bg-emerald-100 border-emerald-400 text-emerald-700"
+  }
+
+  // Get tenant type icon
+  const getTenantIcon = (property: Property) => {
+    if (property.occupancy === "Vacant") return null
+    return <User className="h-3 w-3" />
+  }
+
+  // Floor map data structure - organized by floor
+  const floorMap = useMemo(() => {
+    const floors: Record<string, Property[]> = {}
+    properties.forEach((p) => {
+      if (!floors[p.floor]) floors[p.floor] = []
+      floors[p.floor].push(p)
+    })
+    return floors
+  }, [])
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -72,6 +99,43 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
         </TabsList>
 
         <TabsContent value="properties">
+          {/* View Toggle */}
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-1">
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className={viewMode === "list" ? "bg-slate-900" : ""}
+              >
+                <List className="mr-2 h-4 w-4" />
+                List View
+              </Button>
+              <Button
+                variant={viewMode === "map" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("map")}
+                className={viewMode === "map" ? "bg-slate-900" : ""}
+              >
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                Map View
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <span className="flex items-center gap-1">
+                <span className="h-3 w-3 rounded bg-emerald-400" /> Occupied
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-3 w-3 rounded bg-slate-300" /> Vacant
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-3 w-3 rounded bg-orange-400" /> Expiring
+              </span>
+            </div>
+          </div>
+
+          {viewMode === "list" ? (
+            <>
           <ListToolbar
         searchValue={search}
         onSearchChange={setSearch}
@@ -152,6 +216,83 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
       </div>
 
       <TablePagination currentPage={page} totalPages={68} onPageChange={setPage} />
+            </>
+          ) : (
+            /* Map View - Visual Floor Plan */
+            <div className="flex flex-col gap-6">
+              {Object.entries(floorMap)
+                .sort((a, b) => {
+                  const floorOrder = ["2nd", "3rd", "4th", "5th", "6th"]
+                  return floorOrder.indexOf(a[0]) - floorOrder.indexOf(b[0])
+                })
+                .map(([floorName, units]) => (
+                  <Card key={floorName}>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <Building2 className="h-4 w-4" />
+                        {floorName} Floor
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8">
+                        {units.map((unit) => (
+                          <Popover key={unit.id}>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                className={`flex h-20 flex-col items-center justify-center rounded-lg border-2 p-2 transition-all hover:scale-105 hover:shadow-md ${getUnitColor(unit)}`}
+                              >
+                                <span className="text-lg font-bold">{unit.room}</span>
+                                <span className="flex items-center gap-1 text-xs">
+                                  {getTenantIcon(unit)}
+                                  <span>
+                                    {unit.occupancy === "Vacant" ? "Vacant" : "Occ."}
+                                  </span>
+                                </span>
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64">
+                              <div className="flex flex-col gap-3">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-semibold text-slate-900">
+                                    Room {unit.room}
+                                  </h4>
+                                  <LeasePill status={unit.lease} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                  <div>
+                                    <p className="text-slate-500">Size</p>
+                                    <p className="font-medium">{unit.squareFootage}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-slate-500">Floor</p>
+                                    <p className="font-medium">{unit.floor}</p>
+                                  </div>
+                                  <div className="col-span-2">
+                                    <p className="text-slate-500">Tenant</p>
+                                    <p className="font-medium">
+                                      {getTenantNameForProperty(unit)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => onSelectProperty?.(unit.id)}
+                                  className="w-full"
+                                >
+                                  View Detail
+                                </Button>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="pricing">
