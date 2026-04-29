@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select"
 import { SectionHeader } from "@/components/section-header"
 import { cn } from "@/lib/utils"
+import { brokers } from "@/lib/data"
 
 const REGIONS = ["Addis Ababa", "Oromia", "Amhara", "Tigray", "Sidama"]
 const SUBCITIES = [
@@ -165,6 +166,21 @@ export function AddTenantView() {
             </FieldRow>
             <FieldRow label="House No." htmlFor="houseNo">
               <Input id="houseNo" name="houseNo" placeholder="110" />
+            </FieldRow>
+            <FieldRow label="Referred by Broker?">
+              <Select defaultValue="none">
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a broker" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Broker / Walk-in</SelectItem>
+                  {brokers.map((broker) => (
+                    <SelectItem key={broker.id} value={broker.id}>
+                      {broker.name} ({broker.licenseNo})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FieldRow>
           </div>
         </section>

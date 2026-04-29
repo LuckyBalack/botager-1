@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import {
   invoices,
@@ -87,10 +88,18 @@ export function BillingView() {
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
   const [paymentAmount, setPaymentAmount] = useState("")
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("chapa")
+  const [includesWHT, setIncludesWHT] = useState(false)
+  const [whtAmount, setWhtAmount] = useState("")
+  const [whtReceiptNumber, setWhtReceiptNumber] = useState("")
 
   // Tax calculations (would normally come from settings)
   const vatRate = 15
   const serviceRate = 2
+
+  // Calculate WHT breakdown
+  const cashReceived = parseFloat(paymentAmount || "0")
+  const whtCredit = parseFloat(whtAmount || "0")
+  const totalRentCleared = includesWHT ? cashReceived + whtCredit : cashReceived
 
   const handleRecordPayment = (invoiceId: string) => {
     const invoice = invoices.find((inv) => inv.id === invoiceId)
@@ -124,12 +133,16 @@ export function BillingView() {
 
   const handleConfirmPayment = () => {
     setPaymentModalOpen(false)
+    const whtInfo = includesWHT ? ` (includes WHT: ETB ${whtAmount})` : ""
     toast.success("Digital Receipt Sent", {
-      description: `Payment of ETB ${paymentAmount} recorded successfully via ${paymentMethods.find((m) => m.id === selectedPaymentMethod)?.name}.`,
+      description: `Payment of ETB ${totalRentCleared.toLocaleString()} recorded successfully via ${paymentMethods.find((m) => m.id === selectedPaymentMethod)?.name}${whtInfo}.`,
     })
     setSelectedInvoice(null)
     setPaymentAmount("")
     setSelectedPaymentMethod("chapa")
+    setIncludesWHT(false)
+    setWhtAmount("")
+    setWhtReceiptNumber("")
   }
 
   return (
@@ -409,7 +422,7 @@ export function BillingView() {
           </DialogHeader>
           <div className="flex flex-col gap-6 py-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">Cash Amount Received</Label>
               <Input
                 id="amount"
                 type="text"
@@ -419,6 +432,70 @@ export function BillingView() {
                 className="w-full"
               />
             </div>
+
+            {/* WHT Checkbox */}
+            <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-4">
+              <Checkbox
+                id="wht"
+                checked={includesWHT}
+                onCheckedChange={(checked) => setIncludesWHT(checked === true)}
+              />
+              <div className="flex flex-col">
+                <Label htmlFor="wht" className="cursor-pointer font-medium">
+                  Includes Withholding Tax?
+                </Label>
+                <span className="text-xs text-slate-500">
+                  Check if the tenant has withheld tax from this payment
+                </span>
+              </div>
+            </div>
+
+            {/* WHT Fields (shown when checkbox is checked) */}
+            {includesWHT && (
+              <div className="flex flex-col gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="wht-amount">WHT Amount (ETB)</Label>
+                  <Input
+                    id="wht-amount"
+                    type="text"
+                    value={whtAmount}
+                    onChange={(e) => setWhtAmount(e.target.value)}
+                    placeholder="e.g., 2000"
+                    className="bg-white"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="wht-receipt">WHT Receipt Number</Label>
+                  <Input
+                    id="wht-receipt"
+                    type="text"
+                    value={whtReceiptNumber}
+                    onChange={(e) => setWhtReceiptNumber(e.target.value)}
+                    placeholder="e.g., WHT-2024-001234"
+                    className="bg-white"
+                  />
+                </div>
+                {/* WHT Validation Summary */}
+                <div className="rounded-md border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-medium text-slate-500 mb-2">Payment Summary:</p>
+                  <div className="flex flex-col gap-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Cash Received:</span>
+                      <span className="font-medium">ETB {cashReceived.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-amber-600">
+                      <span>+ WHT Credit:</span>
+                      <span className="font-medium">ETB {whtCredit.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-slate-200 pt-1 mt-1">
+                      <span className="font-semibold text-slate-900">= Total Rent Cleared:</span>
+                      <span className="font-bold text-emerald-600">ETB {totalRentCleared.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col gap-3">
               <Label>Payment Method</Label>
               <RadioGroup

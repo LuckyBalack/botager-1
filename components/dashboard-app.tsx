@@ -30,6 +30,7 @@ import { SettingsView } from "@/components/views/settings-view"
 import { UtilityTrackingView } from "@/components/views/utility-tracking-view"
 import { LeaseSettlementView } from "@/components/views/lease-settlement-view"
 import { WaitlistView } from "@/components/views/waitlist-view"
+import { BrokersView } from "@/components/views/brokers-view"
 import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
 import { SystemAdminSidebar, type SystemAdminViewKey } from "@/components/system-admin-sidebar"
 import { SystemAdminView } from "@/components/views/system-admin-view"
@@ -61,6 +62,7 @@ const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", str
   "utility-tracking": "Utility Meter Readings",
   "waitlist": "Prospective Tenants & Waitlist",
   "lease-settlement": "Final Lease Settlement",
+  "brokers": "Brokers & Commissions",
 }
 
 export function DashboardApp() {
@@ -290,6 +292,7 @@ export function DashboardApp() {
           {activeView === "data-import" && <DataImportView />}
           {activeView === "inspections" && <InspectionsView />}
           {activeView === "vendors" && <VendorsView />}
+          {activeView === "brokers" && <BrokersView />}
           {activeView === "system-subscription" && <SystemSubscriptionView />}
           {activeView === "utility-tracking" && <UtilityTrackingView />}
           {activeView === "waitlist" && (

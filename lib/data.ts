@@ -1102,3 +1102,168 @@ export const maintenanceTickets: MaintenanceTicket[] = [
     },
   },
 ]
+
+// Broker (Delala) Data (Step 33)
+export type Broker = {
+  id: string
+  name: string
+  phone: string
+  licenseNo: string
+  totalReferrals: number
+  unpaidCommissions: string
+}
+
+export const brokers: Broker[] = [
+  {
+    id: "broker-001",
+    name: "Meseret Taye",
+    phone: "+251 911 22 33 44",
+    licenseNo: "BRK-2024-001",
+    totalReferrals: 8,
+    unpaidCommissions: "ETB 45,000",
+  },
+  {
+    id: "broker-002",
+    name: "Samuel Girma",
+    phone: "+251 922 33 44 55",
+    licenseNo: "BRK-2024-002",
+    totalReferrals: 12,
+    unpaidCommissions: "ETB 15,000",
+  },
+  {
+    id: "broker-003",
+    name: "Helen Yohannes",
+    phone: "+251 933 44 55 66",
+    licenseNo: "BRK-2024-003",
+    totalReferrals: 5,
+    unpaidCommissions: "ETB 0",
+  },
+]
+
+export type CommissionRecord = {
+  id: string
+  brokerId: string
+  brokerName: string
+  leaseId: string
+  roomNo: string
+  tenantName: string
+  commissionAmount: string
+  dateEarned: string
+  status: "Pending" | "Paid"
+  paidDate?: string
+}
+
+export const commissionRecords: CommissionRecord[] = [
+  {
+    id: "comm-001",
+    brokerId: "broker-001",
+    brokerName: "Meseret Taye",
+    leaseId: "lease-310",
+    roomNo: "310",
+    tenantName: "Getachew Temesgen",
+    commissionAmount: "ETB 15,000",
+    dateEarned: "Mar 15, 2024",
+    status: "Pending",
+  },
+  {
+    id: "comm-002",
+    brokerId: "broker-001",
+    brokerName: "Meseret Taye",
+    leaseId: "lease-405",
+    roomNo: "405",
+    tenantName: "Jenbere Gutu",
+    commissionAmount: "ETB 15,000",
+    dateEarned: "Feb 28, 2024",
+    status: "Pending",
+  },
+  {
+    id: "comm-003",
+    brokerId: "broker-002",
+    brokerName: "Samuel Girma",
+    leaseId: "lease-510",
+    roomNo: "510",
+    tenantName: "Alemayehu Goshu",
+    commissionAmount: "ETB 15,000",
+    dateEarned: "Jan 20, 2024",
+    status: "Paid",
+    paidDate: "Feb 5, 2024",
+  },
+]
+
+// Property Assets Data (Step 35)
+export type AssetCondition = "New" | "Good" | "Damaged"
+
+export type PropertyAsset = {
+  id: string
+  propertyId: string
+  name: string
+  serialNumber: string
+  condition: AssetCondition
+  photoUrl: string
+  lastInspected: string
+}
+
+export const propertyAssets: PropertyAsset[] = [
+  {
+    id: "asset-001",
+    propertyId: "p-310",
+    name: "Split A/C Unit",
+    serialNumber: "AC-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 15, 2024",
+  },
+  {
+    id: "asset-002",
+    propertyId: "p-310",
+    name: "Office Desk",
+    serialNumber: "DSK-2024-001",
+    condition: "New",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 15, 2024",
+  },
+  {
+    id: "asset-003",
+    propertyId: "p-310",
+    name: "Office Chair",
+    serialNumber: "CHR-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 15, 2024",
+  },
+  {
+    id: "asset-004",
+    propertyId: "p-405",
+    name: "Backup Generator",
+    serialNumber: "GEN-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 10, 2024",
+  },
+  {
+    id: "asset-005",
+    propertyId: "p-405",
+    name: "Window A/C Unit",
+    serialNumber: "AC-2024-002",
+    condition: "Damaged",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 10, 2024",
+  },
+  {
+    id: "asset-006",
+    propertyId: "p-510",
+    name: "Ceiling Fan",
+    serialNumber: "FAN-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 12, 2024",
+  },
+]
+
+export function getAssetsForProperty(propertyId: string): PropertyAsset[] {
+  return propertyAssets.filter((a) => a.propertyId === propertyId)
+}
+
+export function getBrokerById(id: string): Broker | undefined {
+  return brokers.find((b) => b.id === id)
+}

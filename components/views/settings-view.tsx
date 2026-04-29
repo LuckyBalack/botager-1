@@ -36,6 +36,7 @@ export function SettingsView({ onNavigate, onSystemSubscription }: SettingsViewP
   const [addTaxModalOpen, setAddTaxModalOpen] = useState(false)
   const [newTaxName, setNewTaxName] = useState("")
   const [newTaxRate, setNewTaxRate] = useState("")
+  const [isVatRegistered, setIsVatRegistered] = useState(true)
 
   const handleToggleTax = (id: string) => {
     setTaxRulesList(
@@ -255,6 +256,17 @@ export function SettingsView({ onNavigate, onSystemSubscription }: SettingsViewP
             <CardDescription>Configure tax rules for invoice generation</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-6">
+            {/* VAT Registration Toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+              <div>
+                <Label className="text-base">VAT Registered (15%)</Label>
+                <p className="text-sm text-slate-500">
+                  When enabled, all invoices will automatically display a separate line item for 15% VAT
+                </p>
+              </div>
+              <Switch checked={isVatRegistered} onCheckedChange={setIsVatRegistered} />
+            </div>
+
             {/* Auto-apply toggle */}
             <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
               <div>
