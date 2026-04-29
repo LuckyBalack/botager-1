@@ -2,9 +2,11 @@
 
 import { useState } from "react"
 
-import { AppSidebar, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
+import { AppSidebar, AppSidebarMobile, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
 import { AppHeader, type UserRole } from "@/components/app-header"
-import { TenantSidebar, type TenantViewKey } from "@/components/tenant-sidebar"
+import { TenantSidebar } from "@/components/tenant-sidebar"
+import { TenantBottomNav } from "@/components/tenant-bottom-nav"
+import { SystemAdminSidebar, SystemAdminSidebarMobile, type SystemAdminViewKey } from "@/components/system-admin-sidebar"
 import { TenantDashboardView } from "@/components/views/tenant-dashboard-view"
 import { TenantInvoicesView } from "@/components/views/tenant-invoices-view"
 import { TenantMaintenanceView } from "@/components/views/tenant-maintenance-view"
@@ -15,7 +17,6 @@ import { TenantsView } from "@/components/views/tenants-view"
 import { TenantDetailView } from "@/components/views/tenant-detail-view"
 import { PropertyDetailView } from "@/components/views/property-detail-view"
 import { AddTenantView } from "@/components/views/add-tenant-view"
-
 import { PortfolioDashboardView } from "@/components/views/portfolio-dashboard-view"
 import { BillingView } from "@/components/views/billing-view"
 import { MaintenanceView } from "@/components/views/maintenance-view"
@@ -35,9 +36,17 @@ import { LeaseSettlementView } from "@/components/views/lease-settlement-view"
 import { WaitlistView } from "@/components/views/waitlist-view"
 import { BrokersView } from "@/components/views/brokers-view"
 import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
-import { SystemAdminSidebar, type SystemAdminViewKey } from "@/components/system-admin-sidebar"
 import { SystemAdminView } from "@/components/views/system-admin-view"
 import { getPropertyById, getTenantById } from "@/lib/data"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet"
+import type { TenantViewKey } from "@/components/tenant-sidebar"
+import { useResponsive } from "@/hooks/use-responsive"
 
 type ActiveView = ViewKey | "detail" | "add-tenant" | "system-subscription" | "lease-settlement"
 type DetailKind = "tenant" | "property"
@@ -69,14 +78,24 @@ const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", str
 }
 
 export function DashboardApp() {
+  const { isTablet } = useResponsive()
+  
   const [userRole, setUserRole] = useState<UserRole>("admin")
   const [activeView, setActiveView] = useState<ActiveView>("dashboard")
   const [tenantView, setTenantView] = useState<TenantViewKey>("my-lease")
   const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")
   const [selected, setSelected] = useState<Selected>(null)
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingSelection>("abuki")
-  // Track if user came from admin side (to show "Back to Admin" button in marketplace)
   const [cameFromAdmin, setCameFromAdmin] = useState(false)
+  
+  // Mobile navigation state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  
+  // Sidebar collapse state (for tablet view)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Auto-collapse sidebar on tablet
+  const effectiveCollapsed = isTablet ? true : sidebarCollapsed
 
   const handleRoleToggle = () => {
     setUserRole((prev) => {
@@ -84,6 +103,7 @@ export function DashboardApp() {
       if (prev === "tenant") return "system-admin"
       return "admin"
     })
+    setMobileMenuOpen(false)
   }
 
   const handleBuildingChange = (building: BuildingSelection) => {
@@ -99,6 +119,7 @@ export function DashboardApp() {
   const navigate = (view: ViewKey) => {
     setSelected(null)
     setActiveView(view)
+    setMobileMenuOpen(false)
   }
 
   const openTenantDetail = (id: string) => {
@@ -174,21 +195,45 @@ export function DashboardApp() {
   if (userRole === "system-admin") {
     return (
       <div className="flex min-h-screen bg-slate-50 text-slate-900">
+        {/* Desktop Sidebar */}
         <SystemAdminSidebar
           activeView={systemAdminView}
           onNavigate={setSystemAdminView}
           onLogout={() => setUserRole("admin")}
+          collapsed={effectiveCollapsed}
         />
+
+        {/* Mobile Navigation Sheet */}
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetContent side="left" className="w-[280px] p-0">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Navigation Menu</SheetTitle>
+              <SheetDescription>System admin navigation menu</SheetDescription>
+            </SheetHeader>
+            <SystemAdminSidebarMobile
+              activeView={systemAdminView}
+              onNavigate={setSystemAdminView}
+              onLogout={() => setUserRole("admin")}
+              onClose={() => setMobileMenuOpen(false)}
+            />
+          </SheetContent>
+        </Sheet>
 
         <div className="flex min-w-0 flex-1 flex-col">
           <AppHeader
             title={systemAdminTitleMap[systemAdminView]}
             userRole={userRole}
             onRoleToggle={handleRoleToggle}
+            onMenuToggle={() => setMobileMenuOpen(true)}
+            sidebarCollapsed={effectiveCollapsed}
+            onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
 
-          <main className="flex-1 px-10 py-8">
-            <SystemAdminView view={systemAdminView} />
+          {/* TV max-width container */}
+          <main className="flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 2xl:px-12 2xl:py-10">
+            <div className="mx-auto max-w-[1800px]">
+              <SystemAdminView view={systemAdminView} />
+            </div>
           </main>
         </div>
       </div>
@@ -199,22 +244,36 @@ export function DashboardApp() {
   if (userRole === "tenant") {
     return (
       <div className="flex min-h-screen bg-slate-50 text-slate-900">
-        <TenantSidebar activeView={tenantView} onNavigate={setTenantView} />
+        {/* Desktop Sidebar - hidden on mobile */}
+        <TenantSidebar
+          activeView={tenantView}
+          onNavigate={setTenantView}
+          collapsed={effectiveCollapsed}
+        />
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col pb-16 md:pb-0">
           <AppHeader
             title={tenantTitleMap[tenantView]}
             userRole={userRole}
             onRoleToggle={handleRoleToggle}
+            showMenuButton={false}
+            sidebarCollapsed={effectiveCollapsed}
+            onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
 
-          <main className="flex-1 px-10 py-8">
-            {tenantView === "my-lease" && <TenantDashboardView onNavigate={setTenantView} />}
-            {tenantView === "invoices" && <TenantInvoicesView />}
-            {tenantView === "maintenance" && <TenantMaintenanceView />}
-            {tenantView === "messages" && <TenantMessagesView />}
+          {/* TV max-width container */}
+          <main className="flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 2xl:px-12 2xl:py-10">
+            <div className="mx-auto max-w-[1800px]">
+              {tenantView === "my-lease" && <TenantDashboardView onNavigate={setTenantView} />}
+              {tenantView === "invoices" && <TenantInvoicesView />}
+              {tenantView === "maintenance" && <TenantMaintenanceView />}
+              {tenantView === "messages" && <TenantMessagesView />}
+            </div>
           </main>
         </div>
+
+        {/* Mobile Bottom Navigation */}
+        <TenantBottomNav activeView={tenantView} onNavigate={setTenantView} />
       </div>
     )
   }
@@ -258,12 +317,31 @@ export function DashboardApp() {
   // Admin View Render
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900">
+      {/* Desktop Sidebar */}
       <AppSidebar
         activeView={sidebarActive}
         onNavigate={handleNavigate}
         selectedBuilding={selectedBuilding}
         onBuildingChange={handleBuildingChange}
+        collapsed={effectiveCollapsed}
       />
+
+      {/* Mobile Navigation Sheet */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="w-[280px] p-0">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigation Menu</SheetTitle>
+            <SheetDescription>Main navigation menu</SheetDescription>
+          </SheetHeader>
+          <AppSidebarMobile
+            activeView={sidebarActive}
+            onNavigate={handleNavigate}
+            selectedBuilding={selectedBuilding}
+            onBuildingChange={handleBuildingChange}
+            onClose={() => setMobileMenuOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader
@@ -272,63 +350,68 @@ export function DashboardApp() {
           onAddTenant={openAddTenant}
           userRole={userRole}
           onRoleToggle={handleRoleToggle}
+          onMenuToggle={() => setMobileMenuOpen(true)}
+          sidebarCollapsed={effectiveCollapsed}
+          onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
 
-        <main className="flex-1 px-10 py-8">
-          {activeView === "portfolio-dashboard" && <PortfolioDashboardView />}
-          {activeView === "dashboard" && (
-            <DashboardView onNavigate={handleNavigate} />
-          )}
-          {activeView === "properties" && (
-            <PropertiesView onSelectProperty={openPropertyDetail} />
-          )}
-          {activeView === "tenants" && (
-            <TenantsView onSelectTenant={openTenantDetail} />
-          )}
-          {activeView === "billing" && <BillingView />}
-          {activeView === "maintenance" && <MaintenanceView />}
-          {activeView === "accounting" && <AccountingView />}
-          {activeView === "documents" && <DocumentsView />}
-          {activeView === "messages" && <MessagesView />}
-          {activeView === "detail" && selectedTenant && (
-            <TenantDetailView
-              tenant={selectedTenant}
-              onTerminateLease={openLeaseSettlement}
-            />
-          )}
-          {activeView === "detail" && selectedProperty && (
-            <PropertyDetailView property={selectedProperty} />
-          )}
-          {activeView === "add-tenant" && <AddTenantView />}
-          {activeView === "settings" && (
-            <SettingsView
-              onNavigate={handleNavigate}
-              onSystemSubscription={() => setActiveView("system-subscription")}
-            />
-          )}
-          {activeView === "team-settings" && <TeamSettingsView />}
-          {activeView === "automations" && <AutomationsView />}
-          {activeView === "help-center" && <HelpCenterView />}
-          {activeView === "data-import" && <DataImportView />}
-          {activeView === "inspections" && <InspectionsView />}
-          {activeView === "vendors" && <VendorsView />}
-          {activeView === "brokers" && <BrokersView />}
-          {activeView === "system-subscription" && <SystemSubscriptionView />}
-          {activeView === "utility-tracking" && <UtilityTrackingView />}
-          {activeView === "waitlist" && (
-            <WaitlistView
-              onInviteToLease={(leadData) => {
-                // Here we would typically pass the lead data to the add tenant form
-                openAddTenant()
-              }}
-            />
-          )}
-          {activeView === "lease-settlement" && selectedTenant && (
-            <LeaseSettlementView
-              tenant={selectedTenant}
-              onClose={() => navigate("tenants")}
-            />
-          )}
+        {/* TV max-width container with responsive padding */}
+        <main className="flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 2xl:px-12 2xl:py-10">
+          <div className="mx-auto max-w-[1800px]">
+            {activeView === "portfolio-dashboard" && <PortfolioDashboardView />}
+            {activeView === "dashboard" && (
+              <DashboardView onNavigate={handleNavigate} />
+            )}
+            {activeView === "properties" && (
+              <PropertiesView onSelectProperty={openPropertyDetail} />
+            )}
+            {activeView === "tenants" && (
+              <TenantsView onSelectTenant={openTenantDetail} />
+            )}
+            {activeView === "billing" && <BillingView />}
+            {activeView === "maintenance" && <MaintenanceView />}
+            {activeView === "accounting" && <AccountingView />}
+            {activeView === "documents" && <DocumentsView />}
+            {activeView === "messages" && <MessagesView />}
+            {activeView === "detail" && selectedTenant && (
+              <TenantDetailView
+                tenant={selectedTenant}
+                onTerminateLease={openLeaseSettlement}
+              />
+            )}
+            {activeView === "detail" && selectedProperty && (
+              <PropertyDetailView property={selectedProperty} />
+            )}
+            {activeView === "add-tenant" && <AddTenantView />}
+            {activeView === "settings" && (
+              <SettingsView
+                onNavigate={handleNavigate}
+                onSystemSubscription={() => setActiveView("system-subscription")}
+              />
+            )}
+            {activeView === "team-settings" && <TeamSettingsView />}
+            {activeView === "automations" && <AutomationsView />}
+            {activeView === "help-center" && <HelpCenterView />}
+            {activeView === "data-import" && <DataImportView />}
+            {activeView === "inspections" && <InspectionsView />}
+            {activeView === "vendors" && <VendorsView />}
+            {activeView === "brokers" && <BrokersView />}
+            {activeView === "system-subscription" && <SystemSubscriptionView />}
+            {activeView === "utility-tracking" && <UtilityTrackingView />}
+            {activeView === "waitlist" && (
+              <WaitlistView
+                onInviteToLease={(leadData) => {
+                  openAddTenant()
+                }}
+              />
+            )}
+            {activeView === "lease-settlement" && selectedTenant && (
+              <LeaseSettlementView
+                tenant={selectedTenant}
+                onClose={() => navigate("tenants")}
+              />
+            )}
+          </div>
         </main>
       </div>
 

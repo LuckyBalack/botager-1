@@ -146,19 +146,19 @@ export function BillingView() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4 sm:gap-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl 2xl:text-3xl">
             Financials & Billing
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs text-slate-500 sm:text-sm">
             Manage invoices, receipts, and payment requests
           </p>
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-md bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2 sm:w-auto sm:px-5 sm:py-2.5 sm:text-sm"
         >
           <span>Generate Invoice</span>
           <Plus className="h-4 w-4" aria-hidden="true" />

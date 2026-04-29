@@ -6,6 +6,7 @@ import { TablePagination } from "@/components/table-pagination"
 import { LeasePill, PaymentPill } from "@/components/status-pills"
 import { tenants } from "@/lib/data"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ResponsiveTable, HiddenOnMobileCell, HiddenOnMobileHeader } from "@/components/responsive-table"
 
 const leaseOptions = [
   { value: "all", label: "All statuses" },
@@ -71,75 +72,87 @@ export function TenantsView({ onSelectTenant }: TenantsViewProps) {
         ]}
       />
 
-      <div className="mt-10">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="text-left">
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Tenant
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Company
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Room No.
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Lease Status
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Payment
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Contact
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((t) => (
-              <tr
-                key={t.id}
-                onClick={() => onSelectTenant?.(t.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    onSelectTenant?.(t.id)
-                  }
-                }}
-                tabIndex={onSelectTenant ? 0 : -1}
-                className="cursor-pointer border-t border-slate-200 transition-colors hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
-              >
-                <td className="py-5 pr-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={t.avatar} alt={`${t.firstName} ${t.lastName}`} />
-                      <AvatarFallback>{t.firstName[0]}{t.lastName[0]}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium text-slate-900">
-                      {t.firstName} {t.lastName}
-                    </span>
-                  </div>
-                </td>
-                <td className="py-5 pr-4 text-sm text-slate-700">{t.companyName}</td>
-                <td className="py-5 pr-4 text-sm text-slate-700">{t.roomNo}</td>
-                <td className="py-5 pr-4">
-                  <LeasePill status={t.lease} />
-                </td>
-                <td className="py-5 pr-4">
-                  <PaymentPill status={t.payment} />
-                </td>
-                <td className="py-5 pr-4 text-sm text-slate-700">{t.phone}</td>
+      <div className="mt-6 sm:mt-8 lg:mt-10">
+        <ResponsiveTable>
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="text-left">
+                <th scope="col" className="py-3 pr-4 pl-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Tenant
+                </th>
+                <HiddenOnMobileHeader scope="col" hideBelow="md" className="py-3 pr-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Company
+                </HiddenOnMobileHeader>
+                <th scope="col" className="py-3 pr-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Room
+                </th>
+                <th scope="col" className="py-3 pr-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Lease
+                </th>
+                <HiddenOnMobileHeader scope="col" hideBelow="sm" className="py-3 pr-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Payment
+                </HiddenOnMobileHeader>
+                <HiddenOnMobileHeader scope="col" hideBelow="lg" className="py-3 pr-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Contact
+                </HiddenOnMobileHeader>
               </tr>
-            ))}
-            {visible.length === 0 && (
-              <tr>
-                <td colSpan={6} className="border-t border-slate-200 py-10 text-center text-sm text-slate-500">
-                  No tenants match your filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visible.map((t) => (
+                <tr
+                  key={t.id}
+                  onClick={() => onSelectTenant?.(t.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      onSelectTenant?.(t.id)
+                    }
+                  }}
+                  tabIndex={onSelectTenant ? 0 : -1}
+                  className="cursor-pointer border-t border-slate-200 transition-colors hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+                >
+                  <td className="py-4 pr-4 pl-4 sm:py-5">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Avatar className="h-7 w-7 sm:h-9 sm:w-9">
+                        <AvatarImage src={t.avatar} alt={`${t.firstName} ${t.lastName}`} />
+                        <AvatarFallback className="text-xs sm:text-sm">{t.firstName[0]}{t.lastName[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <span className="block truncate text-xs font-medium text-slate-900 sm:text-sm">
+                          {t.firstName} {t.lastName}
+                        </span>
+                        {/* Show company on mobile in the name cell */}
+                        <span className="block truncate text-[10px] text-slate-500 md:hidden">
+                          {t.companyName}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <HiddenOnMobileCell hideBelow="md" className="py-4 pr-4 text-xs text-slate-700 sm:py-5 sm:text-sm">
+                    {t.companyName}
+                  </HiddenOnMobileCell>
+                  <td className="py-4 pr-4 text-xs text-slate-700 sm:py-5 sm:text-sm">{t.roomNo}</td>
+                  <td className="py-4 pr-4 sm:py-5">
+                    <LeasePill status={t.lease} />
+                  </td>
+                  <HiddenOnMobileCell hideBelow="sm" className="py-4 pr-4 sm:py-5">
+                    <PaymentPill status={t.payment} />
+                  </HiddenOnMobileCell>
+                  <HiddenOnMobileCell hideBelow="lg" className="py-4 pr-4 text-xs text-slate-700 sm:py-5 sm:text-sm">
+                    {t.phone}
+                  </HiddenOnMobileCell>
+                </tr>
+              ))}
+              {visible.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="border-t border-slate-200 py-10 text-center text-xs text-slate-500 sm:text-sm">
+                    No tenants match your filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </ResponsiveTable>
       </div>
 
       <TablePagination currentPage={page} totalPages={Math.ceil(tenants.length / 10)} onPageChange={setPage} />

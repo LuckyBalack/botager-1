@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calculator, DollarSign, LayoutGrid, List, Building2, User } from "lucide-react"
+import { ResponsiveTable, HiddenOnMobileCell, HiddenOnMobileHeader } from "@/components/responsive-table"
 
 const floorOptions = [
   { value: "all", label: "All floors" },
@@ -100,36 +101,38 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
 
         <TabsContent value="properties">
           {/* View Toggle */}
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-1">
+          <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 sm:gap-2">
               <Button
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("list")}
-                className={viewMode === "list" ? "bg-slate-900" : ""}
+                className={`h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm ${viewMode === "list" ? "bg-slate-900" : ""}`}
               >
-                <List className="mr-2 h-4 w-4" />
-                List View
+                <List className="mr-1 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">List</span>
+                <span className="xs:hidden">List</span>
               </Button>
               <Button
                 variant={viewMode === "map" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("map")}
-                className={viewMode === "map" ? "bg-slate-900" : ""}
+                className={`h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm ${viewMode === "map" ? "bg-slate-900" : ""}`}
               >
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                Map View
+                <LayoutGrid className="mr-1 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">Map</span>
+                <span className="xs:hidden">Map</span>
               </Button>
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-500">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 sm:gap-3 sm:text-sm">
               <span className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded bg-emerald-400" /> Occupied
+                <span className="h-2.5 w-2.5 rounded bg-emerald-400 sm:h-3 sm:w-3" /> Occupied
               </span>
               <span className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded bg-slate-300" /> Vacant
+                <span className="h-2.5 w-2.5 rounded bg-slate-300 sm:h-3 sm:w-3" /> Vacant
               </span>
               <span className="flex items-center gap-1">
-                <span className="h-3 w-3 rounded bg-orange-400" /> Expiring
+                <span className="h-2.5 w-2.5 rounded bg-orange-400 sm:h-3 sm:w-3" /> Expiring
               </span>
             </div>
           </div>
@@ -158,61 +161,75 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
         ]}
       />
 
-      <div className="mt-10">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="text-left">
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Room
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Floor
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Square Footage
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Lease Status
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-medium text-slate-500">
-                Tenant
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((p) => (
-              <tr
-                key={p.id}
-                onClick={() => onSelectProperty?.(p.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    onSelectProperty?.(p.id)
-                  }
-                }}
-                tabIndex={onSelectProperty ? 0 : -1}
-                className="cursor-pointer border-t border-slate-200 transition-colors hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
-              >
-                <td className="py-5 pr-4 text-sm font-medium text-slate-900">{p.room}</td>
-                <td className="py-5 pr-4 text-sm text-slate-700">{p.floor}</td>
-                <td className="py-5 pr-4 text-sm text-slate-700">{p.squareFootage}</td>
-                <td className="py-5 pr-4">
-                  <LeasePill status={p.lease} />
-                </td>
-                <td className="py-5 pr-4 text-sm font-semibold text-slate-900">
-                  {getTenantNameForProperty(p)}
-                </td>
+      <div className="mt-6 sm:mt-8 lg:mt-10">
+        <ResponsiveTable>
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="text-left">
+                <th scope="col" className="py-3 pl-4 pr-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Room
+                </th>
+                <HiddenOnMobileHeader scope="col" hideBelow="sm" className="py-3 pr-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Floor
+                </HiddenOnMobileHeader>
+                <HiddenOnMobileHeader scope="col" hideBelow="md" className="py-3 pr-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Square Footage
+                </HiddenOnMobileHeader>
+                <th scope="col" className="py-3 pr-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Status
+                </th>
+                <th scope="col" className="py-3 pr-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  Tenant
+                </th>
               </tr>
-            ))}
-            {visible.length === 0 && (
-              <tr>
-                <td colSpan={5} className="border-t border-slate-200 py-10 text-center text-sm text-slate-500">
-                  No properties match your filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visible.map((p) => (
+                <tr
+                  key={p.id}
+                  onClick={() => onSelectProperty?.(p.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      onSelectProperty?.(p.id)
+                    }
+                  }}
+                  tabIndex={onSelectProperty ? 0 : -1}
+                  className="cursor-pointer border-t border-slate-200 transition-colors hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"
+                >
+                  <td className="py-4 pl-4 pr-4 sm:py-5">
+                    <div className="min-w-0">
+                      <span className="block text-xs font-medium text-slate-900 sm:text-sm">{p.room}</span>
+                      {/* Show floor on mobile in room cell */}
+                      <span className="block text-[10px] text-slate-500 sm:hidden">{p.floor}</span>
+                    </div>
+                  </td>
+                  <HiddenOnMobileCell hideBelow="sm" className="py-4 pr-4 text-xs text-slate-700 sm:py-5 sm:text-sm">
+                    {p.floor}
+                  </HiddenOnMobileCell>
+                  <HiddenOnMobileCell hideBelow="md" className="py-4 pr-4 text-xs text-slate-700 sm:py-5 sm:text-sm">
+                    {p.squareFootage}
+                  </HiddenOnMobileCell>
+                  <td className="py-4 pr-4 sm:py-5">
+                    <LeasePill status={p.lease} />
+                  </td>
+                  <td className="py-4 pr-4 text-xs font-semibold text-slate-900 sm:py-5 sm:text-sm">
+                    <span className="block max-w-[100px] truncate sm:max-w-none">
+                      {getTenantNameForProperty(p)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {visible.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="border-t border-slate-200 py-10 text-center text-xs text-slate-500 sm:text-sm">
+                    No properties match your filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </ResponsiveTable>
       </div>
 
       <TablePagination currentPage={page} totalPages={68} onPageChange={setPage} />
@@ -234,7 +251,7 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8">
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12">
                         {units.map((unit) => (
                           <Popover key={unit.id}>
                             <PopoverTrigger asChild>

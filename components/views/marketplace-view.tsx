@@ -162,22 +162,22 @@ export function MarketplaceView({
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Public Header */}
-      <header className="border-b border-slate-200 bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
+      <header className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Building2 className="h-8 w-8 text-orange-500" />
+            <Building2 className="h-6 w-6 text-orange-500 sm:h-8 sm:w-8" />
             <div>
-              <span className="text-xl font-bold text-slate-900">Mamulka</span>
-              <span className="ml-1 text-sm text-slate-500">/ WRM</span>
+              <span className="text-lg font-bold text-slate-900 sm:text-xl">Mamulka</span>
+              <span className="ml-1 hidden text-sm text-slate-500 sm:inline">/ WRM</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Language Switcher */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Globe className="h-4 w-4" />
-                  {language === "en" ? "EN" : "AM"}
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2 sm:h-9 sm:gap-2 sm:px-3">
+                  <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">{language === "en" ? "EN" : "AM"}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -190,10 +190,10 @@ export function MarketplaceView({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" onClick={onSignIn}>
+            <Button variant="outline" onClick={onSignIn} size="sm" className="h-8 px-2 text-xs sm:h-9 sm:px-4 sm:text-sm">
               {language === "en" ? "Sign In" : "ግባ"}
             </Button>
-            <Button className="bg-orange-500 text-white hover:bg-orange-600">
+            <Button className="hidden bg-orange-500 text-white hover:bg-orange-600 sm:inline-flex" size="sm">
               {language === "en" ? "Post a Listing" : "ዝርዝር ያስቀምጡ"}
             </Button>
           </div>
@@ -201,28 +201,28 @@ export function MarketplaceView({
       </header>
 
       {/* Hero Search Section */}
-      <section className="bg-gradient-to-b from-slate-100 to-slate-50 px-6 py-16">
+      <section className="bg-gradient-to-b from-slate-100 to-slate-50 px-4 py-8 sm:px-6 sm:py-12 lg:py-16">
         <div className="mx-auto max-w-4xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900 text-balance">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 text-balance sm:text-3xl lg:text-4xl 2xl:text-5xl">
             Find Your Perfect Workspace in Addis Ababa
           </h1>
-          <p className="mt-3 text-lg text-slate-600">
+          <p className="mt-2 text-sm text-slate-600 sm:mt-3 sm:text-base lg:text-lg">
             Browse affordable offices, shops, and commercial spaces across the city
           </p>
 
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+          <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-4 sm:h-5 sm:w-5" />
               <Input
                 type="text"
                 placeholder="Search by location or building name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-14 pl-12 text-base"
+                className="h-11 pl-10 text-sm sm:h-14 sm:pl-12 sm:text-base"
               />
             </div>
             <Select value={spaceType} onValueChange={setSpaceType}>
-              <SelectTrigger className="h-14 w-full sm:w-[180px]">
+              <SelectTrigger className="h-11 w-full sm:h-14 sm:w-[180px]">
                 <SelectValue placeholder="Business Type" />
               </SelectTrigger>
               <SelectContent>
@@ -233,8 +233,8 @@ export function MarketplaceView({
                 <SelectItem value="event space">Event Space</SelectItem>
               </SelectContent>
             </Select>
-            <Button className="h-14 bg-orange-500 px-8 text-base font-semibold text-white hover:bg-orange-600">
-              <Search className="mr-2 h-5 w-5" />
+            <Button className="h-11 bg-orange-500 px-6 text-sm font-semibold text-white hover:bg-orange-600 sm:h-14 sm:px-8 sm:text-base">
+              <Search className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
               Search
             </Button>
           </div>
@@ -242,11 +242,11 @@ export function MarketplaceView({
       </section>
 
       {/* Advanced Filters Bar */}
-      <section className="border-b border-slate-200 bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters:
+      <section className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 sm:gap-2 sm:text-sm">
+            <SlidersHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Filters:</span>
           </div>
 
           <Select value={priceRange} onValueChange={setPriceRange}>
@@ -319,9 +319,9 @@ export function MarketplaceView({
       </section>
 
       {/* Listings Grid */}
-      <section className="px-6 py-10">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
+        <div className="mx-auto max-w-[1800px]">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {filteredListings.map((listing) => (
               <Card
                 key={listing.id}

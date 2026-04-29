@@ -103,7 +103,7 @@ export function AddTenantView() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {submitted && (
         <SuccessBanner
           title="Successfully Added"
@@ -111,14 +111,14 @@ export function AddTenantView() {
         />
       )}
 
-      <h2 className="text-2xl font-semibold text-slate-900">New Tenant Form</h2>
+      <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl 2xl:text-3xl">New Tenant Form</h2>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-10">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6 sm:gap-8 lg:gap-10">
         {/* Representative Info */}
-        <section className="flex flex-col gap-6">
+        <section className="flex flex-col gap-4 sm:gap-6">
           <SectionHeader title="Representative Info" />
 
-          <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-5 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-6">
             <FieldRow label="Firstname" htmlFor="firstname">
               <Input id="firstname" name="firstname" placeholder="Firstname" />
             </FieldRow>
@@ -186,10 +186,10 @@ export function AddTenantView() {
         </section>
 
         {/* Company Info */}
-        <section className="flex flex-col gap-6">
+        <section className="flex flex-col gap-4 sm:gap-6">
           <SectionHeader title="Company Info" />
 
-          <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-5 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-6">
             <FieldRow label="Company Name" htmlFor="companyName">
               <Input
                 id="companyName"
@@ -249,7 +249,7 @@ export function AddTenantView() {
         <div>
           <button
             type="submit"
-            className="inline-flex items-center justify-center rounded-md bg-slate-900 px-10 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+            className="inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-8 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 sm:w-auto sm:px-10 sm:py-3 sm:text-base"
           >
             Submit
           </button>
