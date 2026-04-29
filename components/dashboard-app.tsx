@@ -1,18 +1,21 @@
 "use client"
 
 import { useState } from "react"
-import { Settings } from "lucide-react"
+
 import { AppSidebar, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
 import { AppHeader, type UserRole } from "@/components/app-header"
 import { TenantSidebar, type TenantViewKey } from "@/components/tenant-sidebar"
 import { TenantDashboardView } from "@/components/views/tenant-dashboard-view"
+import { TenantInvoicesView } from "@/components/views/tenant-invoices-view"
+import { TenantMaintenanceView } from "@/components/views/tenant-maintenance-view"
+import { TenantMessagesView } from "@/components/views/tenant-messages-view"
 import { DashboardView } from "@/components/views/dashboard-view"
 import { PropertiesView } from "@/components/views/properties-view"
 import { TenantsView } from "@/components/views/tenants-view"
 import { TenantDetailView } from "@/components/views/tenant-detail-view"
 import { PropertyDetailView } from "@/components/views/property-detail-view"
 import { AddTenantView } from "@/components/views/add-tenant-view"
-import { PlaceholderView } from "@/components/views/placeholder-view"
+
 import { PortfolioDashboardView } from "@/components/views/portfolio-dashboard-view"
 import { BillingView } from "@/components/views/billing-view"
 import { MaintenanceView } from "@/components/views/maintenance-view"
@@ -206,28 +209,10 @@ export function DashboardApp() {
           />
 
           <main className="flex-1 px-10 py-8">
-            {tenantView === "my-lease" && <TenantDashboardView />}
-            {tenantView === "invoices" && (
-              <PlaceholderView
-                title="Invoices & Payments"
-                description="View your invoices and make payments."
-                icon={Settings}
-              />
-            )}
-            {tenantView === "maintenance" && (
-              <PlaceholderView
-                title="Maintenance Requests"
-                description="Submit and track maintenance requests."
-                icon={Settings}
-              />
-            )}
-            {tenantView === "messages" && (
-              <PlaceholderView
-                title="Messages"
-                description="Communicate with your property manager."
-                icon={Settings}
-              />
-            )}
+            {tenantView === "my-lease" && <TenantDashboardView onNavigate={setTenantView} />}
+            {tenantView === "invoices" && <TenantInvoicesView />}
+            {tenantView === "maintenance" && <TenantMaintenanceView />}
+            {tenantView === "messages" && <TenantMessagesView />}
           </main>
         </div>
       </div>
