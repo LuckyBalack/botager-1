@@ -1722,3 +1722,230 @@ export function getLeadDetail(id: string): LeadDetail | undefined {
 export function getPublicListingDetail(id: string): PublicListingDetail | undefined {
   return publicListingDetails.find((listing) => listing.id === id)
 }
+
+// Broker / Delala Detail
+export type CommissionEntry = {
+  tenantId: string
+  tenantName: string
+  roomNumber: string
+  commissionAmount: string
+  dateReferred: string
+  status: "Paid" | "Pending"
+}
+
+export type BrokerDetail = {
+  id: string
+  name: string
+  phone: string
+  email: string
+  trustRating: number
+  avatar: string
+  totalReferrals: number
+  activeTenantsBrought: number
+  conversionRate: string
+  commissions: CommissionEntry[]
+}
+
+export const brokerDetails: BrokerDetail[] = [
+  {
+    id: "broker-001",
+    name: "Abebe Kebede",
+    phone: "+251 911 23 45 67",
+    email: "abebe.kebede@gmail.com",
+    trustRating: 4.8,
+    avatar: "/placeholder.svg",
+    totalReferrals: 24,
+    activeTenantsBrought: 18,
+    conversionRate: "75%",
+    commissions: [
+      {
+        tenantId: "t-getachew",
+        tenantName: "Getachew Temesgen",
+        roomNumber: "310",
+        commissionAmount: "ETB 3,000",
+        dateReferred: "Apr 1, 2024",
+        status: "Paid",
+      },
+      {
+        tenantId: "t-alemayehu",
+        tenantName: "Alemayehu Goshu",
+        roomNumber: "510",
+        commissionAmount: "ETB 3,000",
+        dateReferred: "Apr 5, 2024",
+        status: "Paid",
+      },
+      {
+        tenantId: "t-gete",
+        tenantName: "Gete Alemayehu",
+        roomNumber: "212",
+        commissionAmount: "ETB 3,000",
+        dateReferred: "Apr 10, 2024",
+        status: "Pending",
+      },
+      {
+        tenantId: "t-sara",
+        tenantName: "Sara Mekuria",
+        roomNumber: "405",
+        commissionAmount: "ETB 3,000",
+        dateReferred: "Apr 15, 2024",
+        status: "Pending",
+      },
+    ],
+  },
+]
+
+// Vendor / Contractor Detail
+export type JobRecord = {
+  id: string
+  ticketNumber: string
+  roomNumber: string
+  jobTitle: string
+  completedDate: string
+  jobCost: string
+  status: "Completed" | "In Progress"
+  photos?: string[]
+}
+
+export type VendorDetail = {
+  id: string
+  businessName: string
+  category: string
+  contactName: string
+  phone: string
+  email: string
+  verifiedRating: number
+  avatar: string
+  totalJobsCompleted: number
+  avgResolutionTime: string
+  activeJobs: JobRecord[]
+  jobHistory: JobRecord[]
+  outstandingBalance?: string
+}
+
+export const vendorDetails: VendorDetail[] = [
+  {
+    id: "vendor-001",
+    businessName: "Addis Electric",
+    category: "Electrician",
+    contactName: "Dawit Tesfaye",
+    phone: "+251 911 55 44 33",
+    email: "contact@addiselectric.com",
+    verifiedRating: 4.9,
+    avatar: "/placeholder.svg",
+    totalJobsCompleted: 67,
+    avgResolutionTime: "2.3 days",
+    activeJobs: [
+      {
+        id: "job-active-001",
+        ticketNumber: "MNT-105",
+        roomNumber: "405",
+        jobTitle: "Electrical Fault in Room",
+        completedDate: "",
+        jobCost: "ETB 2,500",
+        status: "In Progress",
+      },
+    ],
+    jobHistory: [
+      {
+        id: "job-001",
+        ticketNumber: "MNT-102",
+        roomNumber: "310",
+        jobTitle: "Complete Electrical Rewiring",
+        completedDate: "Apr 28, 2024",
+        jobCost: "ETB 8,500",
+        status: "Completed",
+        photos: ["/placeholder.svg", "/placeholder.svg"],
+      },
+      {
+        id: "job-002",
+        ticketNumber: "MNT-098",
+        roomNumber: "212",
+        jobTitle: "Light Switch Installation",
+        completedDate: "Apr 20, 2024",
+        jobCost: "ETB 1,200",
+        status: "Completed",
+      },
+      {
+        id: "job-003",
+        ticketNumber: "MNT-095",
+        roomNumber: "510",
+        jobTitle: "Ceiling Fan Repair",
+        completedDate: "Apr 15, 2024",
+        jobCost: "ETB 800",
+        status: "Completed",
+      },
+    ],
+    outstandingBalance: "ETB 2,500",
+  },
+]
+
+// Building Verification (Admin)
+export type ComplianceDocument = {
+  name: string
+  status: "Uploaded" | "Missing" | "Verified"
+  uploadedDate?: string
+  fileUrl?: string
+}
+
+export type BuildingVerification = {
+  id: string
+  buildingName: string
+  location: string
+  ownerName: string
+  ownerPhone: string
+  ownerEmail: string
+  verificationStatus: "Under Review" | "Verified" | "Rejected"
+  complianceDocuments: ComplianceDocument[]
+  isPublicOnMarketplace: boolean
+  platformSubscriptionStatus: "Active" | "Inactive" | "Pending"
+}
+
+export const buildingVerifications: BuildingVerification[] = [
+  {
+    id: "building-verify-001",
+    buildingName: "Zefmesh Grand Mall",
+    location: "Bole, Addis Ababa",
+    ownerName: "Kebede Teshome",
+    ownerPhone: "+251 911 23 45 67",
+    ownerEmail: "kebede@zefmesh.com",
+    verificationStatus: "Under Review",
+    complianceDocuments: [
+      {
+        name: "Property Deed",
+        status: "Uploaded",
+        uploadedDate: "Apr 25, 2024",
+        fileUrl: "/documents/property-deed.pdf",
+      },
+      {
+        name: "Owner ID",
+        status: "Verified",
+        uploadedDate: "Apr 25, 2024",
+        fileUrl: "/documents/owner-id.pdf",
+      },
+      {
+        name: "Building Trade License",
+        status: "Uploaded",
+        uploadedDate: "Apr 26, 2024",
+        fileUrl: "/documents/trade-license.pdf",
+      },
+      {
+        name: "Tax Clearance",
+        status: "Missing",
+      },
+    ],
+    isPublicOnMarketplace: false,
+    platformSubscriptionStatus: "Pending",
+  },
+]
+
+export function getBrokerDetail(id: string): BrokerDetail | undefined {
+  return brokerDetails.find((b) => b.id === id)
+}
+
+export function getVendorDetail(id: string): VendorDetail | undefined {
+  return vendorDetails.find((v) => v.id === id)
+}
+
+export function getBuildingVerification(id: string): BuildingVerification | undefined {
+  return buildingVerifications.find((bv) => bv.id === id)
+}
