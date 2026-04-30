@@ -1949,3 +1949,491 @@ export function getVendorDetail(id: string): VendorDetail | undefined {
 export function getBuildingVerification(id: string): BuildingVerification | undefined {
   return buildingVerifications.find((bv) => bv.id === id)
 }
+
+// API Health Logs (Step 3)
+export type ApiHealthLog = {
+  id: string
+  timestamp: string
+  partner: string
+  endpoint: string
+  responseCode: number
+  latency: number // in milliseconds
+}
+
+export const apiHealthLogs: ApiHealthLog[] = [
+  {
+    id: "ahl-001",
+    timestamp: "Apr 30, 2024 14:32:15",
+    partner: "Commercial Bank of Ethiopia",
+    endpoint: "/v1/credit/verify",
+    responseCode: 200,
+    latency: 120,
+  },
+  {
+    id: "ahl-002",
+    timestamp: "Apr 30, 2024 14:30:08",
+    partner: "Awash Bank",
+    endpoint: "/v1/credit/check",
+    responseCode: 200,
+    latency: 98,
+  },
+  {
+    id: "ahl-003",
+    timestamp: "Apr 30, 2024 14:28:45",
+    partner: "Commercial Bank of Ethiopia",
+    endpoint: "/v1/credit/disburse",
+    responseCode: 500,
+    latency: 2450,
+  },
+  {
+    id: "ahl-004",
+    timestamp: "Apr 30, 2024 14:25:12",
+    partner: "Awash Bank",
+    endpoint: "/v1/credit/verify",
+    responseCode: 200,
+    latency: 145,
+  },
+  {
+    id: "ahl-005",
+    timestamp: "Apr 30, 2024 14:22:30",
+    partner: "M-Birr",
+    endpoint: "/v1/wallet/balance",
+    responseCode: 401,
+    latency: 56,
+  },
+  {
+    id: "ahl-006",
+    timestamp: "Apr 30, 2024 14:20:18",
+    partner: "Commercial Bank of Ethiopia",
+    endpoint: "/v1/credit/verify",
+    responseCode: 200,
+    latency: 112,
+  },
+  {
+    id: "ahl-007",
+    timestamp: "Apr 30, 2024 14:18:05",
+    partner: "Awash Bank",
+    endpoint: "/v1/credit/disburse",
+    responseCode: 200,
+    latency: 234,
+  },
+]
+
+// Credit Utilization by Sub-city (Step 3)
+export type CreditUtilization = {
+  id: string
+  subcity: string
+  totalApplications: number
+  approvalRate: number // percentage
+  totalEtbIssued: string
+  totalEtbNumber: number
+}
+
+export const creditUtilizationData: CreditUtilization[] = [
+  {
+    id: "cu-001",
+    subcity: "Bole",
+    totalApplications: 245,
+    approvalRate: 78,
+    totalEtbIssued: "ETB 1.2M",
+    totalEtbNumber: 1200000,
+  },
+  {
+    id: "cu-002",
+    subcity: "Kirkos",
+    totalApplications: 189,
+    approvalRate: 72,
+    totalEtbIssued: "ETB 890K",
+    totalEtbNumber: 890000,
+  },
+  {
+    id: "cu-003",
+    subcity: "Arada",
+    totalApplications: 156,
+    approvalRate: 65,
+    totalEtbIssued: "ETB 720K",
+    totalEtbNumber: 720000,
+  },
+  {
+    id: "cu-004",
+    subcity: "Yeka",
+    totalApplications: 134,
+    approvalRate: 81,
+    totalEtbIssued: "ETB 650K",
+    totalEtbNumber: 650000,
+  },
+  {
+    id: "cu-005",
+    subcity: "Lideta",
+    totalApplications: 98,
+    approvalRate: 69,
+    totalEtbIssued: "ETB 420K",
+    totalEtbNumber: 420000,
+  },
+]
+
+// Support Tickets (Step 4)
+export type SupportTicketStatus = "New" | "Open" | "Resolved" | "Escalated"
+
+export type SupportTicket = {
+  id: string
+  ownerName: string
+  ownerEmail: string
+  subject: string
+  status: SupportTicketStatus
+  createdAt: string
+  lastUpdated: string
+  messages: {
+    id: string
+    sender: "owner" | "admin"
+    senderName: string
+    message: string
+    timestamp: string
+  }[]
+}
+
+export const supportTickets: SupportTicket[] = [
+  {
+    id: "st-001",
+    ownerName: "Kebede Teshome",
+    ownerEmail: "kebede@gmail.com",
+    subject: "Payment Gateway Error",
+    status: "New",
+    createdAt: "Apr 30, 2024 09:15",
+    lastUpdated: "Apr 30, 2024 09:15",
+    messages: [
+      {
+        id: "msg-001",
+        sender: "owner",
+        senderName: "Kebede Teshome",
+        message: "I am trying to process a tenant payment but the Telebirr integration keeps showing an error. The error code is TBR-500. Can you please help?",
+        timestamp: "Apr 30, 2024 09:15",
+      },
+    ],
+  },
+  {
+    id: "st-002",
+    ownerName: "Almaz Bekele",
+    ownerEmail: "almaz.b@gmail.com",
+    subject: "How to add a second building?",
+    status: "Open",
+    createdAt: "Apr 29, 2024 14:30",
+    lastUpdated: "Apr 30, 2024 08:45",
+    messages: [
+      {
+        id: "msg-002",
+        sender: "owner",
+        senderName: "Almaz Bekele",
+        message: "Hello, I want to add my second building to the platform. I already have Unity Plaza registered. How can I add another building under the same account?",
+        timestamp: "Apr 29, 2024 14:30",
+      },
+      {
+        id: "msg-003",
+        sender: "admin",
+        senderName: "WRM Support",
+        message: "Hi Almaz, thank you for reaching out. You can add a new building by going to Settings > Buildings > Add New Building. You will need to provide the required documents for verification. Would you like me to guide you through the process?",
+        timestamp: "Apr 30, 2024 08:45",
+      },
+    ],
+  },
+  {
+    id: "st-003",
+    ownerName: "Dawit Hailu",
+    ownerEmail: "dawit.h@gmail.com",
+    subject: "Tenant dispute resolution",
+    status: "Open",
+    createdAt: "Apr 28, 2024 11:20",
+    lastUpdated: "Apr 29, 2024 16:00",
+    messages: [
+      {
+        id: "msg-004",
+        sender: "owner",
+        senderName: "Dawit Hailu",
+        message: "I have a tenant who claims they paid rent but my system shows unpaid. We need help resolving this dispute. Transaction ID: TXN-2024-0428-001",
+        timestamp: "Apr 28, 2024 11:20",
+      },
+      {
+        id: "msg-005",
+        sender: "admin",
+        senderName: "WRM Support",
+        message: "We are looking into the transaction. Please allow 24-48 hours for our finance team to investigate.",
+        timestamp: "Apr 29, 2024 16:00",
+      },
+    ],
+  },
+  {
+    id: "st-004",
+    ownerName: "Tigist Mengistu",
+    ownerEmail: "tigist.m@gmail.com",
+    subject: "Cannot generate monthly report",
+    status: "Resolved",
+    createdAt: "Apr 25, 2024 10:00",
+    lastUpdated: "Apr 26, 2024 14:30",
+    messages: [
+      {
+        id: "msg-006",
+        sender: "owner",
+        senderName: "Tigist Mengistu",
+        message: "The monthly report generation is stuck at 50%. It has been like this for 2 hours.",
+        timestamp: "Apr 25, 2024 10:00",
+      },
+      {
+        id: "msg-007",
+        sender: "admin",
+        senderName: "WRM Support",
+        message: "We have identified the issue and fixed it. Please try generating the report again. The issue was related to a large number of transactions in April.",
+        timestamp: "Apr 26, 2024 14:30",
+      },
+    ],
+  },
+]
+
+// System Broadcasts (Step 4)
+export type BroadcastAudience = "All Building Owners" | "All Active Tenants" | "Specific Building"
+
+export type SystemBroadcast = {
+  id: string
+  date: string
+  audience: BroadcastAudience
+  subject: string
+  messagePreview: string
+  deliveryMethods: ("SMS" | "Email" | "In-App")[]
+  successRate: number // percentage
+}
+
+export const systemBroadcasts: SystemBroadcast[] = [
+  {
+    id: "sb-001",
+    date: "Apr 28, 2024",
+    audience: "All Building Owners",
+    subject: "Scheduled Maintenance Notice",
+    messagePreview: "The platform will undergo scheduled maintenance on May 1st from 2:00 AM to 4:00 AM EAT...",
+    deliveryMethods: ["Email", "In-App"],
+    successRate: 98,
+  },
+  {
+    id: "sb-002",
+    date: "Apr 20, 2024",
+    audience: "All Active Tenants",
+    subject: "New Payment Options Available",
+    messagePreview: "We are excited to announce that you can now pay your rent using CBE Birr and M-Pesa...",
+    deliveryMethods: ["SMS", "Email", "In-App"],
+    successRate: 94,
+  },
+  {
+    id: "sb-003",
+    date: "Apr 15, 2024",
+    audience: "All Building Owners",
+    subject: "Tax Season Reminder",
+    messagePreview: "This is a reminder that Q1 tax reports are now available in your dashboard...",
+    deliveryMethods: ["Email"],
+    successRate: 100,
+  },
+]
+
+// Audit Logs (Step 5)
+export type AuditLogRole = "System Admin" | "Building Owner" | "Tenant"
+
+export type AuditLog = {
+  id: string
+  timestamp: string
+  userName: string
+  userEmail: string
+  role: AuditLogRole
+  ipAddress: string
+  action: string
+}
+
+export const auditLogs: AuditLog[] = [
+  {
+    id: "al-001",
+    timestamp: "Apr 30, 2024 14:45:22",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Updated Tax Config: VAT Rate changed to 15%",
+  },
+  {
+    id: "al-002",
+    timestamp: "Apr 30, 2024 14:32:10",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Approved Zefmesh Mall - Workspace Verification",
+  },
+  {
+    id: "al-003",
+    timestamp: "Apr 30, 2024 13:15:45",
+    userName: "Kebede Teshome",
+    userEmail: "kebede@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.45.112",
+    action: "Added new tenant: Hanna Girma to Unit 302",
+  },
+  {
+    id: "al-004",
+    timestamp: "Apr 30, 2024 12:50:33",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Deleted Tenant Record: ID TEN-2024-0089",
+  },
+  {
+    id: "al-005",
+    timestamp: "Apr 30, 2024 11:22:18",
+    userName: "Almaz Bekele",
+    userEmail: "almaz.b@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.67.89",
+    action: "Generated Monthly Financial Report - April 2024",
+  },
+  {
+    id: "al-006",
+    timestamp: "Apr 30, 2024 10:45:00",
+    userName: "Yohannes Haile",
+    userEmail: "yohannes.h@gmail.com",
+    role: "Tenant",
+    ipAddress: "196.188.33.201",
+    action: "Submitted Rent Payment: ETB 15,000 via Telebirr",
+  },
+  {
+    id: "al-007",
+    timestamp: "Apr 29, 2024 16:30:55",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Updated Platform Fee: Gateway Transaction Fee to 2.5%",
+  },
+  {
+    id: "al-008",
+    timestamp: "Apr 29, 2024 14:20:12",
+    userName: "Tigist Mengistu",
+    userEmail: "tigist.m@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.89.156",
+    action: "Updated Building Info: Sunshine Apartments",
+  },
+  {
+    id: "al-009",
+    timestamp: "Apr 29, 2024 11:05:30",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Triggered Manual DB Backup",
+  },
+  {
+    id: "al-010",
+    timestamp: "Apr 28, 2024 09:15:45",
+    userName: "Dawit Hailu",
+    userEmail: "dawit.h@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.55.78",
+    action: "Evicted Tenant: Samuel Tadesse from Unit 105",
+  },
+]
+
+// UI Translation Strings (Step 5)
+export type TranslationString = {
+  id: string
+  component: string
+  englishString: string
+  amharicTranslation: string
+}
+
+export const translationStrings: TranslationString[] = [
+  {
+    id: "ts-001",
+    component: "Sidebar Navigation",
+    englishString: "Dashboard",
+    amharicTranslation: "ዳሽቦርድ",
+  },
+  {
+    id: "ts-002",
+    component: "Sidebar Navigation",
+    englishString: "My Buildings",
+    amharicTranslation: "ህንፃዎቼ",
+  },
+  {
+    id: "ts-003",
+    component: "Sidebar Navigation",
+    englishString: "Tenants",
+    amharicTranslation: "ተከራዮች",
+  },
+  {
+    id: "ts-004",
+    component: "Sidebar Navigation",
+    englishString: "Payments",
+    amharicTranslation: "ክፍያዎች",
+  },
+  {
+    id: "ts-005",
+    component: "Sidebar Navigation",
+    englishString: "Settings",
+    amharicTranslation: "ቅንብሮች",
+  },
+  {
+    id: "ts-006",
+    component: "Button Labels",
+    englishString: "Submit",
+    amharicTranslation: "አስገባ",
+  },
+  {
+    id: "ts-007",
+    component: "Button Labels",
+    englishString: "Cancel",
+    amharicTranslation: "ሰርዝ",
+  },
+  {
+    id: "ts-008",
+    component: "Button Labels",
+    englishString: "Save Changes",
+    amharicTranslation: "ለውጦችን አስቀምጥ",
+  },
+  {
+    id: "ts-009",
+    component: "Form Labels",
+    englishString: "Full Name",
+    amharicTranslation: "ሙሉ ስም",
+  },
+  {
+    id: "ts-010",
+    component: "Form Labels",
+    englishString: "Phone Number",
+    amharicTranslation: "ስልክ ቁጥር",
+  },
+  {
+    id: "ts-011",
+    component: "Form Labels",
+    englishString: "Email Address",
+    amharicTranslation: "ኢሜይል አድራሻ",
+  },
+  {
+    id: "ts-012",
+    component: "Status Labels",
+    englishString: "Pending",
+    amharicTranslation: "በመጠባበቅ ላይ",
+  },
+  {
+    id: "ts-013",
+    component: "Status Labels",
+    englishString: "Approved",
+    amharicTranslation: "ጸድቋል",
+  },
+  {
+    id: "ts-014",
+    component: "Status Labels",
+    englishString: "Rejected",
+    amharicTranslation: "ውድቅ ተደርጓል",
+  },
+  {
+    id: "ts-015",
+    component: "Notifications",
+    englishString: "Payment Received",
+    amharicTranslation: "ክፍያ ደርሷል",
+  },
+]
