@@ -311,6 +311,7 @@ export function DashboardApp() {
     moderation: "Advanced Moderation & Compliance",
     "sys-financials": "Platform Financials & Billing",
     "credit-partners": "Credit Service Partners",
+    "system-helpdesk": "Global Support & Communication",
     settings: "System Settings",
   }
 
@@ -357,7 +358,7 @@ export function DashboardApp() {
             <div className="mx-auto max-w-[1800px]">
               {systemAdminView === "moderation" && <AdvancedModerationView />}
               {systemAdminView === "sys-financials" && <PlatformFinancialsView />}
-              {(systemAdminView === "credit-partners" || systemAdminView === "settings") && (
+              {(systemAdminView === "credit-partners" || systemAdminView === "system-helpdesk" || systemAdminView === "settings") && (
                 <SystemAdminView view={systemAdminView} />
               )}
             </div>
