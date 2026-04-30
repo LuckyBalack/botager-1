@@ -154,6 +154,47 @@ export function SettingsView({ onNavigate, onSystemSubscription }: SettingsViewP
           </CardContent>
         </Card>
 
+        {/* Communication Settings */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-slate-600" />
+              <CardTitle>Communication Templates</CardTitle>
+            </div>
+            <CardDescription>Configure message templates for English & Amharic</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Payment Reminder Template (SMS)</Label>
+                <p className="text-sm text-slate-500">Message sent 3 days before due date</p>
+              </div>
+              <Button variant="outline" size="sm">Edit</Button>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Lease Expiry Alert</Label>
+                <p className="text-sm text-slate-500">Sent 30 days before lease ends</p>
+              </div>
+              <Button variant="outline" size="sm">Edit</Button>
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Payment Grace Period</Label>
+                <p className="text-sm text-slate-500">Days before marking payment overdue</p>
+              </div>
+              <Input type="number" defaultValue="5" className="w-20" />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Restrict Staff Communications</Label>
+                <p className="text-sm text-slate-500">Limit which staff can send messages</p>
+              </div>
+              <Switch defaultChecked />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Security Settings */}
         <Card>
           <CardHeader>

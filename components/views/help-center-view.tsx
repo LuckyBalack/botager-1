@@ -147,6 +147,32 @@ export function HelpCenterView() {
           </ul>
         </div>
 
+        <div className="flex flex-col gap-4 rounded-xl border border-emerald-200 bg-emerald-50 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <h3 className="font-semibold text-slate-900">Marketplace Auto-Sync</h3>
+              <p className="text-xs text-slate-600">Keep your listings updated automatically</p>
+            </div>
+            <button type="button" className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700">
+              Enable
+            </button>
+          </div>
+          <p className="text-sm text-slate-700">Automatically sync property availability changes to the public marketplace. When a unit becomes occupied or vacant, the marketplace listing updates instantly.</p>
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-xl border border-blue-200 bg-blue-50 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1">
+              <h3 className="font-semibold text-slate-900">Sales & Support Team</h3>
+              <p className="text-xs text-slate-600">Connect with our specialists</p>
+            </div>
+            <button type="button" className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+              Schedule Call
+            </button>
+          </div>
+          <p className="text-sm text-slate-700">Our sales team can help you maximize your marketplace presence, and our support team is ready to assist with any technical issues. Available Monday-Saturday, 8 AM - 6 PM EAT.</p>
+        </div>
+
         <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6">
           <h3 className="font-semibold text-slate-900">Video Tutorials</h3>
           <ul className="flex flex-col gap-3">
