@@ -17,6 +17,10 @@ import { TenantsView } from "@/components/views/tenants-view"
 import { TenantDetailView } from "@/components/views/tenant-detail-view"
 import { PropertyDetailView } from "@/components/views/property-detail-view"
 import { AddTenantView } from "@/components/views/add-tenant-view"
+import { PublicListingDetailView } from "@/components/views/public-listing-detail-view"
+import { MaintenanceTicketDetailView } from "@/components/views/maintenance-ticket-detail-view"
+import { DigitalInvoiceDetailView } from "@/components/views/digital-invoice-detail-view"
+import { LeadDetailView } from "@/components/views/lead-detail-view"
 import { PortfolioDashboardView } from "@/components/views/portfolio-dashboard-view"
 import { BillingView } from "@/components/views/billing-view"
 import { MaintenanceView } from "@/components/views/maintenance-view"
@@ -37,7 +41,14 @@ import { WaitlistView } from "@/components/views/waitlist-view"
 import { BrokersView } from "@/components/views/brokers-view"
 import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
 import { SystemAdminView } from "@/components/views/system-admin-view"
-import { getPropertyById, getTenantById } from "@/lib/data"
+import {
+  getPropertyById,
+  getTenantById,
+  getMaintenanceTicketDetail,
+  getInvoiceDetail,
+  getLeadDetail,
+  getPublicListingDetail,
+} from "@/lib/data"
 import {
   Sheet,
   SheetContent,
@@ -48,8 +59,17 @@ import {
 import type { TenantViewKey } from "@/components/tenant-sidebar"
 import { useResponsive } from "@/hooks/use-responsive"
 
-type ActiveView = ViewKey | "detail" | "add-tenant" | "system-subscription" | "lease-settlement"
-type DetailKind = "tenant" | "property"
+type ActiveView =
+  | ViewKey
+  | "detail"
+  | "add-tenant"
+  | "system-subscription"
+  | "lease-settlement"
+  | "listing-detail"
+  | "maintenance-ticket-detail"
+  | "invoice-detail"
+  | "lead-detail"
+type DetailKind = "tenant" | "property" | "listing" | "maintenance-ticket" | "invoice" | "lead"
 type Selected = { kind: DetailKind; id: string } | null
 
 const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", string> = {
@@ -142,6 +162,26 @@ export function DashboardApp() {
     setActiveView("lease-settlement")
   }
 
+  const openListingDetail = (id: string) => {
+    setSelected({ kind: "listing", id })
+    setActiveView("listing-detail")
+  }
+
+  const openMaintenanceTicketDetail = (id: string) => {
+    setSelected({ kind: "maintenance-ticket", id })
+    setActiveView("maintenance-ticket-detail")
+  }
+
+  const openInvoiceDetail = (id: string) => {
+    setSelected({ kind: "invoice", id })
+    setActiveView("invoice-detail")
+  }
+
+  const openLeadDetail = (id: string) => {
+    setSelected({ kind: "lead", id })
+    setActiveView("lead-detail")
+  }
+
   const sidebarActive: ViewKey =
     activeView === "detail"
       ? selected?.kind === "tenant"
@@ -149,7 +189,15 @@ export function DashboardApp() {
         : "properties"
       : activeView === "add-tenant" || activeView === "lease-settlement"
         ? "tenants"
-        : activeView as ViewKey
+        : activeView === "listing-detail"
+          ? "marketplace"
+          : activeView === "maintenance-ticket-detail"
+            ? "maintenance"
+            : activeView === "invoice-detail"
+              ? "billing"
+              : activeView === "lead-detail"
+                ? "waitlist"
+                : activeView as ViewKey
 
   const headerTitle =
     activeView === "detail"
@@ -160,7 +208,15 @@ export function DashboardApp() {
         ? "Add Tenants"
         : activeView === "lease-settlement"
           ? "Final Lease Settlement"
-          : titleMap[activeView as keyof typeof titleMap]
+          : activeView === "listing-detail"
+            ? "Listing Details"
+            : activeView === "maintenance-ticket-detail"
+              ? "Maintenance Ticket"
+              : activeView === "invoice-detail"
+                ? "Invoice Details"
+                : activeView === "lead-detail"
+                  ? "Lead Details"
+                  : titleMap[activeView as keyof typeof titleMap]
 
   const showAddTenant =
     activeView === "dashboard" ||
@@ -174,6 +230,22 @@ export function DashboardApp() {
   const selectedProperty =
     activeView === "detail" && selected?.kind === "property"
       ? getPropertyById(selected.id)
+      : undefined
+  const selectedListing =
+    activeView === "listing-detail" && selected?.kind === "listing"
+      ? getPublicListingDetail(selected.id)
+      : undefined
+  const selectedMaintenanceTicket =
+    activeView === "maintenance-ticket-detail" && selected?.kind === "maintenance-ticket"
+      ? getMaintenanceTicketDetail(selected.id)
+      : undefined
+  const selectedInvoice =
+    activeView === "invoice-detail" && selected?.kind === "invoice"
+      ? getInvoiceDetail(selected.id)
+      : undefined
+  const selectedLead =
+    activeView === "lead-detail" && selected?.kind === "lead"
+      ? getLeadDetail(selected.id)
       : undefined
 
   // Tenant view titles
@@ -409,6 +481,24 @@ export function DashboardApp() {
               <LeaseSettlementView
                 tenant={selectedTenant}
                 onClose={() => navigate("tenants")}
+              />
+            )}
+            {activeView === "listing-detail" && selectedListing && (
+              <PublicListingDetailView
+                listing={selectedListing}
+                onBack={() => navigate("marketplace")}
+              />
+            )}
+            {activeView === "maintenance-ticket-detail" && selectedMaintenanceTicket && (
+              <MaintenanceTicketDetailView ticket={selectedMaintenanceTicket} />
+            )}
+            {activeView === "invoice-detail" && selectedInvoice && (
+              <DigitalInvoiceDetailView invoice={selectedInvoice} />
+            )}
+            {activeView === "lead-detail" && selectedLead && (
+              <LeadDetailView
+                lead={selectedLead}
+                onConvert={() => openAddTenant()}
               />
             )}
           </div>

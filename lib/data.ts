@@ -1391,3 +1391,334 @@ export function getAssetsForProperty(propertyId: string): PropertyAsset[] {
 export function getBrokerById(id: string): Broker | undefined {
   return brokers.find((b) => b.id === id)
 }
+
+// Maintenance Ticket Detail (Expanded)
+export type MaintenanceMessage = {
+  id: string
+  sender: string
+  senderRole: "manager" | "vendor" | "tenant"
+  avatar: string
+  message: string
+  timestamp: string
+  attachments?: {
+    name: string
+    url: string
+    type: "image" | "document"
+  }[]
+}
+
+export type MaintenanceTicketDetail = {
+  id: string
+  ticketNumber: string
+  roomNumber: string
+  tenantName: string
+  tenantPhone: string
+  priority: MaintenancePriority
+  status: MaintenanceStatus
+  title: string
+  description: string
+  dateSubmitted: string
+  vendor: {
+    name: string
+    phone: string
+  }
+  damagePhotos: string[]
+  messages: MaintenanceMessage[]
+}
+
+export const maintenanceTicketDetails: MaintenanceTicketDetail[] = [
+  {
+    id: "mnt-001",
+    ticketNumber: "MNT-102",
+    roomNumber: "310",
+    tenantName: "Getachew Temesgen",
+    tenantPhone: "+251 987 67 56 44",
+    priority: "High",
+    status: "In Progress",
+    title: "Water Leak in Ceiling",
+    description: "Significant water leak coming from ceiling in the main office area. Needs immediate attention to prevent further damage.",
+    dateSubmitted: "Apr 27, 2024",
+    vendor: {
+      name: "Addis Plumbing",
+      phone: "+251 911 55 44 33",
+    },
+    damagePhotos: ["/placeholder.svg", "/placeholder.svg"],
+    messages: [
+      {
+        id: "msg-1",
+        sender: "Getachew Temesgen",
+        senderRole: "tenant",
+        avatar: "/professional-headshot.png",
+        message: "Hi, the ceiling leak is getting worse. Is the plumber coming today?",
+        timestamp: "Apr 27, 2024 - 10:30 AM",
+      },
+      {
+        id: "msg-2",
+        sender: "Property Manager",
+        senderRole: "manager",
+        avatar: "/placeholder.svg",
+        message: "I've called Addis Plumbing and they're on their way. Should be there by 2 PM.",
+        timestamp: "Apr 27, 2024 - 10:45 AM",
+      },
+      {
+        id: "msg-3",
+        sender: "Addis Plumbing",
+        senderRole: "vendor",
+        avatar: "/placeholder.svg",
+        message: "Arrived and inspecting the damage. Will send invoice for parts needed shortly.",
+        timestamp: "Apr 27, 2024 - 2:15 PM",
+        attachments: [
+          {
+            name: "repair-estimate.pdf",
+            url: "#",
+            type: "document",
+          },
+        ],
+      },
+    ],
+  },
+]
+
+// Digital Invoice Detail
+export type InvoiceLineItem = {
+  description: string
+  quantity: number
+  unitPrice: string
+  total: string
+}
+
+export type InvoiceDetail = {
+  id: string
+  invoiceNumber: string
+  issueDate: string
+  dueDate: string
+  status: InvoiceStatus
+  tenantName: string
+  roomNumber: string
+  tenantEmail: string
+  buildingName: string
+  lineItems: InvoiceLineItem[]
+  subtotal: string
+  vat: string
+  withholding: string
+  grandTotal: string
+  paymentMethod?: string
+  transactionRef?: string
+}
+
+export const invoiceDetails: InvoiceDetail[] = [
+  {
+    id: "INV-001",
+    invoiceNumber: "INV-2024-001",
+    issueDate: "Apr 1, 2024",
+    dueDate: "May 5, 2024",
+    status: "Pending",
+    tenantName: "Getachew Temesgen",
+    roomNumber: "310",
+    tenantEmail: "gech.temu@gmail.com",
+    buildingName: "Abuki Bldg.",
+    lineItems: [
+      {
+        description: "Monthly Rent - April 2024",
+        quantity: 1,
+        unitPrice: "ETB 15,000",
+        total: "ETB 15,000",
+      },
+      {
+        description: "Utility Charges (Electricity)",
+        quantity: 1,
+        unitPrice: "ETB 325",
+        total: "ETB 325",
+      },
+      {
+        description: "Water & Maintenance",
+        quantity: 1,
+        unitPrice: "ETB 500",
+        total: "ETB 500",
+      },
+    ],
+    subtotal: "ETB 15,825",
+    vat: "ETB 2,373.75 (15%)",
+    withholding: "ETB 316.50 (2%)",
+    grandTotal: "ETB 18,198.75",
+  },
+  {
+    id: "INV-002",
+    invoiceNumber: "INV-2024-002",
+    issueDate: "Mar 1, 2024",
+    dueDate: "Apr 5, 2024",
+    status: "Paid",
+    tenantName: "Alemayehu Goshu",
+    roomNumber: "510",
+    tenantEmail: "alemayehu.g@gmail.com",
+    buildingName: "Abuki Bldg.",
+    lineItems: [
+      {
+        description: "Monthly Rent - March 2024",
+        quantity: 1,
+        unitPrice: "ETB 15,000",
+        total: "ETB 15,000",
+      },
+      {
+        description: "Utility Charges (Electricity)",
+        quantity: 1,
+        unitPrice: "ETB 280",
+        total: "ETB 280",
+      },
+    ],
+    subtotal: "ETB 15,280",
+    vat: "ETB 2,292 (15%)",
+    withholding: "ETB 305.60 (2%)",
+    grandTotal: "ETB 17,877.60",
+    paymentMethod: "Telebirr",
+    transactionRef: "TXN-20240405-001",
+  },
+]
+
+// Lead/Waitlist Detail
+export type FollowUpActivity = {
+  id: string
+  date: string
+  type: "call" | "email" | "tour" | "meeting"
+  notes: string
+  nextFollowUp?: string
+}
+
+export type LeadDetail = {
+  id: string
+  name: string
+  company: string
+  phone: string
+  email: string
+  warmthScore: "Cold" | "Warm" | "Hot" | "Highly Interested"
+  desiredSize: string
+  budgetRange: string
+  desiredFloor: string
+  desiredLocation: string
+  dateJoined: string
+  status: LeadStatus
+  notes: string
+  activities: FollowUpActivity[]
+}
+
+export const leadDetails: LeadDetail[] = [
+  {
+    id: "lead-001",
+    name: "Abebe Kebede",
+    company: "Kebede Tech Solutions",
+    phone: "+251 911 23 45 67",
+    email: "abebe.k@gmail.com",
+    warmthScore: "Hot",
+    desiredSize: "30 sq.m",
+    budgetRange: "ETB 12,000 - 18,000",
+    desiredFloor: "3rd Floor",
+    desiredLocation: "Bole",
+    dateJoined: "Apr 25, 2024",
+    status: "Interested",
+    notes: "Very interested in modern office space. Flexible with timeline. Mentioned budget can be stretched for the right space.",
+    activities: [
+      {
+        id: "act-1",
+        date: "Apr 28, 2024",
+        type: "tour",
+        notes: "Virtual tour of Room 302 - Showed great interest",
+        nextFollowUp: "May 1, 2024",
+      },
+      {
+        id: "act-2",
+        date: "Apr 25, 2024",
+        type: "call",
+        notes: "Initial inquiry call - explained requirements",
+      },
+    ],
+  },
+]
+
+// Public Listing Detail (Marketplace)
+export type PublicListingDetail = {
+  id: string
+  buildingName: string
+  roomNo: string
+  floor: string
+  size: string
+  monthlyPrice: string
+  location: string
+  subcity: string
+  description: string
+  amenities: string[]
+  buildingFeatures: string[]
+  images: string[]
+  reviews: {
+    rating: number
+    text: string
+    reviewerName: string
+    date: string
+    verified: boolean
+  }[]
+  ownerName: string
+  ownerPhone: string
+  includesUtilities: boolean
+  availableDate: string
+  spaceType: string
+}
+
+export const publicListingDetails: PublicListingDetail[] = [
+  {
+    id: "listing-001",
+    buildingName: "Abuki Bldg.",
+    roomNo: "302",
+    floor: "3rd",
+    size: "25 sq.m",
+    monthlyPrice: "ETB 12,000",
+    location: "Bole, Addis Ababa",
+    subcity: "Bole",
+    description: "Modern office space with excellent natural lighting and city views. Perfect for small teams or startups looking for a professional environment in the heart of Bole. Features dedicated parking and 24/7 security.",
+    amenities: ["WiFi", "Parking", "24/7 Security", "Elevator", "Cleaning Service"],
+    buildingFeatures: ["Backup Generator", "24/7 Security", "Elevator Access", "On-site Parking", "Coffee Service"],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    reviews: [
+      {
+        rating: 5,
+        text: "Excellent location and very responsive management. The building has great amenities and the security is top-notch.",
+        reviewerName: "Abebe K.",
+        date: "Mar 2024",
+        verified: true,
+      },
+      {
+        rating: 4,
+        text: "Clean and professional space. The generator backup is a lifesaver during power outages.",
+        reviewerName: "Sara M.",
+        date: "Feb 2024",
+        verified: true,
+      },
+      {
+        rating: 5,
+        text: "Perfect for our startup. Great community and networking opportunities.",
+        reviewerName: "Yonas T.",
+        date: "Jan 2024",
+        verified: true,
+      },
+    ],
+    ownerName: "Kebede Teshome",
+    ownerPhone: "+251 911 23 45 67",
+    includesUtilities: true,
+    availableDate: "May 1, 2024",
+    spaceType: "Office",
+  },
+]
+
+export function getMaintenanceTicketDetail(id: string): MaintenanceTicketDetail | undefined {
+  return maintenanceTicketDetails.find((t) => t.id === id)
+}
+
+export function getInvoiceDetail(id: string): InvoiceDetail | undefined {
+  return invoiceDetails.find((inv) => inv.id === id)
+}
+
+export function getLeadDetail(id: string): LeadDetail | undefined {
+  return leadDetails.find((lead) => lead.id === id)
+}
+
+export function getPublicListingDetail(id: string): PublicListingDetail | undefined {
+  return publicListingDetails.find((listing) => listing.id === id)
+}
