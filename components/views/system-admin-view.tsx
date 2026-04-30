@@ -17,6 +17,16 @@ import {
   MessageSquare,
   AlertTriangle,
   ArrowUpRight,
+  Download,
+  Search,
+  Save,
+  Database,
+  Trash2,
+  ShieldAlert,
+  Globe,
+  Languages,
+  ClipboardList,
+  Wrench,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -68,10 +78,14 @@ import {
   creditUtilizationData,
   supportTickets,
   systemBroadcasts,
+  auditLogs,
+  translationStrings,
   type WorkspaceSubmission,
   type CreditPartner,
   type SupportTicket,
   type BroadcastAudience,
+  type AuditLogRole,
+  type TranslationString,
 } from "@/lib/data"
 
 type SystemAdminViewProps = {
@@ -1230,28 +1244,516 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
     return <SystemHelpdeskView />
   }
 
-  // Settings view
+  // Settings view - Full System Configuration & Security
+  return <SystemSettingsView />
+}
+
+// System Settings View Component
+function SystemSettingsView() {
+  // Global Config State
+  const [vatRate, setVatRate] = useState("15")
+  const [whtRate, setWhtRate] = useState("2")
+  const [enforceVat, setEnforceVat] = useState(true)
+  const [gatewayFee, setGatewayFee] = useState("2.5")
+  const [serviceFee, setServiceFee] = useState("500")
+
+  // Localization State
+  const [translations, setTranslations] = useState<TranslationString[]>(translationStrings)
+  const [translationSearch, setTranslationSearch] = useState("")
+
+  // Audit Logs State
+  const [auditSearch, setAuditSearch] = useState("")
+  const [roleFilter, setRoleFilter] = useState<AuditLogRole | "All">("All")
+
+  // System Maintenance State
+  const [maintenanceMode, setMaintenanceMode] = useState(false)
+  const [backingUp, setBackingUp] = useState(false)
+  const [clearingCache, setClearingCache] = useState(false)
+
+  const handleSaveGlobalConfig = () => {
+    toast.success("Configuration Saved", {
+      description: "Global platform settings have been updated.",
+    })
+  }
+
+  const handleSaveTranslation = (id: string, newAmharic: string) => {
+    setTranslations(
+      translations.map((t) =>
+        t.id === id ? { ...t, amharicTranslation: newAmharic } : t
+      )
+    )
+    toast.success("Translation Saved", {
+      description: "The Amharic translation has been updated.",
+    })
+  }
+
+  const handleExportLogs = () => {
+    toast.success("Export Started", {
+      description: "Audit logs are being exported to CSV.",
+    })
+  }
+
+  const handleTriggerBackup = () => {
+    setBackingUp(true)
+    setTimeout(() => {
+      setBackingUp(false)
+      toast.success("Backup Complete", {
+        description: "Database backup has been created successfully.",
+      })
+    }, 3000)
+  }
+
+  const handleClearCache = () => {
+    setClearingCache(true)
+    setTimeout(() => {
+      setClearingCache(false)
+      toast.success("Cache Cleared", {
+        description: "Application cache has been cleared.",
+      })
+    }, 2000)
+  }
+
+  const handleMaintenanceToggle = (checked: boolean) => {
+    if (checked) {
+      // Show confirmation before enabling
+      toast.warning("Maintenance Mode", {
+        description: "This will lock out all Owners and Tenants. Are you sure?",
+        action: {
+          label: "Confirm",
+          onClick: () => {
+            setMaintenanceMode(true)
+            toast.info("Maintenance Mode Enabled", {
+              description: "All users except admins are now locked out.",
+            })
+          },
+        },
+      })
+    } else {
+      setMaintenanceMode(false)
+      toast.success("Maintenance Mode Disabled", {
+        description: "Platform is now accessible to all users.",
+      })
+    }
+  }
+
+  const filteredTranslations = translations.filter(
+    (t) =>
+      t.component.toLowerCase().includes(translationSearch.toLowerCase()) ||
+      t.englishString.toLowerCase().includes(translationSearch.toLowerCase())
+  )
+
+  const filteredAuditLogs = auditLogs.filter((log) => {
+    const matchesSearch =
+      log.userName.toLowerCase().includes(auditSearch.toLowerCase()) ||
+      log.action.toLowerCase().includes(auditSearch.toLowerCase()) ||
+      log.userEmail.toLowerCase().includes(auditSearch.toLowerCase())
+    const matchesRole = roleFilter === "All" || log.role === roleFilter
+    return matchesSearch && matchesRole
+  })
+
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">System Admin Settings</h1>
+        <h1 className="text-2xl font-bold text-slate-900">System Configuration & Security</h1>
         <p className="mt-1 text-slate-500">
-          Configure platform-wide settings and preferences.
+          Manage platform settings, localization, audit logs, and system maintenance.
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-slate-600" />
-            <CardTitle>Platform Configuration</CardTitle>
+      <Tabs defaultValue="global-config" className="w-full">
+        <TabsList className="w-full justify-start">
+          <TabsTrigger value="global-config" className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            Global Config
+          </TabsTrigger>
+          <TabsTrigger value="localization" className="flex items-center gap-2">
+            <Languages className="h-4 w-4" />
+            Localization
+          </TabsTrigger>
+          <TabsTrigger value="audit-logs" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Audit Logs
+          </TabsTrigger>
+          <TabsTrigger value="maintenance" className="flex items-center gap-2">
+            <Wrench className="h-4 w-4" />
+            System Maintenance
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Global Config Tab */}
+        <TabsContent value="global-config" className="mt-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Tax Settings Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-slate-600" />
+                  Tax Settings
+                </CardTitle>
+                <CardDescription>
+                  Configure Ethiopian VAT and Withholding Tax rates
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="vat-rate">Default VAT Rate (%)</Label>
+                    <Input
+                      id="vat-rate"
+                      type="number"
+                      value={vatRate}
+                      onChange={(e) => setVatRate(e.target.value)}
+                      placeholder="15"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="wht-rate">Default WHT Rate (%)</Label>
+                    <Input
+                      id="wht-rate"
+                      type="number"
+                      value={whtRate}
+                      onChange={(e) => setWhtRate(e.target.value)}
+                      placeholder="2"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                  <div>
+                    <p className="font-medium text-slate-900">Enforce VAT on all commercial leases</p>
+                    <p className="text-sm text-slate-500">Apply VAT platform-wide for commercial properties</p>
+                  </div>
+                  <Switch checked={enforceVat} onCheckedChange={setEnforceVat} />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Platform Monetization Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-slate-600" />
+                  Platform Monetization
+                </CardTitle>
+                <CardDescription>
+                  Configure platform fees and service charges
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="gateway-fee">Standard Gateway Transaction Fee (%)</Label>
+                  <Input
+                    id="gateway-fee"
+                    type="number"
+                    step="0.1"
+                    value={gatewayFee}
+                    onChange={(e) => setGatewayFee(e.target.value)}
+                    placeholder="2.5"
+                  />
+                  <p className="text-xs text-slate-500">Applied to all payment gateway transactions</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="service-fee">Nicomas Digital Service Fee (ETB/Month)</Label>
+                  <Input
+                    id="service-fee"
+                    type="number"
+                    value={serviceFee}
+                    onChange={(e) => setServiceFee(e.target.value)}
+                    placeholder="500"
+                  />
+                  <p className="text-xs text-slate-500">Monthly platform subscription fee per workspace</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <CardDescription>Manage system-wide settings</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-slate-500">System admin settings configuration coming soon.</p>
-        </CardContent>
-      </Card>
+
+          <div className="mt-6 flex justify-end">
+            <Button className="bg-orange-500 hover:bg-orange-600" onClick={handleSaveGlobalConfig}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Global Configurations
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* Localization Tab */}
+        <TabsContent value="localization" className="mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <CardTitle>UI String Translations</CardTitle>
+                  <CardDescription>Manage English to Amharic translations</CardDescription>
+                </div>
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    placeholder="Search translations..."
+                    value={translationSearch}
+                    onChange={(e) => setTranslationSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="font-semibold text-slate-700">Interface Component</TableHead>
+                    <TableHead className="font-semibold text-slate-700">English String</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Amharic Translation</TableHead>
+                    <TableHead className="font-semibold text-slate-700 w-[80px]">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTranslations.map((item) => (
+                    <TranslationRow
+                      key={item.id}
+                      item={item}
+                      onSave={handleSaveTranslation}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Audit Logs Tab */}
+        <TabsContent value="audit-logs" className="mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <CardTitle>Security Audit Logs</CardTitle>
+                  <CardDescription>Track all major platform actions for compliance</CardDescription>
+                </div>
+                <Button variant="outline" onClick={handleExportLogs}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Logs to CSV
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    placeholder="Search by user, action..."
+                    value={auditSearch}
+                    onChange={(e) => setAuditSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select
+                  value={roleFilter}
+                  onValueChange={(v) => setRoleFilter(v as AuditLogRole | "All")}
+                >
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="Filter by Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Roles</SelectItem>
+                    <SelectItem value="System Admin">System Admin</SelectItem>
+                    <SelectItem value="Building Owner">Building Owner</SelectItem>
+                    <SelectItem value="Tenant">Tenant</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="font-semibold text-slate-700">Timestamp</TableHead>
+                    <TableHead className="font-semibold text-slate-700">User</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Role</TableHead>
+                    <TableHead className="font-semibold text-slate-700">IP Address</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Action Taken</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAuditLogs.map((log) => (
+                    <TableRow key={log.id}>
+                      <TableCell className="text-slate-600 font-mono text-sm whitespace-nowrap">
+                        {log.timestamp}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-slate-900">{log.userName}</p>
+                          <p className="text-xs text-slate-500">{log.userEmail}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={`border-none ${
+                            log.role === "System Admin"
+                              ? "bg-purple-100 text-purple-700"
+                              : log.role === "Building Owner"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-slate-100 text-slate-700"
+                          }`}
+                        >
+                          {log.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <code className="rounded bg-slate-100 px-2 py-1 text-xs font-mono text-slate-600">
+                          {log.ipAddress}
+                        </code>
+                      </TableCell>
+                      <TableCell className="text-slate-600 max-w-[300px]">
+                        {log.action}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* System Maintenance Tab */}
+        <TabsContent value="maintenance" className="mt-6">
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Database Backup Card */}
+            <Card className="border-amber-200 bg-amber-50/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-800">
+                  <Database className="h-5 w-5" />
+                  Database Backup
+                </CardTitle>
+                <CardDescription className="text-amber-700">
+                  Manage database backups
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div className="rounded-lg bg-white p-3 border border-amber-200">
+                  <p className="text-sm text-slate-600">Last Backup</p>
+                  <p className="font-semibold text-slate-900">Today, 03:00 AM</p>
+                </div>
+                <Button
+                  className="w-full bg-slate-800 hover:bg-slate-900"
+                  onClick={handleTriggerBackup}
+                  disabled={backingUp}
+                >
+                  {backingUp ? (
+                    <>
+                      <Activity className="h-4 w-4 mr-2 animate-pulse" />
+                      Backing Up...
+                    </>
+                  ) : (
+                    <>
+                      <Database className="h-4 w-4 mr-2" />
+                      Trigger Manual DB Backup
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Cache Management Card */}
+            <Card className="border-amber-200 bg-amber-50/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-800">
+                  <Trash2 className="h-5 w-5" />
+                  Cache Management
+                </CardTitle>
+                <CardDescription className="text-amber-700">
+                  Clear application cache
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div className="rounded-lg bg-white p-3 border border-amber-200">
+                  <p className="text-sm text-slate-600">Cache Status</p>
+                  <p className="font-semibold text-slate-900">256 MB in use</p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full border-slate-300"
+                  onClick={handleClearCache}
+                  disabled={clearingCache}
+                >
+                  {clearingCache ? (
+                    <>
+                      <Activity className="h-4 w-4 mr-2 animate-pulse" />
+                      Clearing...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Clear Application Cache
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Maintenance Mode Card */}
+            <Card className="border-red-200 bg-red-50/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-800">
+                  <ShieldAlert className="h-5 w-5" />
+                  Maintenance Mode
+                </CardTitle>
+                <CardDescription className="text-red-700">
+                  Lock platform access
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div className="flex items-center justify-between rounded-lg bg-white p-3 border border-red-200">
+                  <div>
+                    <p className="font-medium text-slate-900">Enable Maintenance Mode</p>
+                  </div>
+                  <Switch
+                    checked={maintenanceMode}
+                    onCheckedChange={handleMaintenanceToggle}
+                    className="data-[state=checked]:bg-red-500"
+                  />
+                </div>
+                <p className="text-xs text-red-700">
+                  This will lock out all Owners and Tenants and display a maintenance screen. 
+                  Use only during major upgrades.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
+  )
+}
+
+// Translation Row Component with inline editing
+function TranslationRow({
+  item,
+  onSave,
+}: {
+  item: TranslationString
+  onSave: (id: string, newAmharic: string) => void
+}) {
+  const [amharicValue, setAmharicValue] = useState(item.amharicTranslation)
+
+  return (
+    <TableRow>
+      <TableCell className="text-slate-600">{item.component}</TableCell>
+      <TableCell className="font-medium text-slate-900">{item.englishString}</TableCell>
+      <TableCell>
+        <Input
+          value={amharicValue}
+          onChange={(e) => setAmharicValue(e.target.value)}
+          className="font-medium"
+          style={{ fontFamily: "Nyala, Abyssinica SIL, sans-serif" }}
+        />
+      </TableCell>
+      <TableCell>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-slate-600 hover:text-orange-600"
+          onClick={() => onSave(item.id, amharicValue)}
+        >
+          <Save className="h-4 w-4" />
+        </Button>
+      </TableCell>
+    </TableRow>
   )
 }

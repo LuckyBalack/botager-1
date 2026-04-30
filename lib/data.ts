@@ -2230,3 +2230,210 @@ export const systemBroadcasts: SystemBroadcast[] = [
     successRate: 100,
   },
 ]
+
+// Audit Logs (Step 5)
+export type AuditLogRole = "System Admin" | "Building Owner" | "Tenant"
+
+export type AuditLog = {
+  id: string
+  timestamp: string
+  userName: string
+  userEmail: string
+  role: AuditLogRole
+  ipAddress: string
+  action: string
+}
+
+export const auditLogs: AuditLog[] = [
+  {
+    id: "al-001",
+    timestamp: "Apr 30, 2024 14:45:22",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Updated Tax Config: VAT Rate changed to 15%",
+  },
+  {
+    id: "al-002",
+    timestamp: "Apr 30, 2024 14:32:10",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Approved Zefmesh Mall - Workspace Verification",
+  },
+  {
+    id: "al-003",
+    timestamp: "Apr 30, 2024 13:15:45",
+    userName: "Kebede Teshome",
+    userEmail: "kebede@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.45.112",
+    action: "Added new tenant: Hanna Girma to Unit 302",
+  },
+  {
+    id: "al-004",
+    timestamp: "Apr 30, 2024 12:50:33",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Deleted Tenant Record: ID TEN-2024-0089",
+  },
+  {
+    id: "al-005",
+    timestamp: "Apr 30, 2024 11:22:18",
+    userName: "Almaz Bekele",
+    userEmail: "almaz.b@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.67.89",
+    action: "Generated Monthly Financial Report - April 2024",
+  },
+  {
+    id: "al-006",
+    timestamp: "Apr 30, 2024 10:45:00",
+    userName: "Yohannes Haile",
+    userEmail: "yohannes.h@gmail.com",
+    role: "Tenant",
+    ipAddress: "196.188.33.201",
+    action: "Submitted Rent Payment: ETB 15,000 via Telebirr",
+  },
+  {
+    id: "al-007",
+    timestamp: "Apr 29, 2024 16:30:55",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Updated Platform Fee: Gateway Transaction Fee to 2.5%",
+  },
+  {
+    id: "al-008",
+    timestamp: "Apr 29, 2024 14:20:12",
+    userName: "Tigist Mengistu",
+    userEmail: "tigist.m@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.89.156",
+    action: "Updated Building Info: Sunshine Apartments",
+  },
+  {
+    id: "al-009",
+    timestamp: "Apr 29, 2024 11:05:30",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Triggered Manual DB Backup",
+  },
+  {
+    id: "al-010",
+    timestamp: "Apr 28, 2024 09:15:45",
+    userName: "Dawit Hailu",
+    userEmail: "dawit.h@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.55.78",
+    action: "Evicted Tenant: Samuel Tadesse from Unit 105",
+  },
+]
+
+// UI Translation Strings (Step 5)
+export type TranslationString = {
+  id: string
+  component: string
+  englishString: string
+  amharicTranslation: string
+}
+
+export const translationStrings: TranslationString[] = [
+  {
+    id: "ts-001",
+    component: "Sidebar Navigation",
+    englishString: "Dashboard",
+    amharicTranslation: "ዳሽቦርድ",
+  },
+  {
+    id: "ts-002",
+    component: "Sidebar Navigation",
+    englishString: "My Buildings",
+    amharicTranslation: "ህንፃዎቼ",
+  },
+  {
+    id: "ts-003",
+    component: "Sidebar Navigation",
+    englishString: "Tenants",
+    amharicTranslation: "ተከራዮች",
+  },
+  {
+    id: "ts-004",
+    component: "Sidebar Navigation",
+    englishString: "Payments",
+    amharicTranslation: "ክፍያዎች",
+  },
+  {
+    id: "ts-005",
+    component: "Sidebar Navigation",
+    englishString: "Settings",
+    amharicTranslation: "ቅንብሮች",
+  },
+  {
+    id: "ts-006",
+    component: "Button Labels",
+    englishString: "Submit",
+    amharicTranslation: "አስገባ",
+  },
+  {
+    id: "ts-007",
+    component: "Button Labels",
+    englishString: "Cancel",
+    amharicTranslation: "ሰርዝ",
+  },
+  {
+    id: "ts-008",
+    component: "Button Labels",
+    englishString: "Save Changes",
+    amharicTranslation: "ለውጦችን አስቀምጥ",
+  },
+  {
+    id: "ts-009",
+    component: "Form Labels",
+    englishString: "Full Name",
+    amharicTranslation: "ሙሉ ስም",
+  },
+  {
+    id: "ts-010",
+    component: "Form Labels",
+    englishString: "Phone Number",
+    amharicTranslation: "ስልክ ቁጥር",
+  },
+  {
+    id: "ts-011",
+    component: "Form Labels",
+    englishString: "Email Address",
+    amharicTranslation: "ኢሜይል አድራሻ",
+  },
+  {
+    id: "ts-012",
+    component: "Status Labels",
+    englishString: "Pending",
+    amharicTranslation: "በመጠባበቅ ላይ",
+  },
+  {
+    id: "ts-013",
+    component: "Status Labels",
+    englishString: "Approved",
+    amharicTranslation: "ጸድቋል",
+  },
+  {
+    id: "ts-014",
+    component: "Status Labels",
+    englishString: "Rejected",
+    amharicTranslation: "ውድቅ ተደርጓል",
+  },
+  {
+    id: "ts-015",
+    component: "Notifications",
+    englishString: "Payment Received",
+    amharicTranslation: "ክፍያ ደርሷል",
+  },
+]
