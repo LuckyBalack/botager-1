@@ -88,6 +88,7 @@ function SuccessBanner({
 export function AddTenantView() {
   const [submitted, setSubmitted] = useState(false)
   const [tradeLicense, setTradeLicense] = useState<File | null>(null)
+  const [prePaidMonths, setPrePaidMonths] = useState("1")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-dismiss the temporary success banner.
@@ -206,6 +207,20 @@ export function AddTenantView() {
                   {BUSINESS_TYPES.map((b) => (
                     <SelectItem key={b} value={b}>
                       {b}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FieldRow>
+            <FieldRow label="Pre-paid Months" htmlFor="prepaid-months">
+              <Select value={prePaidMonths} onValueChange={setPrePaidMonths}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select prepaid months" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 6, 12].map((m) => (
+                    <SelectItem key={m} value={m.toString()}>
+                      {m} {m === 1 ? "Month" : "Months"}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -50,8 +50,15 @@ export function UtilityTrackingView() {
     return Math.max(0, current - previous)
   }
 
+  // Tiered pricing: first 100 units at base rate, next 150 at 1.2x, above 250 at 1.5x
   const calculateTotalCost = (consumption: number, rate: number) => {
-    return consumption * rate
+    if (consumption <= 100) {
+      return consumption * rate
+    } else if (consumption <= 250) {
+      return (100 * rate) + ((consumption - 100) * rate * 1.2)
+    } else {
+      return (100 * rate) + (150 * rate * 1.2) + ((consumption - 250) * rate * 1.5)
+    }
   }
 
   const handleGenerateInvoices = () => {

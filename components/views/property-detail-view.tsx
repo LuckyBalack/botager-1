@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Camera, Check, AlertTriangle, Package, Store, Eye, EyeOff } from "lucide-react"
+import { Plus, Camera, Check, AlertTriangle, Package, Store, Eye, EyeOff, Zap, Droplet, Wind } from "lucide-react"
 import { LeaseAgreementCard } from "@/components/lease-agreement-card"
 import { LeasePill, PaymentPill } from "@/components/status-pills"
 import { getTenantById, getAssetsForProperty, type Property, type PropertyAsset, type AssetCondition } from "@/lib/data"
@@ -87,6 +87,11 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
   const [newAssetSerial, setNewAssetSerial] = useState("")
   const [newAssetCondition, setNewAssetCondition] = useState<AssetCondition>("New")
   const [listedOnMarketplace, setListedOnMarketplace] = useState(false)
+  const [linkedUtilities, setLinkedUtilities] = useState<{electricity: boolean, water: boolean, gas: boolean}>({
+    electricity: false,
+    water: false,
+    gas: false,
+  })
 
   const handleMarketplaceToggle = (checked: boolean) => {
     setListedOnMarketplace(checked)
@@ -130,6 +135,10 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
       <Tabs defaultValue="details" className="w-full">
         <TabsList className="mb-4 bg-slate-100">
           <TabsTrigger value="details" className="px-6">Property Details</TabsTrigger>
+          <TabsTrigger value="utilities" className="px-6">
+            <Zap className="mr-2 h-4 w-4" />
+            Utilities
+          </TabsTrigger>
           <TabsTrigger value="assets" className="px-6">
             <Package className="mr-2 h-4 w-4" />
             Assets ({assetsList.length})
@@ -239,6 +248,100 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
             >
               Extend Lease
             </button>
+          </div>
+        </TabsContent>
+
+        {/* Utilities Tab */}
+        <TabsContent value="utilities">
+          <div className="flex flex-col gap-6">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">Utility Meters & Tracking</h3>
+              <p className="text-sm text-slate-500 mt-1">Link utility accounts and enable automatic meter tracking</p>
+            </div>
+
+            {/* Utilities Grid */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {/* Electricity */}
+              <div className="flex flex-col gap-3 rounded-lg border border-slate-200 p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-yellow-100 p-2">
+                      <Zap className="h-5 w-5 text-yellow-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900">Electricity</h4>
+                      <p className="text-xs text-slate-500">Power meter tracking</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={linkedUtilities.electricity}
+                    onCheckedChange={(checked) => setLinkedUtilities({...linkedUtilities, electricity: checked})}
+                  />
+                </div>
+                {linkedUtilities.electricity && (
+                  <div className="mt-3 pt-3 border-t border-slate-200">
+                    <p className="text-xs text-slate-600 mb-2">Meter Number</p>
+                    <Input placeholder="ETH-ABC-123456" defaultValue="ETH-ABC-123456" className="text-sm" />
+                  </div>
+                )}
+              </div>
+
+              {/* Water */}
+              <div className="flex flex-col gap-3 rounded-lg border border-slate-200 p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-blue-100 p-2">
+                      <Droplet className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900">Water</h4>
+                      <p className="text-xs text-slate-500">Water meter tracking</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={linkedUtilities.water}
+                    onCheckedChange={(checked) => setLinkedUtilities({...linkedUtilities, water: checked})}
+                  />
+                </div>
+                {linkedUtilities.water && (
+                  <div className="mt-3 pt-3 border-t border-slate-200">
+                    <p className="text-xs text-slate-600 mb-2">Meter Number</p>
+                    <Input placeholder="WAT-DEF-789012" defaultValue="WAT-DEF-789012" className="text-sm" />
+                  </div>
+                )}
+              </div>
+
+              {/* Gas */}
+              <div className="flex flex-col gap-3 rounded-lg border border-slate-200 p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-orange-100 p-2">
+                      <Wind className="h-5 w-5 text-orange-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900">Gas</h4>
+                      <p className="text-xs text-slate-500">Gas meter tracking</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={linkedUtilities.gas}
+                    onCheckedChange={(checked) => setLinkedUtilities({...linkedUtilities, gas: checked})}
+                  />
+                </div>
+                {linkedUtilities.gas && (
+                  <div className="mt-3 pt-3 border-t border-slate-200">
+                    <p className="text-xs text-slate-600 mb-2">Meter Number</p>
+                    <Input placeholder="GAS-GHI-345678" defaultValue="GAS-GHI-345678" className="text-sm" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <p className="text-sm text-blue-800">
+                When utilities are linked, tenants and managers will see meter readings and usage charges in the billing portal.
+              </p>
+            </div>
           </div>
         </TabsContent>
 

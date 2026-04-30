@@ -21,6 +21,9 @@ import { PublicListingDetailView } from "@/components/views/public-listing-detai
 import { MaintenanceTicketDetailView } from "@/components/views/maintenance-ticket-detail-view"
 import { DigitalInvoiceDetailView } from "@/components/views/digital-invoice-detail-view"
 import { LeadDetailView } from "@/components/views/lead-detail-view"
+import { BrokerDetailView } from "@/components/views/broker-detail-view"
+import { VendorDetailView } from "@/components/views/vendor-detail-view"
+import { BuildingVerificationView } from "@/components/views/building-verification-view"
 import { PortfolioDashboardView } from "@/components/views/portfolio-dashboard-view"
 import { BillingView } from "@/components/views/billing-view"
 import { MaintenanceView } from "@/components/views/maintenance-view"
@@ -48,6 +51,9 @@ import {
   getInvoiceDetail,
   getLeadDetail,
   getPublicListingDetail,
+  getBrokerDetail,
+  getVendorDetail,
+  getBuildingVerification,
 } from "@/lib/data"
 import {
   Sheet,
@@ -69,7 +75,10 @@ type ActiveView =
   | "maintenance-ticket-detail"
   | "invoice-detail"
   | "lead-detail"
-type DetailKind = "tenant" | "property" | "listing" | "maintenance-ticket" | "invoice" | "lead"
+  | "broker-detail"
+  | "vendor-detail"
+  | "building-verification"
+type DetailKind = "tenant" | "property" | "listing" | "maintenance-ticket" | "invoice" | "lead" | "broker" | "vendor" | "building"
 type Selected = { kind: DetailKind; id: string } | null
 
 const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", string> = {
@@ -182,6 +191,21 @@ export function DashboardApp() {
     setActiveView("lead-detail")
   }
 
+  const openBrokerDetail = (id: string) => {
+    setSelected({ kind: "broker", id })
+    setActiveView("broker-detail")
+  }
+
+  const openVendorDetail = (id: string) => {
+    setSelected({ kind: "vendor", id })
+    setActiveView("vendor-detail")
+  }
+
+  const openBuildingVerification = (id: string) => {
+    setSelected({ kind: "building", id })
+    setActiveView("building-verification")
+  }
+
   const sidebarActive: ViewKey =
     activeView === "detail"
       ? selected?.kind === "tenant"
@@ -197,7 +221,13 @@ export function DashboardApp() {
               ? "billing"
               : activeView === "lead-detail"
                 ? "waitlist"
-                : activeView as ViewKey
+                : activeView === "broker-detail"
+                  ? "brokers"
+                  : activeView === "vendor-detail"
+                    ? "vendors"
+                    : activeView === "building-verification"
+                      ? "dashboard"
+                      : activeView as ViewKey
 
   const headerTitle =
     activeView === "detail"
@@ -216,7 +246,13 @@ export function DashboardApp() {
                 ? "Invoice Details"
                 : activeView === "lead-detail"
                   ? "Lead Details"
-                  : titleMap[activeView as keyof typeof titleMap]
+                  : activeView === "broker-detail"
+                    ? "Broker Profile"
+                    : activeView === "vendor-detail"
+                      ? "Vendor Profile"
+                      : activeView === "building-verification"
+                        ? "Building Verification"
+                        : titleMap[activeView as keyof typeof titleMap]
 
   const showAddTenant =
     activeView === "dashboard" ||
@@ -246,6 +282,18 @@ export function DashboardApp() {
   const selectedLead =
     activeView === "lead-detail" && selected?.kind === "lead"
       ? getLeadDetail(selected.id)
+      : undefined
+  const selectedBroker =
+    activeView === "broker-detail" && selected?.kind === "broker"
+      ? getBrokerDetail(selected.id)
+      : undefined
+  const selectedVendor =
+    activeView === "vendor-detail" && selected?.kind === "vendor"
+      ? getVendorDetail(selected.id)
+      : undefined
+  const selectedBuildingVerification =
+    activeView === "building-verification" && selected?.kind === "building"
+      ? getBuildingVerification(selected.id)
       : undefined
 
   // Tenant view titles
@@ -499,6 +547,24 @@ export function DashboardApp() {
               <LeadDetailView
                 lead={selectedLead}
                 onConvert={() => openAddTenant()}
+              />
+            )}
+            {activeView === "broker-detail" && selectedBroker && (
+              <BrokerDetailView
+                broker={selectedBroker}
+                onBack={() => navigate("brokers")}
+              />
+            )}
+            {activeView === "vendor-detail" && selectedVendor && (
+              <VendorDetailView
+                vendor={selectedVendor}
+                onBack={() => navigate("vendors")}
+              />
+            )}
+            {activeView === "building-verification" && selectedBuildingVerification && (
+              <BuildingVerificationView
+                building={selectedBuildingVerification}
+                onBack={() => navigate("dashboard")}
               />
             )}
           </div>

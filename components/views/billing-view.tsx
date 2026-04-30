@@ -53,6 +53,27 @@ function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
   )
 }
 
+function UrgencyBadge({ daysOverdue }: { daysOverdue: number }) {
+  if (daysOverdue <= 0) return null
+  
+  let variant = "bg-yellow-100 text-yellow-800"
+  let label = `${daysOverdue}d overdue`
+  
+  if (daysOverdue >= 30) {
+    variant = "bg-red-100 text-red-800"
+    label = `${daysOverdue}d overdue - CRITICAL`
+  } else if (daysOverdue >= 14) {
+    variant = "bg-orange-100 text-orange-800"
+    label = `${daysOverdue}d overdue - HIGH`
+  }
+  
+  return (
+    <Badge className={`${variant} border-none font-medium text-xs`}>
+      {label}
+    </Badge>
+  )
+}
+
 function CreditStatusBadge({
   status,
 }: {
@@ -81,6 +102,14 @@ const paymentMethods = [
     description: "Manual payment",
   },
 ]
+
+function getDaysOverdue(dueDateStr: string): number {
+  const today = new Date()
+  const dueDate = new Date(dueDateStr)
+  const diffTime = today.getTime() - dueDate.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays > 0 ? diffDays : 0
+}
 
 export function BillingView() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
@@ -202,6 +231,9 @@ export function BillingView() {
                     Status
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700">
+                    Urgency
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700">
                     Actions
                   </TableHead>
                 </TableRow>
@@ -226,6 +258,9 @@ export function BillingView() {
                     </TableCell>
                     <TableCell>
                       <InvoiceStatusBadge status={invoice.status} />
+                    </TableCell>
+                    <TableCell>
+                      <UrgencyBadge daysOverdue={getDaysOverdue(invoice.dueDate)} />
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
