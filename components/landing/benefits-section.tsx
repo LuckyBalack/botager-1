@@ -9,10 +9,10 @@ type BenefitsSectionProps = {
 export function BenefitsSection({ onGetStarted }: BenefitsSectionProps) {
   return (
     <section className="bg-orange-50/70 py-24">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 lg:grid-cols-2 lg:px-10">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 lg:grid-cols-2 lg:px-10 2xl:max-w-[1800px]">
         <div className="flex flex-col gap-6">
           <span className="text-sm font-medium text-slate-500">Benefits</span>
-          <h2 className="text-balance text-4xl font-extrabold leading-tight tracking-tight text-slate-900">
+          <h2 className="text-balance text-4xl font-extrabold leading-tight tracking-tight text-slate-900 lg:text-5xl 2xl:text-5xl">
             Why Choose Mamulka for Your Property Management Needs
           </h2>
           <p className="max-w-lg text-pretty text-base leading-relaxed text-slate-600">

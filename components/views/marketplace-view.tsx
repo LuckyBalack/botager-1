@@ -163,7 +163,7 @@ export function MarketplaceView({
     <div className="min-h-screen bg-slate-50">
       {/* Public Header */}
       <header className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 2xl:max-w-[1800px]">
           <div className="flex items-center gap-2">
             <Building2 className="h-6 w-6 text-orange-500 sm:h-8 sm:w-8" />
             <div>
@@ -243,7 +243,7 @@ export function MarketplaceView({
 
       {/* Advanced Filters Bar */}
       <section className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 sm:gap-4">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 sm:gap-4 2xl:max-w-[1800px]">
           <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 sm:gap-2 sm:text-sm">
             <SlidersHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="hidden sm:inline">Filters:</span>
@@ -498,7 +498,7 @@ export function MarketplaceView({
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white px-6 py-8">
-        <div className="mx-auto max-w-7xl text-center text-sm text-slate-500">
+        <div className="mx-auto max-w-7xl text-center text-sm text-slate-500 2xl:max-w-[1800px]">
           <p>&copy; 2024 Mamulka WRM. All rights reserved.</p>
         </div>
       </footer>
