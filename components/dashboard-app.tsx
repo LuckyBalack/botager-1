@@ -44,6 +44,8 @@ import { WaitlistView } from "@/components/views/waitlist-view"
 import { BrokersView } from "@/components/views/brokers-view"
 import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
 import { SystemAdminView } from "@/components/views/system-admin-view"
+import { PlatformFinancialsView } from "@/components/views/platform-financials-view"
+import { AdvancedModerationView } from "@/components/views/advanced-moderation-view"
 import {
   getPropertyById,
   getTenantById,
@@ -306,7 +308,8 @@ export function DashboardApp() {
 
   // System Admin View Titles
   const systemAdminTitleMap: Record<SystemAdminViewKey, string> = {
-    moderation: "Workspace Verifications",
+    moderation: "Advanced Moderation & Compliance",
+    "sys-financials": "Platform Financials & Billing",
     "credit-partners": "Credit Service Partners",
     settings: "System Settings",
   }
@@ -352,7 +355,11 @@ export function DashboardApp() {
           {/* TV max-width container */}
           <main className="flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 2xl:px-12 2xl:py-10">
             <div className="mx-auto max-w-[1800px]">
-              <SystemAdminView view={systemAdminView} />
+              {systemAdminView === "moderation" && <AdvancedModerationView />}
+              {systemAdminView === "sys-financials" && <PlatformFinancialsView />}
+              {(systemAdminView === "credit-partners" || systemAdminView === "settings") && (
+                <SystemAdminView view={systemAdminView} />
+              )}
             </div>
           </main>
         </div>
