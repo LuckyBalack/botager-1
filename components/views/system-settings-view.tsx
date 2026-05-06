@@ -13,6 +13,7 @@ import {
   Search,
   Save,
   Calendar,
+  Plus,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -560,6 +561,205 @@ function SystemMaintenanceTab() {
   )
 }
 
+// User Management Tab
+function UserManagementTab() {
+  const [adminUsers, setAdminUsers] = useState([
+    { id: "admin-1", name: "Abebe Assefa", email: "abebe@wrm.com", role: "Super Admin", status: "Active", joinDate: "Jan 15, 2025" },
+    { id: "admin-2", name: "Marta Kebede", email: "marta@wrm.com", role: "Admin", status: "Active", joinDate: "Feb 20, 2025" },
+    { id: "admin-3", name: "Girma Tesfaye", email: "girma@wrm.com", role: "Admin", status: "Active", joinDate: "Mar 10, 2025" },
+  ])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newAdminEmail, setNewAdminEmail] = useState("")
+  const [newAdminRole, setNewAdminRole] = useState("Admin")
+
+  const handleAddAdmin = () => {
+    if (!newAdminEmail.trim()) {
+      toast.error("Email Required", { description: "Please enter an email address." })
+      return
+    }
+    setAdminUsers([
+      ...adminUsers,
+      {
+        id: `admin-${Date.now()}`,
+        name: "New Administrator",
+        email: newAdminEmail,
+        role: newAdminRole,
+        status: "Pending",
+        joinDate: new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
+      },
+    ])
+    toast.success("Admin Added", {
+      description: `Invitation sent to ${newAdminEmail}. They will appear active after confirming.`,
+    })
+    setNewAdminEmail("")
+    setNewAdminRole("Admin")
+    setShowAddForm(false)
+  }
+
+  const handleRevokeAdmin = (id: string) => {
+    setAdminUsers(adminUsers.filter((a) => a.id !== id))
+    toast.warning("Admin Revoked", { description: "The admin access has been removed." })
+  }
+
+  const filteredAdmins = adminUsers.filter(
+    (admin) =>
+      admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      admin.email.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  return (
+    <div className="space-y-6">
+      {/* Admin Users Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>System Administrators</CardTitle>
+            <CardDescription>Manage access and permissions for platform administrators</CardDescription>
+          </div>
+          <Button onClick={() => setShowAddForm(!showAddForm)} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Admin
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {showAddForm && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="admin-email">Email Address</Label>
+                <Input
+                  id="admin-email"
+                  type="email"
+                  placeholder="admin@example.com"
+                  value={newAdminEmail}
+                  onChange={(e) => setNewAdminEmail(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="admin-role">Admin Role</Label>
+                <Select value={newAdminRole} onValueChange={setNewAdminRole}>
+                  <SelectTrigger id="admin-role">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Super Admin">Super Admin</SelectItem>
+                    <SelectItem value="Admin">Admin</SelectItem>
+                    <SelectItem value="Moderator">Moderator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleAddAdmin} className="bg-blue-600 hover:bg-blue-700">
+                  Send Invitation
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowAddForm(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Search */}
+          <div className="flex gap-2">
+            <Search className="h-5 w-5 text-slate-400 mt-2" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1"
+            />
+          </div>
+
+          {/* Admin Table */}
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50">
+                  <TableHead className="font-semibold text-slate-700">Name</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Email</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Role</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Status</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Join Date</TableHead>
+                  <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAdmins.map((admin) => (
+                  <TableRow key={admin.id} className="hover:bg-slate-50">
+                    <TableCell className="font-medium text-slate-900">{admin.name}</TableCell>
+                    <TableCell className="text-slate-600">{admin.email}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-slate-50">
+                        {admin.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={`border-none text-xs ${
+                          admin.status === "Active"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {admin.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-slate-600">{admin.joinDate}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleRevokeAdmin(admin.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* API Keys Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>API Keys & Integrations</CardTitle>
+          <CardDescription>Manage API keys for third-party integrations</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border border-slate-200 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-slate-900">Payment Gateway API Key</p>
+                <p className="text-sm text-slate-600">Chapa Integration</p>
+              </div>
+              <Badge className="bg-emerald-100 text-emerald-700 border-none">Active</Badge>
+            </div>
+            <Button size="sm" variant="outline" className="mt-3 w-full">
+              Rotate Key
+            </Button>
+          </div>
+          <div className="rounded-lg border border-slate-200 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-slate-900">SMS Gateway API Key</p>
+                <p className="text-sm text-slate-600">Telebirr Integration</p>
+              </div>
+              <Badge className="bg-emerald-100 text-emerald-700 border-none">Active</Badge>
+            </div>
+            <Button size="sm" variant="outline" className="mt-3 w-full">
+              Rotate Key
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
 // Main System Settings View Component
 export function SystemSettingsView() {
   return (
@@ -574,7 +774,7 @@ export function SystemSettingsView() {
 
       {/* Tabs */}
       <Tabs defaultValue="global-config" className="w-full">
-        <TabsList className="w-full grid gap-0 sm:w-auto sm:grid-cols-4">
+        <TabsList className="w-full grid gap-0 sm:w-auto sm:grid-cols-5">
           <TabsTrigger value="global-config" className="gap-2">
             <Globe className="h-4 w-4" />
             <span className="hidden sm:inline">Global Config</span>
@@ -586,6 +786,10 @@ export function SystemSettingsView() {
           <TabsTrigger value="audit-logs" className="gap-2">
             <ClipboardList className="h-4 w-4" />
             <span className="hidden sm:inline">Audit Logs</span>
+          </TabsTrigger>
+          <TabsTrigger value="user-management" className="gap-2">
+            <Globe className="h-4 w-4" />
+            <span className="hidden sm:inline">User Management</span>
           </TabsTrigger>
           <TabsTrigger value="maintenance" className="gap-2">
             <Wrench className="h-4 w-4" />
@@ -603,6 +807,10 @@ export function SystemSettingsView() {
 
         <TabsContent value="audit-logs" className="mt-6">
           <AuditLogsTab />
+        </TabsContent>
+
+        <TabsContent value="user-management" className="mt-6">
+          <UserManagementTab />
         </TabsContent>
 
         <TabsContent value="maintenance" className="mt-6">

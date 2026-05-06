@@ -27,6 +27,7 @@ import {
   Languages,
   ClipboardList,
   Wrench,
+  User,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -71,6 +72,7 @@ import { CreditTransactionMonitoring } from "@/components/credit-transaction-mon
 import { CreditPartnerSLA } from "@/components/credit-partner-sla"
 import { SystemUserManagement } from "@/components/system-user-management"
 import { SystemSecuritySettings } from "@/components/system-security-settings"
+import { SystemSettingsView as StandaloneSystemSettingsView } from "@/components/views/system-settings-view"
 import { HelpdeskTicketFilters } from "@/components/helpdesk-ticket-filters"
 import { HelpdeskEscalation } from "@/components/helpdesk-escalation"
 import { HelpdeskResponseTemplates } from "@/components/helpdesk-response-templates"
@@ -662,6 +664,13 @@ function CreditPartnersDeepView() {
 }
 
 // Support & Helpdesk View
+const supportStaff = [
+  { id: "staff-1", name: "Abebe Assefa", role: "Senior Support Lead", avatar: "AA", status: "Available" },
+  { id: "staff-2", name: "Marta Kebede", role: "Support Specialist", avatar: "MK", status: "Busy" },
+  { id: "staff-3", name: "Girma Tesfaye", role: "Support Agent", avatar: "GT", status: "Available" },
+  { id: "staff-4", name: "Selam Tewodros", role: "Technical Support", avatar: "ST", status: "Away" },
+]
+
 function SystemHelpdeskView() {
   const [tickets, setTickets] = useState(supportTickets)
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(tickets[0] || null)
@@ -674,6 +683,8 @@ function SystemHelpdeskView() {
   })
   const [broadcastSubject, setBroadcastSubject] = useState("")
   const [broadcastBody, setBroadcastBody] = useState("")
+  const [showAnalytics, setShowAnalytics] = useState(false)
+  const [assignedTickets, setAssignedTickets] = useState<Record<string, string>>({})
 
   const handleSendReply = () => {
     if (!selectedTicket || !replyText.trim()) return
@@ -735,6 +746,18 @@ function SystemHelpdeskView() {
     })
   }
 
+  const handleAssignTicket = (staffId: string) => {
+    if (!selectedTicket) return
+    setAssignedTickets({
+      ...assignedTickets,
+      [selectedTicket.id]: staffId,
+    })
+    const staffName = supportStaff.find((s) => s.id === staffId)?.name || "Support Staff"
+    toast.success("Ticket Assigned", {
+      description: `Ticket assigned to ${staffName}. They will be notified.`,
+    })
+  }
+
   const handleSendBroadcast = () => {
     if (!broadcastSubject.trim() || !broadcastBody.trim()) {
       toast.error("Missing Fields", {
@@ -773,6 +796,7 @@ function SystemHelpdeskView() {
           <TabsTrigger value="escalation">Escalation Queue</TabsTrigger>
           <TabsTrigger value="templates">Response Templates</TabsTrigger>
           <TabsTrigger value="system-broadcasts">System Broadcasts</TabsTrigger>
+          <TabsTrigger value="analytics">Performance Analytics</TabsTrigger>
         </TabsList>
 
         {/* Owner Tickets Tab */}
@@ -831,33 +855,78 @@ function SystemHelpdeskView() {
                     <>
                       {/* Ticket Header */}
                       <div className="border-b border-slate-200 p-4">
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between mb-4">
                           <div>
                             <h3 className="font-semibold text-slate-900">{selectedTicket.subject}</h3>
                             <p className="text-sm text-slate-500">
                               From: {selectedTicket.ownerName} ({selectedTicket.ownerEmail})
                             </p>
+                            {assignedTickets[selectedTicket.id] && (
+                              <p className="text-xs text-slate-600 mt-2">
+                                Assigned to:{" "}
+                                <span className="font-medium">
+                                  {supportStaff.find((s) => s.id === assignedTickets[selectedTicket.id])?.name}
+                                </span>
+                              </p>
+                            )}
                           </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleEscalate}
-                              disabled={selectedTicket.status === "Escalated" || selectedTicket.status === "Resolved"}
-                            >
-                              <ArrowUpRight className="h-4 w-4 mr-1" />
-                              Escalate to Tech Team
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-emerald-500 hover:bg-emerald-600"
-                              onClick={handleMarkResolved}
-                              disabled={selectedTicket.status === "Resolved"}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Mark as Resolved
-                            </Button>
-                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <User className="h-4 w-4 mr-1" />
+                                {assignedTickets[selectedTicket.id] ? "Reassign" : "Assign To"}
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                              {supportStaff.map((staff) => (
+                                <DropdownMenuItem
+                                  key={staff.id}
+                                  onClick={() => handleAssignTicket(staff.id)}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium">
+                                      {staff.avatar}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-medium">{staff.name}</span>
+                                      <span className="text-xs text-slate-500">{staff.role}</span>
+                                    </div>
+                                    <Badge
+                                      className={`ml-2 text-xs border-none ${
+                                        staff.status === "Available"
+                                          ? "bg-emerald-100 text-emerald-700"
+                                          : staff.status === "Busy"
+                                            ? "bg-amber-100 text-amber-700"
+                                            : "bg-slate-100 text-slate-700"
+                                      }`}
+                                    >
+                                      {staff.status}
+                                    </Badge>
+                                  </div>
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleEscalate}
+                            disabled={selectedTicket.status === "Escalated" || selectedTicket.status === "Resolved"}
+                          >
+                            <ArrowUpRight className="h-4 w-4 mr-1" />
+                            Escalate
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-emerald-500 hover:bg-emerald-600"
+                            onClick={handleMarkResolved}
+                            disabled={selectedTicket.status === "Resolved"}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Resolve
+                          </Button>
                         </div>
                       </div>
 
@@ -1093,6 +1162,148 @@ function SystemHelpdeskView() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Performance Analytics Tab */}
+        <TabsContent value="analytics" className="mt-6 space-y-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">Total Tickets (This Month)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-slate-900">{tickets.length}</div>
+                <p className="mt-2 text-sm text-slate-600">
+                  {tickets.filter((t) => t.status === "Resolved").length} resolved
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">Avg Resolution Time</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-slate-900">4.2 hrs</div>
+                <p className="mt-2 text-sm text-emerald-600">↓ 12% from last month</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">Customer Satisfaction</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-slate-900">4.8/5</div>
+                <p className="mt-2 text-sm text-slate-600">Based on 156 ratings</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">Active Escalations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-red-600">
+                  {tickets.filter((t) => t.status === "Escalated").length}
+                </div>
+                <p className="mt-2 text-sm text-red-600">Requiring immediate attention</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Support Staff Performance</CardTitle>
+              <CardDescription>Individual metrics for support team members</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="font-semibold text-slate-700">Staff Member</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Role</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Tickets Handled</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Avg Resolution Time</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Satisfaction Rating</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {supportStaff.map((staff) => (
+                    <TableRow key={staff.id} className="hover:bg-slate-50">
+                      <TableCell className="font-medium text-slate-900">{staff.name}</TableCell>
+                      <TableCell className="text-slate-700">{staff.role}</TableCell>
+                      <TableCell className="text-slate-700">
+                        {Math.floor(Math.random() * 15) + 8}
+                      </TableCell>
+                      <TableCell className="text-slate-700">
+                        {(Math.random() * 3 + 2).toFixed(1)} hrs
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium text-slate-900">
+                            {(Math.random() * 0.5 + 4.3).toFixed(1)}
+                          </span>
+                          <span className="text-xs text-slate-500">/5</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={`border-none text-xs ${
+                            staff.status === "Available"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : staff.status === "Busy"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-slate-100 text-slate-700"
+                          }`}
+                        >
+                          {staff.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Ticket Status Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-4">
+                {[
+                  { status: "New", count: tickets.filter((t) => t.status === "New").length, color: "bg-blue-500" },
+                  { status: "Open", count: tickets.filter((t) => t.status === "Open").length, color: "bg-amber-500" },
+                  {
+                    status: "Escalated",
+                    count: tickets.filter((t) => t.status === "Escalated").length,
+                    color: "bg-red-500",
+                  },
+                  {
+                    status: "Resolved",
+                    count: tickets.filter((t) => t.status === "Resolved").length,
+                    color: "bg-emerald-500",
+                  },
+                ].map((item) => (
+                  <div key={item.status}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-900">{item.status}</span>
+                      <span className="text-sm font-semibold text-slate-700">{item.count}</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-slate-200">
+                      <div
+                        className={`h-2 rounded-full ${item.color}`}
+                        style={{ width: `${(item.count / tickets.length) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
@@ -1378,499 +1589,7 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
   }
 
   // Settings view - Full System Configuration & Security
-  return <SystemSettingsView />
-}
-
-// System Settings View Component
-function SystemSettingsView() {
-  // Global Config State
-  const [vatRate, setVatRate] = useState("15")
-  const [whtRate, setWhtRate] = useState("2")
-  const [enforceVat, setEnforceVat] = useState(true)
-  const [gatewayFee, setGatewayFee] = useState("2.5")
-  const [serviceFee, setServiceFee] = useState("500")
-
-  // Localization State
-  const [translations, setTranslations] = useState<TranslationString[]>(translationStrings)
-  const [translationSearch, setTranslationSearch] = useState("")
-
-  // Audit Logs State
-  const [auditSearch, setAuditSearch] = useState("")
-  const [roleFilter, setRoleFilter] = useState<AuditLogRole | "All">("All")
-
-  // System Maintenance State
-  const [maintenanceMode, setMaintenanceMode] = useState(false)
-  const [backingUp, setBackingUp] = useState(false)
-  const [clearingCache, setClearingCache] = useState(false)
-
-  const handleSaveGlobalConfig = () => {
-    toast.success("Configuration Saved", {
-      description: "Global platform settings have been updated.",
-    })
-  }
-
-  const handleSaveTranslation = (id: string, newAmharic: string) => {
-    setTranslations(
-      translations.map((t) =>
-        t.id === id ? { ...t, amharicTranslation: newAmharic } : t
-      )
-    )
-    toast.success("Translation Saved", {
-      description: "The Amharic translation has been updated.",
-    })
-  }
-
-  const handleExportLogs = () => {
-    toast.success("Export Started", {
-      description: "Audit logs are being exported to CSV.",
-    })
-  }
-
-  const handleTriggerBackup = () => {
-    setBackingUp(true)
-    setTimeout(() => {
-      setBackingUp(false)
-      toast.success("Backup Complete", {
-        description: "Database backup has been created successfully.",
-      })
-    }, 3000)
-  }
-
-  const handleClearCache = () => {
-    setClearingCache(true)
-    setTimeout(() => {
-      setClearingCache(false)
-      toast.success("Cache Cleared", {
-        description: "Application cache has been cleared.",
-      })
-    }, 2000)
-  }
-
-  const handleMaintenanceToggle = (checked: boolean) => {
-    if (checked) {
-      // Show confirmation before enabling
-      toast.warning("Maintenance Mode", {
-        description: "This will lock out all Owners and Tenants. Are you sure?",
-        action: {
-          label: "Confirm",
-          onClick: () => {
-            setMaintenanceMode(true)
-            toast.info("Maintenance Mode Enabled", {
-              description: "All users except admins are now locked out.",
-            })
-          },
-        },
-      })
-    } else {
-      setMaintenanceMode(false)
-      toast.success("Maintenance Mode Disabled", {
-        description: "Platform is now accessible to all users.",
-      })
-    }
-  }
-
-  const filteredTranslations = translations.filter(
-    (t) =>
-      t.component.toLowerCase().includes(translationSearch.toLowerCase()) ||
-      t.englishString.toLowerCase().includes(translationSearch.toLowerCase())
-  )
-
-  const filteredAuditLogs = auditLogs.filter((log) => {
-    const matchesSearch =
-      log.userName.toLowerCase().includes(auditSearch.toLowerCase()) ||
-      log.action.toLowerCase().includes(auditSearch.toLowerCase()) ||
-      log.userEmail.toLowerCase().includes(auditSearch.toLowerCase())
-    const matchesRole = roleFilter === "All" || log.role === roleFilter
-    return matchesSearch && matchesRole
-  })
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">System Configuration & Security</h1>
-        <p className="mt-1 text-slate-500">
-          Manage platform settings, localization, audit logs, and system maintenance.
-        </p>
-      </div>
-
-      <Tabs defaultValue="global-config" className="w-full">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="global-config" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            Global Config
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            Users & Roles
-          </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Key className="h-4 w-4" />
-            Security
-          </TabsTrigger>
-          <TabsTrigger value="localization" className="flex items-center gap-2">
-            <Languages className="h-4 w-4" />
-            Localization
-          </TabsTrigger>
-          <TabsTrigger value="audit-logs" className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" />
-            Audit Logs
-          </TabsTrigger>
-          <TabsTrigger value="maintenance" className="flex items-center gap-2">
-            <Wrench className="h-4 w-4" />
-            System Maintenance
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Global Config Tab */}
-        <TabsContent value="global-config" className="mt-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Tax Settings Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-slate-600" />
-                  Tax Settings
-                </CardTitle>
-                <CardDescription>
-                  Configure Ethiopian VAT and Withholding Tax rates
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="vat-rate">Default VAT Rate (%)</Label>
-                    <Input
-                      id="vat-rate"
-                      type="number"
-                      value={vatRate}
-                      onChange={(e) => setVatRate(e.target.value)}
-                      placeholder="15"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="wht-rate">Default WHT Rate (%)</Label>
-                    <Input
-                      id="wht-rate"
-                      type="number"
-                      value={whtRate}
-                      onChange={(e) => setWhtRate(e.target.value)}
-                      placeholder="2"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-                  <div>
-                    <p className="font-medium text-slate-900">Enforce VAT on all commercial leases</p>
-                    <p className="text-sm text-slate-500">Apply VAT platform-wide for commercial properties</p>
-                  </div>
-                  <Switch checked={enforceVat} onCheckedChange={setEnforceVat} />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Platform Monetization Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-slate-600" />
-                  Platform Monetization
-                </CardTitle>
-                <CardDescription>
-                  Configure platform fees and service charges
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gateway-fee">Standard Gateway Transaction Fee (%)</Label>
-                  <Input
-                    id="gateway-fee"
-                    type="number"
-                    step="0.1"
-                    value={gatewayFee}
-                    onChange={(e) => setGatewayFee(e.target.value)}
-                    placeholder="2.5"
-                  />
-                  <p className="text-xs text-slate-500">Applied to all payment gateway transactions</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="service-fee">Nicomas Digital Service Fee (ETB/Month)</Label>
-                  <Input
-                    id="service-fee"
-                    type="number"
-                    value={serviceFee}
-                    onChange={(e) => setServiceFee(e.target.value)}
-                    placeholder="500"
-                  />
-                  <p className="text-xs text-slate-500">Monthly platform subscription fee per workspace</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="mt-6 flex justify-end">
-            <Button className="bg-orange-500 hover:bg-orange-600" onClick={handleSaveGlobalConfig}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Global Configurations
-            </Button>
-          </div>
-        </TabsContent>
-
-        {/* Users & Roles Tab */}
-        <TabsContent value="users" className="mt-6">
-          <SystemUserManagement />
-        </TabsContent>
-
-        {/* Security Tab */}
-        <TabsContent value="security" className="mt-6">
-          <SystemSecuritySettings />
-        </TabsContent>
-
-        {/* Localization Tab */}
-        <TabsContent value="localization" className="mt-6">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle>UI String Translations</CardTitle>
-                  <CardDescription>Manage English to Amharic translations</CardDescription>
-                </div>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    placeholder="Search translations..."
-                    value={translationSearch}
-                    onChange={(e) => setTranslationSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="font-semibold text-slate-700">Interface Component</TableHead>
-                    <TableHead className="font-semibold text-slate-700">English String</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Amharic Translation</TableHead>
-                    <TableHead className="font-semibold text-slate-700 w-[80px]">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTranslations.map((item) => (
-                    <TranslationRow
-                      key={item.id}
-                      item={item}
-                      onSave={handleSaveTranslation}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Audit Logs Tab */}
-        <TabsContent value="audit-logs" className="mt-6">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle>Security Audit Logs</CardTitle>
-                  <CardDescription>Track all major platform actions for compliance</CardDescription>
-                </div>
-                <Button variant="outline" onClick={handleExportLogs}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Logs to CSV
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    placeholder="Search by user, action..."
-                    value={auditSearch}
-                    onChange={(e) => setAuditSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <Select
-                  value={roleFilter}
-                  onValueChange={(v) => setRoleFilter(v as AuditLogRole | "All")}
-                >
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="Filter by Role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">All Roles</SelectItem>
-                    <SelectItem value="System Admin">System Admin</SelectItem>
-                    <SelectItem value="Building Owner">Building Owner</SelectItem>
-                    <SelectItem value="Tenant">Tenant</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="font-semibold text-slate-700">Timestamp</TableHead>
-                    <TableHead className="font-semibold text-slate-700">User</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Role</TableHead>
-                    <TableHead className="font-semibold text-slate-700">IP Address</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Action Taken</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAuditLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="text-slate-600 font-mono text-sm whitespace-nowrap">
-                        {log.timestamp}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-slate-900">{log.userName}</p>
-                          <p className="text-xs text-slate-500">{log.userEmail}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`border-none ${
-                            log.role === "System Admin"
-                              ? "bg-purple-100 text-purple-700"
-                              : log.role === "Building Owner"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {log.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <code className="rounded bg-slate-100 px-2 py-1 text-xs font-mono text-slate-600">
-                          {log.ipAddress}
-                        </code>
-                      </TableCell>
-                      <TableCell className="text-slate-600 max-w-[300px]">
-                        {log.action}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* System Maintenance Tab */}
-        <TabsContent value="maintenance" className="mt-6">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Database Backup Card */}
-            <Card className="border-amber-200 bg-amber-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-800">
-                  <Database className="h-5 w-5" />
-                  Database Backup
-                </CardTitle>
-                <CardDescription className="text-amber-700">
-                  Manage database backups
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="rounded-lg bg-white p-3 border border-amber-200">
-                  <p className="text-sm text-slate-600">Last Backup</p>
-                  <p className="font-semibold text-slate-900">Today, 03:00 AM</p>
-                </div>
-                <Button
-                  className="w-full bg-slate-800 hover:bg-slate-900"
-                  onClick={handleTriggerBackup}
-                  disabled={backingUp}
-                >
-                  {backingUp ? (
-                    <>
-                      <Activity className="h-4 w-4 mr-2 animate-pulse" />
-                      Backing Up...
-                    </>
-                  ) : (
-                    <>
-                      <Database className="h-4 w-4 mr-2" />
-                      Trigger Manual DB Backup
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Cache Management Card */}
-            <Card className="border-amber-200 bg-amber-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-800">
-                  <Trash2 className="h-5 w-5" />
-                  Cache Management
-                </CardTitle>
-                <CardDescription className="text-amber-700">
-                  Clear application cache
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="rounded-lg bg-white p-3 border border-amber-200">
-                  <p className="text-sm text-slate-600">Cache Status</p>
-                  <p className="font-semibold text-slate-900">256 MB in use</p>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full border-slate-300"
-                  onClick={handleClearCache}
-                  disabled={clearingCache}
-                >
-                  {clearingCache ? (
-                    <>
-                      <Activity className="h-4 w-4 mr-2 animate-pulse" />
-                      Clearing...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Clear Application Cache
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Maintenance Mode Card */}
-            <Card className="border-red-200 bg-red-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-800">
-                  <ShieldAlert className="h-5 w-5" />
-                  Maintenance Mode
-                </CardTitle>
-                <CardDescription className="text-red-700">
-                  Lock platform access
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="flex items-center justify-between rounded-lg bg-white p-3 border border-red-200">
-                  <div>
-                    <p className="font-medium text-slate-900">Enable Maintenance Mode</p>
-                  </div>
-                  <Switch
-                    checked={maintenanceMode}
-                    onCheckedChange={handleMaintenanceToggle}
-                    className="data-[state=checked]:bg-red-500"
-                  />
-                </div>
-                <p className="text-xs text-red-700">
-                  This will lock out all Owners and Tenants and display a maintenance screen. 
-                  Use only during major upgrades.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
+  return <StandaloneSystemSettingsView />
 }
 
 // Translation Row Component with inline editing
