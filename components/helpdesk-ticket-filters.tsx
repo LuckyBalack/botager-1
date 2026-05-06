@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Filter, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -26,7 +27,7 @@ export function HelpdeskTicketFilters({
 }: {
   onFilterChange: (filters: HelpdeskFilters) => void
 }) {
-  const [filters, setFilters] = React.useState<HelpdeskFilters>({
+  const [filters, setFilters] = useState<HelpdeskFilters>({
     category: "all",
     priority: "all",
     status: "all",
@@ -159,5 +160,3 @@ export function HelpdeskTicketFilters({
     </div>
   )
 }
-
-import React
