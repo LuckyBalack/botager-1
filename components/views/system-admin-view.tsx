@@ -61,6 +61,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ModerationBulkActions } from "@/components/moderation-bulk-actions"
