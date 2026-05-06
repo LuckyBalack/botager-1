@@ -386,7 +386,6 @@ export function TenantMaintenanceView() {
               </div>
             </CardContent>
           </Card>
-        </div>
         </TabsContent>
 
         <TabsContent value="sla">
