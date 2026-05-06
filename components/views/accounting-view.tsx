@@ -4,6 +4,10 @@ import { useState } from "react"
 import { TrendingUp, TrendingDown, Download, DollarSign, Wallet, PiggyBank, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ProfitLossReport } from "@/components/profit-loss-report"
+import { BalanceSheet } from "@/components/balance-sheet"
+import { AccountReconciliation } from "@/components/account-reconciliation"
 import {
   Select,
   SelectContent,
@@ -44,8 +48,25 @@ export function AccountingView() {
         </div>
       </div>
 
-      {/* Key Financial Stats */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="mb-6 bg-slate-100">
+          <TabsTrigger value="overview" className="px-6">
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="pl" className="px-6">
+            P&L Statement
+          </TabsTrigger>
+          <TabsTrigger value="balance" className="px-6">
+            Balance Sheet
+          </TabsTrigger>
+          <TabsTrigger value="reconciliation" className="px-6">
+            Reconciliation
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-8">
+          {/* Key Financial Stats */}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -106,150 +127,23 @@ export function AccountingView() {
             <div className="mt-4">
               <p className="text-sm font-medium text-slate-500">Outstanding Debt</p>
               <p className="mt-1 text-2xl font-bold text-slate-900">{financialReport.outstandingDebt}</p>
-            </div>
-          </CardContent>
+          </div>
         </Card>
       </div>
+        </TabsContent>
 
-      {/* Charts Row */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Revenue vs Expenses Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue vs. Expenses</CardTitle>
-            <CardDescription>Monthly comparison over the selected period</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {monthlyFinancials.map((month) => (
-                <div key={month.month} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-slate-700">{month.month}</span>
-                    <div className="flex gap-4 text-xs">
-                      <span className="text-green-600">Revenue: ETB {(month.revenue / 1000).toFixed(0)}K</span>
-                      <span className="text-red-600">Expenses: ETB {(month.expenses / 1000).toFixed(0)}K</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <div
-                      className="h-3 rounded-l bg-green-500"
-                      style={{ width: `${(month.revenue / 800000) * 100}%` }}
-                    />
-                    <div
-                      className="h-3 rounded-r bg-red-400"
-                      style={{ width: `${(month.expenses / 800000) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 flex items-center justify-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded bg-green-500" />
-                <span className="text-slate-600">Revenue</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded bg-red-400" />
-                <span className="text-slate-600">Expenses</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <TabsContent value="pl">
+          <ProfitLossReport />
+        </TabsContent>
 
-        {/* Expense Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Expense Breakdown</CardTitle>
-            <CardDescription>Where your money is going</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {expenseBreakdown.map((expense) => (
-                <div key={expense.category} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium text-slate-700">{expense.category}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-slate-500">ETB {(expense.amount / 1000).toFixed(0)}K</span>
-                      <span className="w-10 text-right font-semibold text-slate-900">{expense.percentage}%</span>
-                    </div>
-                  </div>
-                  <Progress value={expense.percentage} className="h-2" />
-                </div>
-              ))}
-            </div>
+        <TabsContent value="balance">
+          <BalanceSheet />
+        </TabsContent>
 
-            {/* Pie Chart Representation */}
-            <div className="mt-8 flex items-center justify-center">
-              <div className="relative h-40 w-40">
-                <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    fill="transparent"
-                    stroke="#3b82f6"
-                    strokeWidth="20"
-                    strokeDasharray="75.4 176"
-                    strokeDashoffset="0"
-                  />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    fill="transparent"
-                    stroke="#10b981"
-                    strokeWidth="20"
-                    strokeDasharray="100.5 176"
-                    strokeDashoffset="-75.4"
-                  />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    fill="transparent"
-                    stroke="#f59e0b"
-                    strokeWidth="20"
-                    strokeDasharray="50.3 176"
-                    strokeDashoffset="-175.9"
-                  />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    fill="transparent"
-                    stroke="#ef4444"
-                    strokeWidth="20"
-                    strokeDasharray="25.1 176"
-                    strokeDashoffset="-226.2"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-slate-700">Total</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-full bg-blue-500" />
-                <span className="text-slate-600">Maintenance (30%)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
-                <span className="text-slate-600">Salaries (40%)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                <span className="text-slate-600">Utilities (20%)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
-                <span className="text-slate-600">Taxes (10%)</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="reconciliation">
+          <AccountReconciliation />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

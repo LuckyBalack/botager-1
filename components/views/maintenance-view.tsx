@@ -1,8 +1,13 @@
 "use client"
 
 import { Plus, GripVertical } from "lucide-react"
+import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MaintenanceServiceHistory } from "@/components/maintenance-service-history"
+import { MaintenanceCostTracking } from "@/components/maintenance-cost-tracking"
+import { MaintenanceSLA } from "@/components/maintenance-sla"
 import {
   maintenanceTickets,
   type MaintenancePriority,
@@ -118,16 +123,47 @@ export function MaintenanceView() {
         </button>
       </div>
 
-      {/* Kanban Board */}
-      <div className="flex gap-6">
-        <KanbanColumn title="Open" status="Open" count={openCount} />
-        <KanbanColumn
-          title="In Progress"
-          status="In Progress"
-          count={inProgressCount}
-        />
-        <KanbanColumn title="Resolved" status="Resolved" count={resolvedCount} />
-      </div>
+      <Tabs defaultValue="board" className="w-full">
+        <TabsList className="mb-6 bg-slate-100">
+          <TabsTrigger value="board" className="px-6">
+            Work Board
+          </TabsTrigger>
+          <TabsTrigger value="history" className="px-6">
+            Service History
+          </TabsTrigger>
+          <TabsTrigger value="costs" className="px-6">
+            Cost Tracking
+          </TabsTrigger>
+          <TabsTrigger value="sla" className="px-6">
+            SLA Tracking
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="board">
+          {/* Kanban Board */}
+          <div className="flex gap-6">
+            <KanbanColumn title="Open" status="Open" count={openCount} />
+            <KanbanColumn
+              title="In Progress"
+              status="In Progress"
+              count={inProgressCount}
+            />
+            <KanbanColumn title="Resolved" status="Resolved" count={resolvedCount} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <MaintenanceServiceHistory />
+        </TabsContent>
+
+        <TabsContent value="costs">
+          <MaintenanceCostTracking />
+        </TabsContent>
+
+        <TabsContent value="sla">
+          <MaintenanceSLA />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

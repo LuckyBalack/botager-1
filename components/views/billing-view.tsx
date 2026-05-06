@@ -3,6 +3,9 @@
 import { useState } from "react"
 import { MoreHorizontal, Plus, FileText } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AutomatedInvoices } from "@/components/automated-invoices"
+import { PaymentReminders } from "@/components/payment-reminders"
+import { DunningSequences } from "@/components/dunning-sequences"
 import {
   Table,
   TableBody,
@@ -205,6 +208,9 @@ export function BillingView() {
           <TabsTrigger value="credit" className="px-6">
             Credit/BNPL Requests
           </TabsTrigger>
+          <TabsTrigger value="automation" className="px-6">
+            Automation
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="invoices">
@@ -368,6 +374,12 @@ export function BillingView() {
               </TableBody>
             </Table>
           </div>
+        </TabsContent>
+
+        <TabsContent value="automation" className="space-y-6">
+          <AutomatedInvoices />
+          <PaymentReminders />
+          <DunningSequences />
         </TabsContent>
 
         <TabsContent value="credit">
