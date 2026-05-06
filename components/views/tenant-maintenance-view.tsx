@@ -235,157 +235,158 @@ export function TenantMaintenanceView() {
         </TabsList>
 
         <TabsContent value="requests">
+          {/* Summary Cards */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">Active Requests</p>
+                    <p className="mt-1 text-3xl font-bold text-slate-900">{openRequests.length}</p>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+                    <Clock className="h-6 w-6 text-amber-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Active Requests</p>
-                <p className="mt-1 text-3xl font-bold text-slate-900">{openRequests.length}</p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
-                <Clock className="h-6 w-6 text-amber-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">In Progress</p>
+                    <p className="mt-1 text-3xl font-bold text-slate-900">
+                      {tenantMaintenanceRequests.filter((r) => r.status === "in-progress").length}
+                    </p>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                    <Loader2 className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">In Progress</p>
-                <p className="mt-1 text-3xl font-bold text-slate-900">
-                  {tenantMaintenanceRequests.filter((r) => r.status === "in-progress").length}
-                </p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
-                <Loader2 className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">Resolved This Month</p>
+                    <p className="mt-1 text-3xl font-bold text-slate-900">{resolvedRequests.length}</p>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+                    <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">Resolved This Month</p>
-                <p className="mt-1 text-3xl font-bold text-slate-900">{resolvedRequests.length}</p>
-              </div>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Active Requests */}
-      {openRequests.length > 0 && (
-        <div>
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">Active Requests</h2>
-          <div className="flex flex-col gap-4">
-            {openRequests.map((request) => (
-              <Card
-                key={request.id}
-                className={cn(
-                  "border-l-4",
-                  request.status === "in-progress" ? "border-l-blue-500" : "border-l-amber-500"
-                )}
-              >
-                <CardContent className="py-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex gap-4">
-                      <CategoryIcon categoryId={request.category} />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-slate-900">{request.title}</h3>
-                          <StatusBadge status={request.status} />
-                          <PriorityBadge priority={request.priority} />
+          {/* Active Requests */}
+          {openRequests.length > 0 && (
+            <div>
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">Active Requests</h2>
+              <div className="flex flex-col gap-4">
+                {openRequests.map((request) => (
+                  <Card
+                    key={request.id}
+                    className={cn(
+                      "border-l-4",
+                      request.status === "in-progress" ? "border-l-blue-500" : "border-l-amber-500"
+                    )}
+                  >
+                    <CardContent className="py-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex gap-4">
+                          <CategoryIcon categoryId={request.category} />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-slate-900">{request.title}</h3>
+                              <StatusBadge status={request.status} />
+                              <PriorityBadge priority={request.priority} />
+                            </div>
+                            <p className="mt-1 text-sm text-slate-500">{request.id}</p>
+                            <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+                              {request.description}
+                            </p>
+                            {request.assignedTo && (
+                              <p className="mt-2 text-sm text-slate-500">
+                                Assigned to: <span className="font-medium">{request.assignedTo}</span>
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <p className="mt-1 text-sm text-slate-500">{request.id}</p>
-                        <p className="mt-2 line-clamp-2 text-sm text-slate-600">
-                          {request.description}
-                        </p>
-                        {request.assignedTo && (
-                          <p className="mt-2 text-sm text-slate-500">
-                            Assigned to: <span className="font-medium">{request.assignedTo}</span>
-                          </p>
-                        )}
+                        <div className="flex flex-col items-end gap-2">
+                          <p className="text-sm text-slate-500">Updated {request.lastUpdate}</p>
+                          <Button variant="outline" size="sm" onClick={() => handleViewDetails(request)}>
+                            View Details
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <p className="text-sm text-slate-500">Updated {request.lastUpdate}</p>
-                      <Button variant="outline" size="sm" onClick={() => handleViewDetails(request)}>
-                        View Details
-                        <ChevronRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Empty State for Active */}
+          {openRequests.length === 0 && (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                  <CheckCircle2 className="h-8 w-8 text-slate-400" />
+                </div>
+                <h3 className="mt-4 text-lg font-semibold text-slate-900">No Active Requests</h3>
+                <p className="mt-2 text-center text-slate-500">
+                  You don&apos;t have any pending maintenance requests.
+                </p>
+                <Button
+                  className="mt-4 gap-2 bg-orange-600 hover:bg-orange-700"
+                  onClick={() => setNewRequestModalOpen(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Submit a Request
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Resolved Requests */}
+          {resolvedRequests.length > 0 && (
+            <div>
+              <h2 className="mb-4 text-lg font-semibold text-slate-900">Recently Resolved</h2>
+              <Card>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-slate-100">
+                    {resolvedRequests.map((request) => (
+                      <button
+                        key={request.id}
+                        type="button"
+                        onClick={() => handleViewDetails(request)}
+                        className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50"
+                      >
+                        <div className="flex items-center gap-4">
+                          <CategoryIcon categoryId={request.category} />
+                          <div>
+                            <h3 className="font-medium text-slate-900">{request.title}</h3>
+                            <p className="text-sm text-slate-500">
+                              Resolved on {request.resolvedDate}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <StatusBadge status={request.status} />
+                          <ChevronRight className="h-5 w-5 text-slate-400" />
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Empty State for Active */}
-      {openRequests.length === 0 && (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-              <CheckCircle2 className="h-8 w-8 text-slate-400" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold text-slate-900">No Active Requests</h3>
-            <p className="mt-2 text-center text-slate-500">
-              You don&apos;t have any pending maintenance requests.
-            </p>
-            <Button
-              className="mt-4 gap-2 bg-orange-600 hover:bg-orange-700"
-              onClick={() => setNewRequestModalOpen(true)}
-            >
-              <Plus className="h-4 w-4" />
-              Submit a Request
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Resolved Requests */}
-      {resolvedRequests.length > 0 && (
-        <div>
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">Recently Resolved</h2>
-          <Card>
-            <CardContent className="p-0">
-              <div className="divide-y divide-slate-100">
-                {resolvedRequests.map((request) => (
-                  <button
-                    key={request.id}
-                    type="button"
-                    onClick={() => handleViewDetails(request)}
-                    className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50"
-                  >
-                    <div className="flex items-center gap-4">
-                      <CategoryIcon categoryId={request.category} />
-                      <div>
-                        <h3 className="font-medium text-slate-900">{request.title}</h3>
-                        <p className="text-sm text-slate-500">
-                          Resolved on {request.resolvedDate}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <StatusBadge status={request.status} />
-                      <ChevronRight className="h-5 w-5 text-slate-400" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="sla">
