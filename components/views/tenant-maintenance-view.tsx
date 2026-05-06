@@ -21,6 +21,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TenantMaintenanceSLA } from "@/components/tenant-maintenance-sla"
+import { TenantMaintenanceCosts } from "@/components/tenant-maintenance-costs"
+import { TenantPreventiveScheduling } from "@/components/tenant-preventive-scheduling"
 import {
   Dialog,
   DialogContent,
@@ -214,6 +218,24 @@ export function TenantMaintenanceView() {
         </Button>
       </div>
 
+      <Tabs defaultValue="requests" className="w-full">
+        <TabsList className="mb-6 bg-slate-100">
+          <TabsTrigger value="requests" className="px-6">
+            My Requests
+          </TabsTrigger>
+          <TabsTrigger value="sla" className="px-6">
+            SLA Tracking
+          </TabsTrigger>
+          <TabsTrigger value="costs" className="px-6">
+            Cost History
+          </TabsTrigger>
+          <TabsTrigger value="preventive" className="px-6">
+            Preventive Care
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="requests">
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -365,7 +387,20 @@ export function TenantMaintenanceView() {
             </CardContent>
           </Card>
         </div>
-      )}
+        </TabsContent>
+
+        <TabsContent value="sla">
+          <TenantMaintenanceSLA />
+        </TabsContent>
+
+        <TabsContent value="costs">
+          <TenantMaintenanceCosts />
+        </TabsContent>
+
+        <TabsContent value="preventive">
+          <TenantPreventiveScheduling />
+        </TabsContent>
+      </Tabs>
 
       {/* New Request Modal */}
       <Dialog open={newRequestModalOpen} onOpenChange={setNewRequestModalOpen}>
