@@ -127,7 +127,8 @@ export function AccountingView() {
             <div className="mt-4">
               <p className="text-sm font-medium text-slate-500">Outstanding Debt</p>
               <p className="mt-1 text-2xl font-bold text-slate-900">{financialReport.outstandingDebt}</p>
-          </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
         </TabsContent>
