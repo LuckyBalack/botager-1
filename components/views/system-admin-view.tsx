@@ -62,6 +62,18 @@ import {
 } from "@/components/ui/select"
 import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ModerationBulkActions } from "@/components/moderation-bulk-actions"
+import { ModerationRiskScoring } from "@/components/moderation-risk-scoring"
+import { ModerationAdvancedFilters } from "@/components/moderation-advanced-filters"
+import { ModerationAuditTrail } from "@/components/moderation-audit-trail"
+import { CreditPartnerKPIs } from "@/components/credit-partner-kpis"
+import { CreditTransactionMonitoring } from "@/components/credit-transaction-monitoring"
+import { CreditPartnerSLA } from "@/components/credit-partner-sla"
+import { SystemUserManagement } from "@/components/system-user-management"
+import { SystemSecuritySettings } from "@/components/system-security-settings"
+import { HelpdeskTicketFilters } from "@/components/helpdesk-ticket-filters"
+import { HelpdeskEscalation } from "@/components/helpdesk-escalation"
+import { HelpdeskResponseTemplates } from "@/components/helpdesk-response-templates"
 import {
   Bar,
   BarChart,
@@ -390,12 +402,15 @@ function CreditPartnersDeepView() {
       <Tabs defaultValue="partner-directory" className="w-full">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="partner-directory">Partner Directory</TabsTrigger>
+          <TabsTrigger value="performance">Performance KPIs</TabsTrigger>
+          <TabsTrigger value="transactions">Transaction Monitoring</TabsTrigger>
+          <TabsTrigger value="sla">SLA Tracking</TabsTrigger>
           <TabsTrigger value="api-health">API Health Logs</TabsTrigger>
           <TabsTrigger value="credit-utilization">Credit Utilization</TabsTrigger>
         </TabsList>
 
         {/* Partner Directory Tab */}
-        <TabsContent value="partner-directory" className="mt-6">
+        <TabsContent value="partner-directory" className="mt-6 space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -550,6 +565,21 @@ function CreditPartnersDeepView() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Performance KPIs Tab */}
+        <TabsContent value="performance" className="mt-6">
+          <CreditPartnerKPIs partners={creditPartners} />
+        </TabsContent>
+
+        {/* Transaction Monitoring Tab */}
+        <TabsContent value="transactions" className="mt-6">
+          <CreditTransactionMonitoring />
+        </TabsContent>
+
+        {/* SLA Tracking Tab */}
+        <TabsContent value="sla" className="mt-6">
+          <CreditPartnerSLA />
         </TabsContent>
 
         {/* Credit Utilization Tab */}
@@ -740,11 +770,14 @@ function SystemHelpdeskView() {
       <Tabs defaultValue="owner-tickets" className="w-full">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="owner-tickets">Owner Tickets</TabsTrigger>
+          <TabsTrigger value="escalation">Escalation Queue</TabsTrigger>
+          <TabsTrigger value="templates">Response Templates</TabsTrigger>
           <TabsTrigger value="system-broadcasts">System Broadcasts</TabsTrigger>
         </TabsList>
 
         {/* Owner Tickets Tab */}
-        <TabsContent value="owner-tickets" className="mt-6">
+        <TabsContent value="owner-tickets" className="mt-6 space-y-6">
+          <HelpdeskTicketFilters onFilterChange={() => {}} />
           <Card>
             <CardContent className="p-0">
               <div className="flex h-[600px]">
@@ -889,6 +922,16 @@ function SystemHelpdeskView() {
               </div>
             </CardContent>
           </Card>
+          </TabsContent>
+
+        {/* Escalation Queue Tab */}
+        <TabsContent value="escalation" className="mt-6">
+          <HelpdeskEscalation />
+        </TabsContent>
+
+        {/* Response Templates Tab */}
+        <TabsContent value="templates" className="mt-6">
+          <HelpdeskResponseTemplates />
         </TabsContent>
 
         {/* System Broadcasts Tab */}
@@ -1060,6 +1103,8 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
   const [submissions, setSubmissions] = useState(workspaceSubmissions)
   const [documentsModalOpen, setDocumentsModalOpen] = useState(false)
   const [selectedSubmission, setSelectedSubmission] = useState<WorkspaceSubmission | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [filters, setFilters] = useState({ status: "all", riskLevel: "all", submittedAfter: "", documentCount: "all" })
 
   const handleViewDocuments = (submission: WorkspaceSubmission) => {
     setSelectedSubmission(submission)
@@ -1084,6 +1129,40 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
     })
   }
 
+  const handleBulkApprove = () => {
+    const newSubmissions = submissions.map((s) =>
+      selectedIds.has(s.id) ? { ...s, status: "Approved" as const } : s
+    )
+    setSubmissions(newSubmissions)
+    setSelectedIds(new Set())
+  }
+
+  const handleBulkReject = () => {
+    const newSubmissions = submissions.map((s) =>
+      selectedIds.has(s.id) ? { ...s, status: "Rejected" as const } : s
+    )
+    setSubmissions(newSubmissions)
+    setSelectedIds(new Set())
+  }
+
+  const handleBulkArchive = () => {
+    const newSubmissions = submissions.map((s) =>
+      selectedIds.has(s.id) ? { ...s, status: "Archived" as const } : s
+    )
+    setSubmissions(newSubmissions)
+    setSelectedIds(new Set())
+  }
+
+  const toggleSelection = (id: string) => {
+    const newIds = new Set(selectedIds)
+    if (newIds.has(id)) {
+      newIds.delete(id)
+    } else {
+      newIds.add(id)
+    }
+    setSelectedIds(newIds)
+  }
+
   if (view === "moderation") {
     return (
       <div className="flex flex-col gap-6">
@@ -1094,8 +1173,30 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <Tabs defaultValue="queue" className="w-full">
+          <TabsList className="mb-6 bg-slate-100">
+            <TabsTrigger value="queue" className="px-6">
+              Verification Queue
+            </TabsTrigger>
+            <TabsTrigger value="risk" className="px-6">
+              Risk Assessment
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="px-6">
+              Audit Trail
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="queue" className="space-y-6">
+            <ModerationAdvancedFilters onFilterChange={setFilters} />
+            <ModerationBulkActions
+              selectedCount={selectedIds.size}
+              onApproveAll={handleBulkApprove}
+              onRejectAll={handleBulkReject}
+              onArchiveAll={handleBulkArchive}
+            />
+
+            {/* Stats */}
+            <div className="grid gap-4 sm:grid-cols-3">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -1153,6 +1254,18 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50">
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedIds.size === submissions.length && submissions.length > 0}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedIds(new Set(submissions.map((s) => s.id)))
+                        } else {
+                          setSelectedIds(new Set())
+                        }
+                      }}
+                    />
+                  </TableHead>
                   <TableHead className="font-semibold text-slate-700">Building Name</TableHead>
                   <TableHead className="font-semibold text-slate-700">Owner</TableHead>
                   <TableHead className="font-semibold text-slate-700">Location</TableHead>
@@ -1165,6 +1278,12 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
               <TableBody>
                 {submissions.map((submission) => (
                   <TableRow key={submission.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(submission.id)}
+                        onCheckedChange={() => toggleSelection(submission.id)}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium text-slate-900">
                       {submission.buildingName}
                     </TableCell>
@@ -1226,6 +1345,20 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
             </Table>
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="risk">
+            <div className="space-y-6">
+              <ModerationRiskScoring submissions={submissions} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <div className="space-y-6">
+              <ModerationAuditTrail />
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <DocumentsModal
           open={documentsModalOpen}
@@ -1366,6 +1499,14 @@ function SystemSettingsView() {
             <Globe className="h-4 w-4" />
             Global Config
           </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Users & Roles
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2">
+            <Key className="h-4 w-4" />
+            Security
+          </TabsTrigger>
           <TabsTrigger value="localization" className="flex items-center gap-2">
             <Languages className="h-4 w-4" />
             Localization
@@ -1472,6 +1613,16 @@ function SystemSettingsView() {
               Save Global Configurations
             </Button>
           </div>
+        </TabsContent>
+
+        {/* Users & Roles Tab */}
+        <TabsContent value="users" className="mt-6">
+          <SystemUserManagement />
+        </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security" className="mt-6">
+          <SystemSecuritySettings />
         </TabsContent>
 
         {/* Localization Tab */}

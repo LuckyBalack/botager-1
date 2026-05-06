@@ -21,6 +21,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { TenantKPIs } from "@/components/tenant-kpis"
+import { LeaseCountdown } from "@/components/lease-countdown"
 import { type TenantViewKey } from "@/components/tenant-sidebar"
 
 const recentActivity = [
@@ -82,6 +84,9 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
           Here&apos;s an overview of your tenancy
         </p>
       </div>
+
+      {/* KPI Cards */}
+      <TenantKPIs />
 
       {/* Amount Due Card */}
       <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-white">
@@ -186,9 +191,13 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
         </Card>
       )}
 
-      {/* Two Column Layout */}
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Lease Countdown and Info Grid */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <LeaseCountdown />
+        </div>
         {/* My Office Card */}
+        <div>
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -236,16 +245,18 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
             </div>
           </CardContent>
         </Card>
+        </div>
+      </div>
 
-        {/* Recent Activity Card */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="h-5 w-5 text-slate-500" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Recent Activity Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Calendar className="h-5 w-5 text-slate-500" />
+            Recent Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
             <div className="relative flex flex-col gap-1">
               {recentActivity.map((item, index) => {
                 const Icon = item.icon
@@ -273,9 +284,8 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
                 )
               })}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Property Manager Contact */}
       <Card>

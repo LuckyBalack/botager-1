@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { LeaseAgreementCard } from "@/components/lease-agreement-card"
 import { LeasePill, PaymentPill } from "@/components/status-pills"
+import { TenantEmergencyContacts } from "@/components/tenant-emergency-contacts"
+import { TenantVerificationStatus } from "@/components/tenant-verification-status"
+import { LeaseSummary } from "@/components/lease-summary"
 
 type TenantDetailViewProps = {
   tenant: Tenant
@@ -59,6 +62,9 @@ export function TenantDetailView({ tenant, onTerminateLease }: TenantDetailViewP
           </CardContent>
         </Card>
 
+        {/* Emergency Contacts */}
+        <TenantEmergencyContacts />
+
         {/* Documents Card */}
         <Card>
           <CardHeader>
@@ -89,6 +95,10 @@ export function TenantDetailView({ tenant, onTerminateLease }: TenantDetailViewP
 
       {/* Right Column - Lease Details */}
       <div className="space-y-6 lg:col-span-2">
+        <LeaseSummary />
+        
+        <TenantVerificationStatus />
+        
         <LeaseAgreementCard
           leaseStartDate={tenant.leaseStartDate}
           leaseExpirationDate={tenant.leaseExpirationDate}

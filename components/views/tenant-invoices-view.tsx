@@ -17,6 +17,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { InvoiceAgingAnalysis } from "@/components/invoice-aging-analysis"
+import { PaymentReceipts } from "@/components/payment-receipts"
+import { InvoiceLateFees } from "@/components/invoice-late-fees"
 import {
   Dialog,
   DialogContent,
@@ -154,8 +158,25 @@ export function TenantInvoicesView() {
         <p className="mt-1 text-slate-500">View and pay your invoices</p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <Tabs defaultValue="invoices" className="w-full">
+        <TabsList className="mb-6 bg-slate-100">
+          <TabsTrigger value="invoices" className="px-6">
+            Invoices
+          </TabsTrigger>
+          <TabsTrigger value="aging" className="px-6">
+            Aging Analysis
+          </TabsTrigger>
+          <TabsTrigger value="receipts" className="px-6">
+            Receipts
+          </TabsTrigger>
+          <TabsTrigger value="lateFees" className="px-6">
+            Late Fees Policy
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="invoices">
+          {/* Summary Cards */}
+          <div className="mb-8 grid gap-4 md:grid-cols-3">
         <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-white">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -199,9 +220,9 @@ export function TenantInvoicesView() {
             </div>
           </CardContent>
         </Card>
-      </div>
+          </div>
 
-      {/* Pending Invoices */}
+          {/* Pending Invoices */}
       {pendingInvoices.length > 0 && (
         <div>
           <h2 className="mb-4 text-lg font-semibold text-slate-900">Pending Invoices</h2>
@@ -288,7 +309,21 @@ export function TenantInvoicesView() {
             </div>
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="aging">
+          <InvoiceAgingAnalysis />
+        </TabsContent>
+
+        <TabsContent value="receipts">
+          <PaymentReceipts />
+        </TabsContent>
+
+        <TabsContent value="lateFees">
+          <InvoiceLateFees />
+        </TabsContent>
+      </Tabs>
 
       {/* Payment Modal */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
