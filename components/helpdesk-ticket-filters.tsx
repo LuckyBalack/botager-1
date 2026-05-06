@@ -34,7 +34,7 @@ export function HelpdeskTicketFilters({
     assignedTo: "all",
   })
 
-  const [isOpen, setIsOpen] = React.useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
   const activeFilterCount = Object.values(filters).filter(
     (v) => v !== "all"
