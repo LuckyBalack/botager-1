@@ -12,8 +12,10 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calculator, DollarSign, LayoutGrid, List, Building2, User } from "lucide-react"
+import { Calculator, DollarSign, LayoutGrid, List, Building2, User, Download, Trash2, CheckCircle2 } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ResponsiveTable, HiddenOnMobileCell, HiddenOnMobileHeader } from "@/components/responsive-table"
+import { toast } from "sonner"
 
 const floorOptions = [
   { value: "all", label: "All floors" },
@@ -41,6 +43,7 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
   const [lease, setLease] = useState("all")
   const [page, setPage] = useState(1)
   const [viewMode, setViewMode] = useState<"list" | "map">("list")
+  const [selectedPropertyIds, setSelectedPropertyIds] = useState<Set<string>>(new Set())
   
   // Pricing Logic State
   const [isDimensionBased, setIsDimensionBased] = useState(false)
@@ -90,6 +93,60 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
       return matchesSearch && matchesFloor && matchesLease
     })
   }, [search, floor, lease])
+
+  // Bulk action handlers
+  const handleSelectAll = () => {
+    if (selectedPropertyIds.size === visible.length) {
+      setSelectedPropertyIds(new Set())
+    } else {
+      setSelectedPropertyIds(new Set(visible.map(p => p.id)))
+    }
+  }
+
+  const handleSelectProperty = (id: string) => {
+    const newSelection = new Set(selectedPropertyIds)
+    if (newSelection.has(id)) {
+      newSelection.delete(id)
+    } else {
+      newSelection.add(id)
+    }
+    setSelectedPropertyIds(newSelection)
+  }
+
+  const handleExportData = () => {
+    const selectedProps = visible.filter(p => selectedPropertyIds.has(p.id))
+    const csvContent = [
+      ["Room", "Floor", "Tenant", "Lease Status", "Occupancy", "Rent Amount"],
+      ...selectedProps.map(p => [
+        p.room,
+        p.floor,
+        getTenantNameForProperty(p),
+        p.lease,
+        p.occupancy,
+        p.rentAmount
+      ])
+    ].map(row => row.join(",")).join("\n")
+    
+    const blob = new Blob([csvContent], { type: "text/csv" })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `properties-export-${Date.now()}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    toast.success("Export Complete", {
+      description: `${selectedProps.length} properties exported as CSV`
+    })
+  }
+
+  const handleBulkDelete = () => {
+    toast.success("Properties Deleted", {
+      description: `${selectedPropertyIds.size} properties marked for review`
+    })
+    setSelectedPropertyIds(new Set())
+  }
 
   return (
     <div className="flex flex-col">

@@ -1,7 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Plus, UserPlus } from "lucide-react"
+import { Plus, UserPlus, TrendingUp, BarChart3 } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ListToolbar } from "@/components/list-toolbar"
 import { TablePagination } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
@@ -51,6 +52,36 @@ function LeadStatusBadge({ status }: { status: LeadStatus }) {
   return (
     <Badge className={`${variants[status]} border-none font-medium`}>
       {status}
+    </Badge>
+  )
+}
+
+function calculateLeadScore(lead: typeof initialLeads[0]): number {
+  let score = 0
+  
+  // Status scoring
+  if (lead.status === "Interested") score += 50
+  else if (lead.status === "Contacted") score += 30
+  else score += 10
+  
+  // Budget scoring (estimated)
+  const budgetMatch = lead.budgetRange.includes("10") || lead.budgetRange.includes("15")
+  if (budgetMatch) score += 30
+  
+  // Engagement scoring (example: Interested status implies engagement)
+  if (lead.status === "Interested") score += 20
+  
+  return Math.min(100, score)
+}
+
+function ScoreBadge({ score }: { score: number }) {
+  let variant = "bg-red-100 text-red-700"
+  if (score >= 70) variant = "bg-emerald-100 text-emerald-700"
+  else if (score >= 50) variant = "bg-amber-100 text-amber-700"
+  
+  return (
+    <Badge className={`${variant} border-none font-medium`}>
+      {score}% Match
     </Badge>
   )
 }
@@ -207,6 +238,7 @@ export function WaitlistView({ onInviteToLease }: WaitlistViewProps) {
               <TableHead className="font-semibold text-slate-700">Desired Floor</TableHead>
               <TableHead className="font-semibold text-slate-700">Date Joined</TableHead>
               <TableHead className="font-semibold text-slate-700">Status</TableHead>
+              <TableHead className="font-semibold text-slate-700">Lead Score</TableHead>
               <TableHead className="font-semibold text-slate-700">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -242,6 +274,9 @@ export function WaitlistView({ onInviteToLease }: WaitlistViewProps) {
                       <SelectItem value="Waiting">Waiting</SelectItem>
                     </SelectContent>
                   </Select>
+                </TableCell>
+                <TableCell>
+                  <ScoreBadge score={calculateLeadScore(lead)} />
                 </TableCell>
                 <TableCell>
                   <Button

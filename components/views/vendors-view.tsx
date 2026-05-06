@@ -32,6 +32,9 @@ interface Vendor {
   phone: string
   rating: number
   totalJobs: number
+  contractStatus?: "Active" | "Inactive" | "Expired"
+  serviceAreas?: string[]
+  responseTime?: number // hours
 }
 
 const vendors: Vendor[] = [

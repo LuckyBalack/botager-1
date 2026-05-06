@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Camera, Check, Save } from "lucide-react"
+import { Camera, Check, Save, Upload, X, Image as ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -24,6 +24,7 @@ interface InspectionArea {
   status: ConditionStatus
   notes: string
   hasPhoto: boolean
+  photos?: string[]
 }
 
 const initialAreas: InspectionArea[] = [
@@ -42,11 +43,48 @@ export function InspectionsView() {
   const [areas, setAreas] = useState<InspectionArea[]>(initialAreas)
   const [managerSigned, setManagerSigned] = useState(false)
   const [tenantSigned, setTenantSigned] = useState(false)
+  const [uploadingAreaId, setUploadingAreaId] = useState<string | null>(null)
 
   const updateArea = (id: string, field: keyof InspectionArea, value: string | boolean) => {
     setAreas(areas.map(area => 
       area.id === id ? { ...area, [field]: value } : area
     ))
+  }
+
+  const handlePhotoUpload = (areaId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files && files.length > 0) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const photoUrl = e.target?.result as string
+        setAreas(areas.map(area => {
+          if (area.id === areaId) {
+            return {
+              ...area,
+              photos: [...(area.photos || []), photoUrl],
+              hasPhoto: true
+            }
+          }
+          return area
+        }))
+      }
+      reader.readAsDataURL(files[0])
+      setUploadingAreaId(null)
+    }
+  }
+
+  const removePhoto = (areaId: string, photoIndex: number) => {
+    setAreas(areas.map(area => {
+      if (area.id === areaId) {
+        const newPhotos = area.photos?.filter((_, i) => i !== photoIndex) || []
+        return {
+          ...area,
+          photos: newPhotos,
+          hasPhoto: newPhotos.length > 0
+        }
+      }
+      return area
+    }))
   }
 
   const getStatusColor = (status: ConditionStatus) => {

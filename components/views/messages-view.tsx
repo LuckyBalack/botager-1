@@ -1,17 +1,42 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Send, Paperclip, MoreVertical, Phone, Video } from "lucide-react"
+import { Search, Send, Paperclip, MoreVertical, Phone, Video, Clock, BookOpen } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { conversations, messages as allMessages, type Conversation } from "@/lib/data"
 
+const messageTemplates = [
+  {
+    id: "payment-reminder",
+    name: "Payment Reminder",
+    category: "Billing",
+    text: "Hi {{tenantName}}, this is a friendly reminder that your rent payment of {{amount}} is due on {{dueDate}}. Please arrange payment at your earliest convenience.",
+  },
+  {
+    id: "maintenance-update",
+    name: "Maintenance Update",
+    category: "Maintenance",
+    text: "Hi {{tenantName}}, we wanted to update you on your maintenance request #{{ticketId}}. Status: {{status}}. We appreciate your patience.",
+  },
+  {
+    id: "lease-renewal",
+    name: "Lease Renewal Notice",
+    category: "Administrative",
+    text: "Hi {{tenantName}}, your lease expires on {{expirationDate}}. Please contact us if you'd like to discuss renewal terms.",
+  },
+]
+
 export function MessagesView() {
+  const [view, setView] = useState<"chat" | "templates">("chat")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(conversations[0])
   const [newMessage, setNewMessage] = useState("")
+  const [selectedTemplate, setSelectedTemplate] = useState<typeof messageTemplates[0] | null>(null)
 
   const filteredConversations = conversations.filter(
     (c) =>
@@ -31,7 +56,20 @@ export function MessagesView() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-180px)] overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <Tabs defaultValue="chat" className="flex h-full flex-col rounded-lg border border-slate-200 bg-white">
+      <TabsList className="m-4 mb-0 border-b border-slate-200">
+        <TabsTrigger value="chat" className="gap-2">
+          <Send className="h-4 w-4" />
+          Messages
+        </TabsTrigger>
+        <TabsTrigger value="templates" className="gap-2">
+          <BookOpen className="h-4 w-4" />
+          Templates
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="chat" className="m-0 flex-1 overflow-hidden rounded-none border-0">
+        <div className="flex h-[calc(100vh-230px)] overflow-hidden rounded-lg border border-slate-200 bg-white">
       {/* Conversations List */}
       <div className="flex w-80 shrink-0 flex-col border-r border-slate-200">
         {/* Search Header */}
@@ -182,6 +220,67 @@ export function MessagesView() {
           Select a conversation to start messaging
         </div>
       )}
-    </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="templates" className="m-0 flex-1 overflow-auto p-6">
+        <div className="flex flex-col gap-6">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Message Templates</h2>
+            <p className="text-sm text-slate-500">Use pre-built templates for quick, consistent messaging</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {messageTemplates.map((template) => (
+              <Card
+                key={template.id}
+                className={cn(
+                  "cursor-pointer transition-all hover:border-orange-300",
+                  selectedTemplate?.id === template.id && "border-orange-500 bg-orange-50"
+                )}
+                onClick={() => setSelectedTemplate(template)}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-sm">{template.name}</CardTitle>
+                      <p className="mt-1 text-xs text-slate-500">{template.category}</p>
+                    </div>
+                    <Clock className="h-4 w-4 text-slate-400" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="line-clamp-3 text-sm text-slate-600">{template.text}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {selectedTemplate && (
+            <Card className="border-orange-200 bg-orange-50">
+              <CardHeader>
+                <CardTitle className="text-base">Preview: {selectedTemplate.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg bg-white p-4">
+                  <p className="text-sm text-slate-700">{selectedTemplate.text}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setSelectedTemplate(null)}>
+                    Close
+                  </Button>
+                  <Button className="bg-orange-500 hover:bg-orange-600" onClick={() => {
+                    setNewMessage(selectedTemplate.text)
+                    setSelectedTemplate(null)
+                  }}>
+                    Use Template
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </TabsContent>
+    </Tabs>
   )
 }

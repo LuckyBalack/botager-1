@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { Zap, FileText } from "lucide-react"
+import { useState, useMemo } from "react"
+import { Zap, FileText, TrendingUp, AlertTriangle } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -74,6 +75,32 @@ export function UtilityTrackingView() {
     setGeneratedInvoices(invoices)
     setInvoiceModalOpen(true)
   }
+
+  // Analytics and Forecasting
+  const analyticsData = useMemo(() => {
+    const totalConsumption = readings.reduce((sum, r) => {
+      return sum + calculateConsumption(r.previousReading, r.currentReading)
+    }, 0)
+    
+    const avgConsumption = Math.round(totalConsumption / readings.length)
+    const forecastedMonthly = avgConsumption * 1.1 // 10% increase forecast
+    
+    // Find highest consumers
+    const highestConsumers = [...readings]
+      .sort((a, b) => {
+        const consumptionA = calculateConsumption(a.previousReading, a.currentReading)
+        const consumptionB = calculateConsumption(b.previousReading, b.currentReading)
+        return consumptionB - consumptionA
+      })
+      .slice(0, 3)
+    
+    return {
+      totalConsumption,
+      avgConsumption,
+      forecastedMonthly,
+      highestConsumers
+    }
+  }, [readings])
 
   const handleConfirmInvoices = () => {
     setInvoiceModalOpen(false)
