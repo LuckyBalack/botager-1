@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { ListToolbar } from "@/components/list-toolbar"
 import { TablePagination } from "@/components/table-pagination"
 import { LeasePill } from "@/components/status-pills"
+import { AddPropertyView } from "@/components/views/add-property-view"
 import { properties, getTenantNameForProperty, type Property } from "@/lib/data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calculator, DollarSign, LayoutGrid, List, Building2, User, Download, Trash2, CheckCircle2 } from "lucide-react"
+import { Calculator, DollarSign, LayoutGrid, List, Building2, User, Download, Trash2, CheckCircle2, Plus } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ResponsiveTable, HiddenOnMobileCell, HiddenOnMobileHeader } from "@/components/responsive-table"
 import { toast } from "sonner"
@@ -44,6 +45,8 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
   const [page, setPage] = useState(1)
   const [viewMode, setViewMode] = useState<"list" | "map">("list")
   const [selectedPropertyIds, setSelectedPropertyIds] = useState<Set<string>>(new Set())
+  const [showAddPropertyForm, setShowAddPropertyForm] = useState(false)
+  const [propertiesList, setPropertiesList] = useState<Property[]>(properties)
   
   // Pricing Logic State
   const [isDimensionBased, setIsDimensionBased] = useState(false)
@@ -78,16 +81,16 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
   // Floor map data structure - organized by floor
   const floorMap = useMemo(() => {
     const floors: Record<string, Property[]> = {}
-    properties.forEach((p) => {
+    propertiesList.forEach((p) => {
       if (!floors[p.floor]) floors[p.floor] = []
       floors[p.floor].push(p)
     })
     return floors
-  }, [])
+  }, [propertiesList])
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return properties.filter((p) => {
+    return propertiesList.filter((p) => {
       const tenantName = getTenantNameForProperty(p).toLowerCase()
       const matchesSearch =
         !q ||
@@ -97,7 +100,7 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
       const matchesLease = lease === "all" || p.lease === lease
       return matchesSearch && matchesFloor && matchesLease
     })
-  }, [search, floor, lease])
+  }, [search, floor, lease, propertiesList])
 
   // Bulk action handlers
   const handleSelectAll = () => {
@@ -153,6 +156,19 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
     setSelectedPropertyIds(new Set())
   }
 
+  const handleAddProperty = (newProperty: Property) => {
+    setPropertiesList([...propertiesList, newProperty])
+    toast.success("Property Added", {
+      description: `Room ${newProperty.room} has been successfully added to the portfolio`
+    })
+    setShowAddPropertyForm(false)
+  }
+
+  // If showing add property form, render that instead
+  if (showAddPropertyForm) {
+    return <AddPropertyView onSubmit={handleAddProperty} onCancel={() => setShowAddPropertyForm(false)} />
+  }
+
   return (
     <div className="flex flex-col">
       <Tabs defaultValue="properties" className="w-full">
@@ -165,26 +181,36 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
         <TabsContent value="properties">
           {/* View Toggle */}
           <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 sm:gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 sm:gap-2">
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className={`h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm ${viewMode === "list" ? "bg-slate-900" : ""}`}
+                >
+                  <List className="mr-1 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">List</span>
+                  <span className="xs:hidden">List</span>
+                </Button>
+                <Button
+                  variant={viewMode === "map" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("map")}
+                  className={`h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm ${viewMode === "map" ? "bg-slate-900" : ""}`}
+                >
+                  <LayoutGrid className="mr-1 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Map</span>
+                  <span className="xs:hidden">Map</span>
+                </Button>
+              </div>
               <Button
-                variant={viewMode === "list" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("list")}
-                className={`h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm ${viewMode === "list" ? "bg-slate-900" : ""}`}
+                onClick={() => setShowAddPropertyForm(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 sm:h-9 px-3 text-xs sm:text-sm"
               >
-                <List className="mr-1 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">List</span>
-                <span className="xs:hidden">List</span>
-              </Button>
-              <Button
-                variant={viewMode === "map" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("map")}
-                className={`h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm ${viewMode === "map" ? "bg-slate-900" : ""}`}
-              >
-                <LayoutGrid className="mr-1 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Map</span>
-                <span className="xs:hidden">Map</span>
+                <Plus className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">Add Property</span>
+                <span className="xs:hidden">Add</span>
               </Button>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 sm:gap-3 sm:text-sm">
