@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Search,
   MapPin,
@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { marketplaceListings, auctionListings, type MarketplaceListing, type AuctionListing } from "@/lib/data"
+import { useMarketplaceListings, useProperties } from "@/hooks/use-database"
 import { MarketplaceSegmentedControl, type MarketplaceMode } from "@/components/marketplace-segmented-control"
 import { WorkspaceDetailView } from "./workspace-detail-view"
 import { PreoccupyFormView } from "./preoccupy-form-view"
@@ -60,9 +60,14 @@ export function MarketplaceView({
   showBackToAdmin,
   onBackToAdmin,
 }: MarketplaceViewProps) {
+  const { properties, loading: propertiesLoading } = useProperties()
+  const selectedProperty = properties?.[0]
+  const { listings: dbListings, loading: listingsLoading } = useMarketplaceListings(selectedProperty?.id || null)
+  
   const [subView, setSubView] = useState<MarketplaceSubView>("listings")
-  const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null)
-  const [selectedAuction, setSelectedAuction] = useState<AuctionListing | null>(null)
+  const [listingsList, setListingsList] = useState<any[]>([])
+  const [selectedListing, setSelectedListing] = useState<any>(null)
+  const [selectedAuction, setSelectedAuction] = useState<any>(null)
   const [showBidModal, setShowBidModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [spaceType, setSpaceType] = useState<string>("all")
@@ -75,10 +80,17 @@ export function MarketplaceView({
   const [alertPhone, setAlertPhone] = useState("")
   const [marketplaceMode, setMarketplaceMode] = useState<MarketplaceMode>("standard")
 
+  // Sync database listings to local state
+  useEffect(() => {
+    if (dbListings && Array.isArray(dbListings) && dbListings.length > 0) {
+      setListingsList(dbListings)
+    }
+  }, [dbListings])
+
   const amenitiesList = ["WiFi", "Elevator", "Generator", "Parking"]
 
   // Combine standard and auction listings based on mode
-  const allListings = marketplaceMode === "standard" ? marketplaceListings : (auctionListings as any[])
+  const allListings = listingsList
 
   const toggleAmenity = (amenity: string) => {
     setSelectedAmenities((prev) =>
@@ -88,15 +100,15 @@ export function MarketplaceView({
     )
   }
 
-  const filteredListings = allListings.filter((listing) => {
+  const filteredListings = allListings.filter((listing: any) => {
     const matchesSearch =
       searchQuery === "" ||
-      listing.buildingName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.subcity.toLowerCase().includes(searchQuery.toLowerCase())
+      (listing.buildingName || listing.building_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (listing.location || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (listing.subcity || '').toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesSpaceType =
-      spaceType === "all" || listing.spaceType.toLowerCase() === spaceType
+      spaceType === "all" || (listing.spaceType || listing.space_type || '').toLowerCase() === spaceType
 
     const priceNumber = marketplaceMode === "standard" 
       ? (listing as MarketplaceListing).monthlyRentNumber 
@@ -218,6 +230,10 @@ export function MarketplaceView({
         onBackToAdmin={onBackToAdmin}
       />
     )
+  }
+
+  if (propertiesLoading || listingsLoading) {
+    return <div className="text-center text-slate-500 p-8">Loading marketplace listings...</div>
   }
 
   // Main Marketplace Listings View

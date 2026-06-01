@@ -47,21 +47,21 @@ type KPIChartProps = {
 
 function RevenueChart({ label, value }: KPIChartProps) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-6">
+    <div className="rounded-lg border border-border bg-card p-6">
       <div className="mb-4">
-        <p className="text-sm font-medium text-slate-500">{label}</p>
-        <p className="mt-1 text-2xl font-bold text-slate-900">ETB {value}M</p>
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="mt-1 text-2xl font-bold text-foreground">ETB {value}M</p>
       </div>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={revenueData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="month" stroke="#94a3b8" style={{ fontSize: "12px" }} />
-          <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" style={{ fontSize: "12px" }} />
+          <YAxis stroke="hsl(var(--muted-foreground))" style={{ fontSize: "12px" }} />
           <Tooltip 
-            contentStyle={{ backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+            contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
             formatter={(value) => `ETB ${value}M`}
           />
-          <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ fill: "#3b82f6", r: 4 }} />
+          <Line type="monotone" dataKey="revenue" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ fill: "hsl(var(--chart-1))", r: 4 }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
