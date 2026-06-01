@@ -27,6 +27,9 @@ import {
   Languages,
   ClipboardList,
   Wrench,
+  CreditCard,
+  Calculator,
+  Zap,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -89,7 +92,7 @@ import {
 } from "@/lib/data"
 
 type SystemAdminViewProps = {
-  view: "moderation" | "credit-partners" | "settings" | "system-helpdesk"
+  view: "platform-subscriptions" | "system-settings"
 }
 
 function DocumentsModal({
@@ -1057,222 +1060,96 @@ function SystemHelpdeskView() {
 }
 
 export function SystemAdminView({ view }: SystemAdminViewProps) {
-  const [submissions, setSubmissions] = useState(workspaceSubmissions)
-  const [documentsModalOpen, setDocumentsModalOpen] = useState(false)
-  const [selectedSubmission, setSelectedSubmission] = useState<WorkspaceSubmission | null>(null)
-
-  const handleViewDocuments = (submission: WorkspaceSubmission) => {
-    setSelectedSubmission(submission)
-    setDocumentsModalOpen(true)
+  if (view === "platform-subscriptions") {
+    return <PlatformSubscriptionsView />
   }
 
-  const handleApprove = (id: string) => {
-    setSubmissions(
-      submissions.map((s) => (s.id === id ? { ...s, status: "Approved" as const } : s))
-    )
-    toast.success("Workspace Approved", {
-      description: "The building owner has been notified.",
-    })
-  }
-
-  const handleReject = (id: string) => {
-    setSubmissions(
-      submissions.map((s) => (s.id === id ? { ...s, status: "Rejected" as const } : s))
-    )
-    toast.error("Workspace Rejected", {
-      description: "The building owner has been notified.",
-    })
-  }
-
-  if (view === "moderation") {
-    return (
-      <div className="flex flex-col gap-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Pending Workspace Verifications</h1>
-          <p className="mt-1 text-slate-500">
-            Review and approve new building submissions from workspace owners.
-          </p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100">
-                  <Building2 className="h-6 w-6 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {submissions.filter((s) => s.status === "Pending").length}
-                  </p>
-                  <p className="text-sm text-slate-500">Pending Review</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100">
-                  <CheckCircle className="h-6 w-6 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {submissions.filter((s) => s.status === "Approved").length}
-                  </p>
-                  <p className="text-sm text-slate-500">Approved Today</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-100">
-                  <XCircle className="h-6 w-6 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {submissions.filter((s) => s.status === "Rejected").length}
-                  </p>
-                  <p className="text-sm text-slate-500">Rejected</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Submissions Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Verification Queue</CardTitle>
-            <CardDescription>Buildings submitted by new workspace owners</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="font-semibold text-slate-700">Building Name</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Owner</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Location</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Submitted</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Documents</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {submissions.map((submission) => (
-                  <TableRow key={submission.id}>
-                    <TableCell className="font-medium text-slate-900">
-                      {submission.buildingName}
-                    </TableCell>
-                    <TableCell className="text-slate-600">{submission.ownerName}</TableCell>
-                    <TableCell className="text-slate-600">{submission.location}</TableCell>
-                    <TableCell className="text-slate-600">{submission.submittedDate}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewDocuments(submission)}
-                      >
-                        <FileText className="h-4 w-4 mr-1" />
-                        {submission.documentCount} Files
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={`border-none ${
-                          submission.status === "Approved"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : submission.status === "Rejected"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-amber-100 text-amber-700"
-                        }`}
-                      >
-                        {submission.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {submission.status === "Pending" && (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            className="bg-emerald-500 hover:bg-emerald-600"
-                            onClick={() => handleApprove(submission.id)}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-red-200 text-red-600 hover:bg-red-50"
-                            onClick={() => handleReject(submission.id)}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </div>
-                      )}
-                      {submission.status !== "Pending" && (
-                        <span className="text-sm text-slate-400">Processed</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        <DocumentsModal
-          open={documentsModalOpen}
-          onOpenChange={setDocumentsModalOpen}
-          submission={selectedSubmission}
-        />
-      </div>
-    )
-  }
-
-  if (view === "credit-partners") {
-    return <CreditPartnersDeepView />
-  }
-
-  if (view === "system-helpdesk") {
-    return <SystemHelpdeskView />
-  }
-
-  // Settings view - Full System Configuration & Security
+  // system-settings
   return <SystemSettingsView />
 }
 
-// System Settings View Component
+// Platform Subscriptions View Component
+function PlatformSubscriptionsView() {
+  return (
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Platform Subscriptions</h1>
+        <p className="mt-1 text-slate-500">
+          Track Building Owner platform subscription payments and renewals.
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-slate-600" />
+            <CardTitle>Active Subscriptions</CardTitle>
+          </div>
+          <CardDescription>Building Owners with active platform fees</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50">
+                <TableHead className="font-semibold text-slate-700">Owner Name</TableHead>
+                <TableHead className="font-semibold text-slate-700">Building Name</TableHead>
+                <TableHead className="font-semibold text-slate-700">Plan</TableHead>
+                <TableHead className="font-semibold text-slate-700">Renewal Date</TableHead>
+                <TableHead className="font-semibold text-slate-700">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[
+                { owner: "Kebede Teshome", building: "Abuki Plaza", plan: "Pro", renewal: "May 15, 2024", status: "Paid" },
+                { owner: "Almaz Bekele", building: "Unity Apartments", plan: "Enterprise", renewal: "Jun 1, 2024", status: "Paid" },
+                { owner: "Tigist Mengistu", building: "Sunshine Residences", plan: "Basic", renewal: "Apr 20, 2024", status: "Overdue" },
+                { owner: "Yohannes Haile", building: "Crown Tower", plan: "Pro", renewal: "May 8, 2024", status: "Paid" },
+                { owner: "Dawit Hailu", building: "Diamond Complex", plan: "Basic", renewal: "May 22, 2024", status: "Paid" },
+              ].map((subscription, idx) => (
+                <TableRow key={idx}>
+                  <TableCell className="font-medium text-slate-900">{subscription.owner}</TableCell>
+                  <TableCell className="text-slate-600">{subscription.building}</TableCell>
+                  <TableCell>
+                    <Badge className="bg-slate-100 text-slate-700">
+                      {subscription.plan}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-slate-600">{subscription.renewal}</TableCell>
+                  <TableCell>
+                    <Badge
+                      className={`border-none ${
+                        subscription.status === "Paid"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {subscription.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// System Settings View Component (Taxes, Fees & Localization only)
 function SystemSettingsView() {
   // Global Config State
   const [vatRate, setVatRate] = useState("15")
   const [whtRate, setWhtRate] = useState("2")
   const [enforceVat, setEnforceVat] = useState(true)
-  const [gatewayFee, setGatewayFee] = useState("2.5")
-  const [serviceFee, setServiceFee] = useState("500")
 
   // Localization State
   const [translations, setTranslations] = useState<TranslationString[]>(translationStrings)
   const [translationSearch, setTranslationSearch] = useState("")
 
-  // Audit Logs State
-  const [auditSearch, setAuditSearch] = useState("")
-  const [roleFilter, setRoleFilter] = useState<AuditLogRole | "All">("All")
-
-  // System Maintenance State
-  const [maintenanceMode, setMaintenanceMode] = useState(false)
-  const [backingUp, setBackingUp] = useState(false)
-  const [clearingCache, setClearingCache] = useState(false)
-
   const handleSaveGlobalConfig = () => {
     toast.success("Configuration Saved", {
-      description: "Global platform settings have been updated.",
+      description: "Tax configuration has been updated.",
     })
   }
 
@@ -1287,191 +1164,71 @@ function SystemSettingsView() {
     })
   }
 
-  const handleExportLogs = () => {
-    toast.success("Export Started", {
-      description: "Audit logs are being exported to CSV.",
-    })
-  }
-
-  const handleTriggerBackup = () => {
-    setBackingUp(true)
-    setTimeout(() => {
-      setBackingUp(false)
-      toast.success("Backup Complete", {
-        description: "Database backup has been created successfully.",
-      })
-    }, 3000)
-  }
-
-  const handleClearCache = () => {
-    setClearingCache(true)
-    setTimeout(() => {
-      setClearingCache(false)
-      toast.success("Cache Cleared", {
-        description: "Application cache has been cleared.",
-      })
-    }, 2000)
-  }
-
-  const handleMaintenanceToggle = (checked: boolean) => {
-    if (checked) {
-      // Show confirmation before enabling
-      toast.warning("Maintenance Mode", {
-        description: "This will lock out all Owners and Tenants. Are you sure?",
-        action: {
-          label: "Confirm",
-          onClick: () => {
-            setMaintenanceMode(true)
-            toast.info("Maintenance Mode Enabled", {
-              description: "All users except admins are now locked out.",
-            })
-          },
-        },
-      })
-    } else {
-      setMaintenanceMode(false)
-      toast.success("Maintenance Mode Disabled", {
-        description: "Platform is now accessible to all users.",
-      })
-    }
-  }
-
   const filteredTranslations = translations.filter(
     (t) =>
       t.component.toLowerCase().includes(translationSearch.toLowerCase()) ||
       t.englishString.toLowerCase().includes(translationSearch.toLowerCase())
   )
 
-  const filteredAuditLogs = auditLogs.filter((log) => {
-    const matchesSearch =
-      log.userName.toLowerCase().includes(auditSearch.toLowerCase()) ||
-      log.action.toLowerCase().includes(auditSearch.toLowerCase()) ||
-      log.userEmail.toLowerCase().includes(auditSearch.toLowerCase())
-    const matchesRole = roleFilter === "All" || log.role === roleFilter
-    return matchesSearch && matchesRole
-  })
-
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">System Configuration & Security</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Global Settings</h1>
         <p className="mt-1 text-slate-500">
-          Manage platform settings, localization, audit logs, and system maintenance.
+          Configure platform-wide taxes, fees, and localization settings.
         </p>
       </div>
 
-      <Tabs defaultValue="global-config" className="w-full">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="global-config" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            Global Config
-          </TabsTrigger>
-          <TabsTrigger value="localization" className="flex items-center gap-2">
-            <Languages className="h-4 w-4" />
-            Localization
-          </TabsTrigger>
-          <TabsTrigger value="audit-logs" className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" />
-            Audit Logs
-          </TabsTrigger>
-          <TabsTrigger value="maintenance" className="flex items-center gap-2">
-            <Wrench className="h-4 w-4" />
-            System Maintenance
-          </TabsTrigger>
+      <Tabs defaultValue="taxes-fees" className="w-full">
+        <TabsList>
+          <TabsTrigger value="taxes-fees">Taxes & Fees</TabsTrigger>
+          <TabsTrigger value="localization">Localization</TabsTrigger>
         </TabsList>
 
-        {/* Global Config Tab */}
-        <TabsContent value="global-config" className="mt-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Tax Settings Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-slate-600" />
-                  Tax Settings
-                </CardTitle>
-                <CardDescription>
-                  Configure Ethiopian VAT and Withholding Tax rates
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="vat-rate">Default VAT Rate (%)</Label>
-                    <Input
-                      id="vat-rate"
-                      type="number"
-                      value={vatRate}
-                      onChange={(e) => setVatRate(e.target.value)}
-                      placeholder="15"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="wht-rate">Default WHT Rate (%)</Label>
-                    <Input
-                      id="wht-rate"
-                      type="number"
-                      value={whtRate}
-                      onChange={(e) => setWhtRate(e.target.value)}
-                      placeholder="2"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-                  <div>
-                    <p className="font-medium text-slate-900">Enforce VAT on all commercial leases</p>
-                    <p className="text-sm text-slate-500">Apply VAT platform-wide for commercial properties</p>
-                  </div>
-                  <Switch checked={enforceVat} onCheckedChange={setEnforceVat} />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Platform Monetization Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-slate-600" />
-                  Platform Monetization
-                </CardTitle>
-                <CardDescription>
-                  Configure platform fees and service charges
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gateway-fee">Standard Gateway Transaction Fee (%)</Label>
+        {/* Taxes & Fees Tab */}
+        <TabsContent value="taxes-fees" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Platform Tax Configuration</CardTitle>
+              <CardDescription>Set default tax rates and rules for all Building Owners</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-6">
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="vat-rate">Default VAT Rate (%)</Label>
                   <Input
-                    id="gateway-fee"
+                    id="vat-rate"
                     type="number"
-                    step="0.1"
-                    value={gatewayFee}
-                    onChange={(e) => setGatewayFee(e.target.value)}
-                    placeholder="2.5"
+                    value={vatRate}
+                    onChange={(e) => setVatRate(e.target.value)}
+                    placeholder="15"
                   />
-                  <p className="text-xs text-slate-500">Applied to all payment gateway transactions</p>
+                  <p className="text-xs text-slate-500">Applied to all leases unless otherwise configured</p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="service-fee">Nicomas Digital Service Fee (ETB/Month)</Label>
+                <div className="grid gap-2">
+                  <Label htmlFor="wht-rate">Default Withholding Tax (%)</Label>
                   <Input
-                    id="service-fee"
+                    id="wht-rate"
                     type="number"
-                    value={serviceFee}
-                    onChange={(e) => setServiceFee(e.target.value)}
-                    placeholder="500"
+                    value={whtRate}
+                    onChange={(e) => setWhtRate(e.target.value)}
+                    placeholder="2"
                   />
-                  <p className="text-xs text-slate-500">Monthly platform subscription fee per workspace</p>
+                  <p className="text-xs text-slate-500">Applied to all transactions unless otherwise configured</p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="mt-6 flex justify-end">
-            <Button className="bg-orange-500 hover:bg-orange-600" onClick={handleSaveGlobalConfig}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Global Configurations
-            </Button>
-          </div>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                <div>
+                  <p className="font-medium text-slate-900">Enforce VAT on all commercial leases</p>
+                  <p className="text-sm text-slate-500">Applies VAT platform-wide for commercial properties</p>
+                </div>
+                <Switch checked={enforceVat} onCheckedChange={setEnforceVat} />
+              </div>
+              <Button className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto" onClick={handleSaveGlobalConfig}>
+                Save Tax Configuration
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Localization Tab */}
@@ -1481,7 +1238,7 @@ function SystemSettingsView() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <CardTitle>UI String Translations</CardTitle>
-                  <CardDescription>Manage English to Amharic translations</CardDescription>
+                  <CardDescription>Manage English to Amharic translations for core UI strings</CardDescription>
                 </div>
                 <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -1516,206 +1273,6 @@ function SystemSettingsView() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* Audit Logs Tab */}
-        <TabsContent value="audit-logs" className="mt-6">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle>Security Audit Logs</CardTitle>
-                  <CardDescription>Track all major platform actions for compliance</CardDescription>
-                </div>
-                <Button variant="outline" onClick={handleExportLogs}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Logs to CSV
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    placeholder="Search by user, action..."
-                    value={auditSearch}
-                    onChange={(e) => setAuditSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <Select
-                  value={roleFilter}
-                  onValueChange={(v) => setRoleFilter(v as AuditLogRole | "All")}
-                >
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="Filter by Role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">All Roles</SelectItem>
-                    <SelectItem value="System Admin">System Admin</SelectItem>
-                    <SelectItem value="Building Owner">Building Owner</SelectItem>
-                    <SelectItem value="Tenant">Tenant</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="font-semibold text-slate-700">Timestamp</TableHead>
-                    <TableHead className="font-semibold text-slate-700">User</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Role</TableHead>
-                    <TableHead className="font-semibold text-slate-700">IP Address</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Action Taken</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAuditLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="text-slate-600 font-mono text-sm whitespace-nowrap">
-                        {log.timestamp}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-slate-900">{log.userName}</p>
-                          <p className="text-xs text-slate-500">{log.userEmail}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`border-none ${
-                            log.role === "System Admin"
-                              ? "bg-purple-100 text-purple-700"
-                              : log.role === "Building Owner"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {log.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <code className="rounded bg-slate-100 px-2 py-1 text-xs font-mono text-slate-600">
-                          {log.ipAddress}
-                        </code>
-                      </TableCell>
-                      <TableCell className="text-slate-600 max-w-[300px]">
-                        {log.action}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* System Maintenance Tab */}
-        <TabsContent value="maintenance" className="mt-6">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Database Backup Card */}
-            <Card className="border-amber-200 bg-amber-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-800">
-                  <Database className="h-5 w-5" />
-                  Database Backup
-                </CardTitle>
-                <CardDescription className="text-amber-700">
-                  Manage database backups
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="rounded-lg bg-white p-3 border border-amber-200">
-                  <p className="text-sm text-slate-600">Last Backup</p>
-                  <p className="font-semibold text-slate-900">Today, 03:00 AM</p>
-                </div>
-                <Button
-                  className="w-full bg-slate-800 hover:bg-slate-900"
-                  onClick={handleTriggerBackup}
-                  disabled={backingUp}
-                >
-                  {backingUp ? (
-                    <>
-                      <Activity className="h-4 w-4 mr-2 animate-pulse" />
-                      Backing Up...
-                    </>
-                  ) : (
-                    <>
-                      <Database className="h-4 w-4 mr-2" />
-                      Trigger Manual DB Backup
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Cache Management Card */}
-            <Card className="border-amber-200 bg-amber-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-800">
-                  <Trash2 className="h-5 w-5" />
-                  Cache Management
-                </CardTitle>
-                <CardDescription className="text-amber-700">
-                  Clear application cache
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="rounded-lg bg-white p-3 border border-amber-200">
-                  <p className="text-sm text-slate-600">Cache Status</p>
-                  <p className="font-semibold text-slate-900">256 MB in use</p>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full border-slate-300"
-                  onClick={handleClearCache}
-                  disabled={clearingCache}
-                >
-                  {clearingCache ? (
-                    <>
-                      <Activity className="h-4 w-4 mr-2 animate-pulse" />
-                      Clearing...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Clear Application Cache
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Maintenance Mode Card */}
-            <Card className="border-red-200 bg-red-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-800">
-                  <ShieldAlert className="h-5 w-5" />
-                  Maintenance Mode
-                </CardTitle>
-                <CardDescription className="text-red-700">
-                  Lock platform access
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="flex items-center justify-between rounded-lg bg-white p-3 border border-red-200">
-                  <div>
-                    <p className="font-medium text-slate-900">Enable Maintenance Mode</p>
-                  </div>
-                  <Switch
-                    checked={maintenanceMode}
-                    onCheckedChange={handleMaintenanceToggle}
-                    className="data-[state=checked]:bg-red-500"
-                  />
-                </div>
-                <p className="text-xs text-red-700">
-                  This will lock out all Owners and Tenants and display a maintenance screen. 
-                  Use only during major upgrades.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

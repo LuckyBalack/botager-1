@@ -114,7 +114,7 @@ export function DashboardApp() {
   const [userRole, setUserRole] = useState<UserRole>("admin")
   const [activeView, setActiveView] = useState<ActiveView>("dashboard")
   const [tenantView, setTenantView] = useState<TenantViewKey>("my-lease")
-  const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")
+  const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("dashboard-analytics")
   const [selected, setSelected] = useState<Selected>(null)
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingSelection>("abuki")
   const [cameFromAdmin, setCameFromAdmin] = useState(false)
@@ -308,11 +308,10 @@ export function DashboardApp() {
 
   // System Admin View Titles
   const systemAdminTitleMap: Record<SystemAdminViewKey, string> = {
-    moderation: "Advanced Moderation & Compliance",
-    "sys-financials": "Platform Financials & Billing",
-    "credit-partners": "Credit Service Partners",
-    "system-helpdesk": "Global Support & Communication",
-    settings: "System Settings",
+    "dashboard-analytics": "Dashboard Overview",
+    "moderation-queue": "Moderation",
+    "platform-subscriptions": "Platform Subscriptions",
+    "system-settings": "Global Settings",
   }
 
   // System Admin Portal Render
@@ -356,9 +355,9 @@ export function DashboardApp() {
           {/* TV max-width container */}
           <main className="flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 2xl:px-12 2xl:py-10">
             <div className="mx-auto max-w-[1800px]">
-              {systemAdminView === "moderation" && <AdvancedModerationView />}
-              {systemAdminView === "sys-financials" && <PlatformFinancialsView />}
-              {(systemAdminView === "credit-partners" || systemAdminView === "system-helpdesk" || systemAdminView === "settings") && (
+              {systemAdminView === "dashboard-analytics" && <PlatformFinancialsView />}
+              {systemAdminView === "moderation-queue" && <AdvancedModerationView />}
+              {(systemAdminView === "platform-subscriptions" || systemAdminView === "system-settings") && (
                 <SystemAdminView view={systemAdminView} />
               )}
             </div>

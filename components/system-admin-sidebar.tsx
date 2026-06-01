@@ -1,6 +1,6 @@
 "use client"
 
-import { ShieldCheck, Building2, CreditCard, Settings, LogOut, BarChart3, Headphones } from "lucide-react"
+import { ShieldCheck, Building2, LayoutDashboard, CreditCard, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Tooltip,
@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export type SystemAdminViewKey = "moderation" | "credit-partners" | "sys-financials" | "system-helpdesk" | "settings"
+export type SystemAdminViewKey = "dashboard-analytics" | "moderation-queue" | "platform-subscriptions" | "system-settings"
 
 type NavItem = {
   key: SystemAdminViewKey
@@ -18,11 +18,10 @@ type NavItem = {
 }
 
 export const systemAdminNav: NavItem[] = [
-  { key: "moderation", label: "Moderation Queue", icon: ShieldCheck },
-  { key: "sys-financials", label: "Platform Financials", icon: BarChart3 },
-  { key: "credit-partners", label: "Credit Partners", icon: CreditCard },
-  { key: "system-helpdesk", label: "Support Hub", icon: Headphones },
-  { key: "settings", label: "Settings", icon: Settings },
+  { key: "dashboard-analytics", label: "Dashboard Overview", icon: LayoutDashboard },
+  { key: "moderation-queue", label: "Moderation", icon: ShieldCheck },
+  { key: "platform-subscriptions", label: "Subscriptions", icon: CreditCard },
+  { key: "system-settings", label: "Global Settings", icon: Settings },
 ]
 
 type SystemAdminSidebarProps = {
