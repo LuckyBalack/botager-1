@@ -15,18 +15,18 @@ function OccupancyCard({ label, count, percent, variant, icon: Icon }: Occupancy
       : "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200"
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6">
-      <div className="flex h-10 w-10 items-center justify-center text-slate-700">
-        <Icon className="h-6 w-6" aria-hidden="true" />
+    <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 lg:p-6 2xl:p-7">
+      <div className="flex h-8 w-8 items-center justify-center text-slate-700 sm:h-10 sm:w-10">
+        <Icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
       </div>
-      <p className="mt-4 text-sm text-slate-500">{label}</p>
-      <div className="mt-2 flex items-center justify-between">
-        <span className="text-3xl font-bold tracking-tight text-slate-900">{count}</span>
-        <div className="flex items-center gap-2">
-          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badgeClasses}`}>
+      <p className="mt-3 text-xs text-slate-500 sm:mt-4 sm:text-sm">{label}</p>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <span className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl 2xl:text-4xl">{count}</span>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold sm:px-2.5 sm:text-xs ${badgeClasses}`}>
             {percent}%
           </span>
-          <span className="text-sm text-slate-500">Occupied</span>
+          <span className="text-xs text-slate-500 sm:text-sm">Occupied</span>
         </div>
       </div>
     </div>
@@ -56,17 +56,17 @@ function Sparkline() {
 
 function RevenueCard() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6">
-      <div className="flex items-start justify-between gap-4">
-        <Wallet className="h-10 w-10 text-slate-700" strokeWidth={1.5} aria-hidden="true" />
+    <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 lg:p-6 2xl:p-7">
+      <div className="flex items-start justify-between gap-3 sm:gap-4">
+        <Wallet className="h-8 w-8 text-slate-700 sm:h-10 sm:w-10" strokeWidth={1.5} aria-hidden="true" />
         <div className="flex flex-col items-end">
-          <span className="text-sm text-slate-500">Total Rent Collected</span>
-          <span className="mt-1 text-3xl font-bold tracking-tight text-slate-900">120,000</span>
+          <span className="text-xs text-slate-500 sm:text-sm">Total Rent Collected</span>
+          <span className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl 2xl:text-4xl">120,000</span>
         </div>
       </div>
-      <div className="mt-4">
+      <div className="mt-3 sm:mt-4">
         <Sparkline />
-        <p className="mt-1 text-right text-xs text-slate-500">Up 5% from last month</p>
+        <p className="mt-1 text-right text-[10px] text-slate-500 sm:text-xs">Up 5% from last month</p>
       </div>
     </div>
   )
@@ -76,11 +76,11 @@ export function StatCards() {
   return (
     <section aria-label="Overview" className="flex flex-col gap-4">
       <div className="flex items-baseline gap-3">
-        <span className="text-sm text-slate-500">Total Offices</span>
-        <span className="text-base font-semibold text-slate-900">310</span>
+        <span className="text-xs text-slate-500 sm:text-sm">Total Offices</span>
+        <span className="text-sm font-semibold text-slate-900 sm:text-base">310</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 sm:gap-6">
         <OccupancyCard
           label="Occupied Offices"
           count={280}

@@ -1,17 +1,23 @@
 "use client"
 
-import { FileText, Mail, MapPin, Phone } from "lucide-react"
+import { FileText, Mail, MapPin, Phone, AlertTriangle, CheckCircle2, Clock } from "lucide-react"
 import type { Tenant } from "@/lib/data"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { LeaseAgreementCard } from "@/components/lease-agreement-card"
 import { LeasePill, PaymentPill } from "@/components/status-pills"
+import { TenantEmergencyContacts } from "@/components/tenant-emergency-contacts"
+import { TenantVerificationStatus } from "@/components/tenant-verification-status"
+import { LeaseSummary } from "@/components/lease-summary"
 
 type TenantDetailViewProps = {
   tenant: Tenant
+  onTerminateLease?: (tenantId: string) => void
 }
 
-export function TenantDetailView({ tenant }: TenantDetailViewProps) {
+export function TenantDetailView({ tenant, onTerminateLease }: TenantDetailViewProps) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Left Column - Tenant Info */}
@@ -56,6 +62,9 @@ export function TenantDetailView({ tenant }: TenantDetailViewProps) {
           </CardContent>
         </Card>
 
+        {/* Emergency Contacts */}
+        <TenantEmergencyContacts />
+
         {/* Documents Card */}
         <Card>
           <CardHeader>
@@ -86,6 +95,10 @@ export function TenantDetailView({ tenant }: TenantDetailViewProps) {
 
       {/* Right Column - Lease Details */}
       <div className="space-y-6 lg:col-span-2">
+        <LeaseSummary />
+        
+        <TenantVerificationStatus />
+        
         <LeaseAgreementCard
           leaseStartDate={tenant.leaseStartDate}
           leaseExpirationDate={tenant.leaseExpirationDate}
@@ -151,6 +164,71 @@ export function TenantDetailView({ tenant }: TenantDetailViewProps) {
             </div>
           </CardContent>
         </Card>
+
+        {/* Tenant Verification Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Screening & Verification</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                <div>
+                  <p className="font-medium text-slate-900">Background Check</p>
+                  <p className="text-sm text-slate-500">Verified - Apr 2024</p>
+                </div>
+              </div>
+              <Badge className="bg-emerald-100 text-emerald-700 border-none">Clear</Badge>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                <div>
+                  <p className="font-medium text-slate-900">Employment Verification</p>
+                  <p className="text-sm text-slate-500">Verified - Apr 2024</p>
+                </div>
+              </div>
+              <Badge className="bg-emerald-100 text-emerald-700 border-none">Verified</Badge>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+              <div className="flex items-center gap-3">
+                <Clock className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="font-medium text-slate-900">Credit Score Check</p>
+                  <p className="text-sm text-slate-500">Pending review</p>
+                </div>
+              </div>
+              <Badge className="bg-amber-100 text-amber-700 border-none">Pending</Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Terminate Lease Card */}
+        {onTerminateLease && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="flex items-center justify-between p-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-slate-900">Terminate Lease</p>
+                  <p className="text-sm text-slate-500">
+                    End the lease and process security deposit settlement
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-100 hover:text-red-700"
+                onClick={() => onTerminateLease(tenant.id)}
+              >
+                Terminate Lease
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

@@ -25,14 +25,131 @@ export const buildings: Building[] = [
   },
 ]
 
-// System Subscription Data (Step 25)
+// Utility Meter Readings Data (Step 29)
+export type UtilityReading = {
+  id: string
+  roomNo: string
+  tenantId: string
+  tenantName: string
+  previousReading: number
+  currentReading: number
+  ratePerUnit: number // ETB per kWh
+  readingDate: string
+}
+
+export const utilityReadings: UtilityReading[] = [
+  {
+    id: "ur-001",
+    roomNo: "310",
+    tenantId: "t-alemu",
+    tenantName: "Getachew Temesgen",
+    previousReading: 1250,
+    currentReading: 1380,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
+  },
+  {
+    id: "ur-002",
+    roomNo: "510",
+    tenantId: "t-alemayehu",
+    tenantName: "Alemayehu Goshu",
+    previousReading: 890,
+    currentReading: 945,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
+  },
+  {
+    id: "ur-003",
+    roomNo: "212",
+    tenantId: "t-gete",
+    tenantName: "Gete Alemayehu",
+    previousReading: 720,
+    currentReading: 810,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
+  },
+  {
+    id: "ur-004",
+    roomNo: "405",
+    tenantId: "t-jenbere",
+    tenantName: "Jenbere Gutu",
+    previousReading: 560,
+    currentReading: 620,
+    ratePerUnit: 2.5,
+    readingDate: "Apr 28, 2024",
+  },
+]
+
+// Waitlist / Lead Data (Step 32)
+export type LeadStatus = "Contacted" | "Interested" | "Waiting"
+
+export type WaitlistLead = {
+  id: string
+  name: string
+  phone: string
+  email: string
+  desiredSize: string
+  budgetRange: string
+  desiredFloor: string
+  dateJoined: string
+  status: LeadStatus
+}
+
+export const waitlistLeads: WaitlistLead[] = [
+  {
+    id: "lead-001",
+    name: "Abebe Kebede",
+    phone: "+251 911 23 45 67",
+    email: "abebe.k@gmail.com",
+    desiredSize: "30 sq.m",
+    budgetRange: "ETB 12,000 - 18,000",
+    desiredFloor: "3rd Floor",
+    dateJoined: "Apr 25, 2024",
+    status: "Interested",
+  },
+  {
+    id: "lead-002",
+    name: "Tigist Haile",
+    phone: "+251 922 34 56 78",
+    email: "tigist.h@gmail.com",
+    desiredSize: "20 sq.m",
+    budgetRange: "ETB 8,000 - 12,000",
+    desiredFloor: "2nd Floor",
+    dateJoined: "Apr 22, 2024",
+    status: "Contacted",
+  },
+  {
+    id: "lead-003",
+    name: "Yonas Tesfaye",
+    phone: "+251 933 45 67 89",
+    email: "yonas.t@gmail.com",
+    desiredSize: "40 sq.m",
+    budgetRange: "ETB 20,000 - 25,000",
+    desiredFloor: "5th Floor",
+    dateJoined: "Apr 20, 2024",
+    status: "Waiting",
+  },
+  {
+    id: "lead-004",
+    name: "Hana Mengistu",
+    phone: "+251 944 56 78 90",
+    email: "hana.m@gmail.com",
+    desiredSize: "25 sq.m",
+    budgetRange: "ETB 10,000 - 15,000",
+    desiredFloor: "4th Floor",
+    dateJoined: "Apr 18, 2024",
+    status: "Interested",
+  },
+]
+
+
 export type SubscriptionPlan = {
   id: string
   name: string
   price: string
-  billingCycle: "monthly" | "yearly"
+  period: string
   features: string[]
-  isCurrent: boolean
+  recommended?: boolean
 }
 
 export const subscriptionPlans: SubscriptionPlan[] = [
@@ -40,25 +157,23 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     id: "plan-basic",
     name: "Basic",
     price: "ETB 5,000",
-    billingCycle: "monthly",
-    features: ["Up to 50 units", "Basic reporting", "Email support"],
-    isCurrent: false,
+    period: "per month",
+    features: ["Up to 20 units", "Basic reporting", "Email support"],
   },
   {
     id: "plan-pro",
     name: "Professional",
     price: "ETB 12,000",
-    billingCycle: "monthly",
-    features: ["Up to 200 units", "Advanced analytics", "Priority support", "API access"],
-    isCurrent: true,
+    period: "per month",
+    features: ["Up to 100 units", "Advanced reporting", "Priority support", "API access"],
+    recommended: true,
   },
   {
     id: "plan-enterprise",
     name: "Enterprise",
     price: "ETB 25,000",
-    billingCycle: "monthly",
-    features: ["Unlimited units", "Custom integrations", "Dedicated account manager", "SLA guarantee"],
-    isCurrent: false,
+    period: "per month",
+    features: ["Unlimited units", "Custom reporting", "Dedicated support", "Full API access", "Custom integrations"],
   },
 ]
 
@@ -171,6 +286,130 @@ export const creditPartners: CreditPartner[] = [
 
 // Space Type for Marketplace (Step 28)
 export type SpaceType = "Shop" | "Office" | "Co-working" | "Event Space"
+
+// Bid Types for Auctions
+export type Bid = {
+  id: string
+  bidderId: string
+  bidderName: string
+  amount: number
+  placedAt: string // ISO timestamp
+  status: "current" | "outbid" | "won"
+}
+
+// Marketplace Auction Listings
+export type AuctionListing = {
+  id: string
+  buildingName: string
+  location: string
+  subcity: string
+  officeSize: string
+  floor: string
+  roomNo: string
+  startingBid: number
+  currentBid: number
+  minimumIncrement: number
+  highestBidder: string
+  auctionEndsAt: string
+  amenities: string[]
+  image?: string
+  spaceType: SpaceType
+  description: string
+  buildingFeatures: string[]
+  ownerPhone: string
+  ownerName: string
+  totalBids: number
+  bidHistory: Bid[]
+  auctionStatus: "live" | "ending-soon" | "ended"
+  reservePrice?: number
+}
+
+export const auctionListings: AuctionListing[] = [
+  {
+    id: "auction-001",
+    buildingName: "Synergy Tower",
+    location: "Nifas Silk, Addis Ababa",
+    subcity: "Nifas Silk",
+    officeSize: "35 sq.m",
+    floor: "6th Floor",
+    roomNo: "601",
+    startingBid: 15000,
+    currentBid: 28500,
+    minimumIncrement: 500,
+    highestBidder: "Tegist Holdings",
+    auctionEndsAt: "2024-05-15T14:30:00",
+    amenities: ["WiFi", "Parking", "24/7 Security", "Elevator"],
+    spaceType: "Office",
+    description: "Premium office space with modern amenities in Synergy Tower. High-speed internet and professional environment ideal for growing businesses.",
+    buildingFeatures: ["24/7 Security", "Backup Generator", "Elevator Access", "On-site Parking", "Cleaning Services"],
+    ownerPhone: "+251 933 45 67 89",
+    ownerName: "Yonas Tesfaye",
+    totalBids: 12,
+    auctionStatus: "ending-soon",
+    reservePrice: 25000,
+    bidHistory: [
+      { id: "bid-1", bidderId: "user-001", bidderName: "Bidder #1", amount: 28500, placedAt: "2024-05-14T10:45:00", status: "current" },
+      { id: "bid-2", bidderId: "user-002", bidderName: "Bidder #2", amount: 28000, placedAt: "2024-05-14T09:30:00", status: "outbid" },
+      { id: "bid-3", bidderId: "user-003", bidderName: "Bidder #3", amount: 27500, placedAt: "2024-05-14T08:15:00", status: "outbid" },
+      { id: "bid-4", bidderId: "user-004", bidderName: "Bidder #4", amount: 27000, placedAt: "2024-05-14T07:00:00", status: "outbid" },
+      { id: "bid-5", bidderId: "user-005", bidderName: "Bidder #5", amount: 26500, placedAt: "2024-05-14T05:45:00", status: "outbid" },
+    ],
+  },
+  {
+    id: "auction-002",
+    buildingName: "Commerce Center",
+    location: "Mexico, Addis Ababa",
+    subcity: "Mexico",
+    officeSize: "50 sq.m",
+    floor: "4th Floor",
+    roomNo: "408",
+    startingBid: 20000,
+    currentBid: 35000,
+    minimumIncrement: 500,
+    highestBidder: "Addis Trading Co.",
+    auctionEndsAt: "2024-05-16T16:45:00",
+    amenities: ["WiFi", "Conference Room", "Parking", "Generator"],
+    spaceType: "Office",
+    description: "Spacious commercial office in the heart of Mexico. Perfect for established businesses seeking premium workspace with full amenities.",
+    buildingFeatures: ["Premium Finishes", "Conference Room Access", "High-Speed Internet", "Central AC", "24/7 Access"],
+    ownerPhone: "+251 944 56 78 90",
+    ownerName: "Hana Mengistu",
+    totalBids: 18,
+    auctionStatus: "live",
+    reservePrice: 30000,
+    bidHistory: [
+      { id: "bid-1", bidderId: "user-001", bidderName: "Bidder #1", amount: 35000, placedAt: "2024-05-14T14:00:00", status: "current" },
+      { id: "bid-2", bidderId: "user-002", bidderName: "Bidder #2", amount: 34500, placedAt: "2024-05-14T13:45:00", status: "outbid" },
+      { id: "bid-3", bidderId: "user-003", bidderName: "Bidder #3", amount: 34000, placedAt: "2024-05-14T13:30:00", status: "outbid" },
+    ],
+  },
+  {
+    id: "auction-003",
+    buildingName: "Silver Plaza",
+    location: "Piassa, Addis Ababa",
+    subcity: "Piassa",
+    officeSize: "30 sq.m",
+    floor: "2nd Floor",
+    roomNo: "205",
+    startingBid: 12000,
+    currentBid: 19800,
+    minimumIncrement: 400,
+    highestBidder: "Growth Ventures",
+    auctionEndsAt: "2024-05-17T11:20:00",
+    amenities: ["WiFi", "Parking", "Security"],
+    spaceType: "Office",
+    description: "Compact modern office in Silver Plaza with excellent visibility from the main road. Suitable for startups and small teams.",
+    buildingFeatures: ["24/7 Security", "Elevator Access", "On-site Parking"],
+    ownerPhone: "+251 911 23 45 67",
+    ownerName: "Kebede Teshome",
+    totalBids: 8,
+    auctionStatus: "live",
+    bidHistory: [
+      { id: "bid-1", bidderId: "user-001", bidderName: "Bidder #1", amount: 19800, placedAt: "2024-05-14T16:20:00", status: "current" },
+      { id: "bid-2", bidderId: "user-002", bidderName: "Bidder #2", amount: 19400, placedAt: "2024-05-14T16:00:00", status: "outbid" },
+    ],
+  },
+]
 
 
 export function getBuildingById(id: string): Building | undefined {
@@ -602,12 +841,28 @@ export type MarketplaceListing = {
   id: string
   buildingName: string
   location: string
+  subcity: string
   officeSize: string
   floor: string
+  roomNo: string
   monthlyRent: string
+  monthlyRentNumber: number
   amenities: string[]
   available: boolean
   image?: string
+  spaceType: "Shop" | "Office" | "Co-working" | "Event Space"
+  description: string
+  buildingFeatures: string[]
+  ownerPhone: string
+  ownerName: string
+  reviews: {
+    rating: number
+    text: string
+    reviewerName: string
+    date: string
+  }[]
+  images: string[]
+  listedOnMarketplace: boolean
 }
 
 export const marketplaceListings: MarketplaceListing[] = [
@@ -615,63 +870,171 @@ export const marketplaceListings: MarketplaceListing[] = [
     id: "ml-001",
     buildingName: "Abuki Bldg.",
     location: "Bole, Addis Ababa",
+    subcity: "Bole",
     officeSize: "25 sq.m",
     floor: "3rd Floor",
+    roomNo: "302",
     monthlyRent: "ETB 12,000",
-    amenities: ["WiFi", "Parking", "24/7 Security"],
+    monthlyRentNumber: 12000,
+    amenities: ["WiFi", "Parking", "24/7 Security", "Elevator"],
     available: true,
+    spaceType: "Office",
+    description: "Modern office space with excellent natural lighting and city views. Perfect for small teams or startups looking for a professional environment in the heart of Bole.",
+    buildingFeatures: ["24/7 Security", "Backup Generator", "Elevator Access", "On-site Parking", "Cleaning Services"],
+    ownerPhone: "+251 911 23 45 67",
+    ownerName: "Kebede Teshome",
+    reviews: [
+      { rating: 5, text: "Great location and very responsive management. Highly recommend!", reviewerName: "Abebe K.", date: "Mar 2024" },
+      { rating: 4, text: "Clean and professional space. The generator backup is a lifesaver.", reviewerName: "Sara M.", date: "Feb 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
   {
     id: "ml-002",
     buildingName: "Zefmesh Grand Mall",
     location: "Kazanchis, Addis Ababa",
+    subcity: "Kirkos",
     officeSize: "40 sq.m",
     floor: "5th Floor",
+    roomNo: "512",
     monthlyRent: "ETB 22,000",
-    amenities: ["WiFi", "Parking", "Conference Room"],
+    monthlyRentNumber: 22000,
+    amenities: ["WiFi", "Parking", "Conference Room", "Generator"],
     available: true,
+    spaceType: "Office",
+    description: "Spacious premium office in the prestigious Zefmesh Grand Mall. Features include access to shared conference rooms and premium finishes throughout.",
+    buildingFeatures: ["Premium Finishes", "Conference Room Access", "High-Speed Internet", "Central AC", "24/7 Access"],
+    ownerPhone: "+251 922 34 56 78",
+    ownerName: "Almaz Bekele",
+    reviews: [
+      { rating: 5, text: "Beautiful space in a great building. Very professional atmosphere.", reviewerName: "Daniel T.", date: "Apr 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
   {
     id: "ml-003",
     buildingName: "Merkato Tower",
     location: "Merkato, Addis Ababa",
+    subcity: "Addis Ketema",
     officeSize: "15 sq.m",
     floor: "2nd Floor",
+    roomNo: "205",
     monthlyRent: "ETB 8,500",
+    monthlyRentNumber: 8500,
     amenities: ["WiFi", "Elevator"],
     available: true,
+    spaceType: "Shop",
+    description: "Compact shop space ideal for retail or small service businesses. Located in the bustling Merkato area with high foot traffic.",
+    buildingFeatures: ["High Foot Traffic", "Elevator Access", "Loading Area", "Security Guard"],
+    ownerPhone: "+251 933 45 67 89",
+    ownerName: "Dawit Hailu",
+    reviews: [
+      { rating: 4, text: "Great location for my small business. Lots of customers!", reviewerName: "Meron A.", date: "Jan 2024" },
+      { rating: 3, text: "Good price but parking can be difficult.", reviewerName: "Tesfaye G.", date: "Dec 2023" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
   {
     id: "ml-004",
     buildingName: "Abuki Bldg.",
     location: "Bole, Addis Ababa",
+    subcity: "Bole",
     officeSize: "50 sq.m",
     floor: "6th Floor",
+    roomNo: "601",
     monthlyRent: "ETB 28,000",
-    amenities: ["WiFi", "Parking", "Private Bathroom", "Kitchen"],
+    monthlyRentNumber: 28000,
+    amenities: ["WiFi", "Parking", "Private Bathroom", "Kitchen", "Generator"],
     available: true,
+    spaceType: "Office",
+    description: "Premium executive office suite with private bathroom and kitchenette. Top floor location with panoramic city views. Ideal for established businesses.",
+    buildingFeatures: ["Private Bathroom", "Kitchenette", "Panoramic Views", "Premium Security", "Reserved Parking"],
+    ownerPhone: "+251 911 23 45 67",
+    ownerName: "Kebede Teshome",
+    reviews: [
+      { rating: 5, text: "Absolutely fantastic office. The views alone are worth it!", reviewerName: "Helen Y.", date: "Apr 2024" },
+      { rating: 5, text: "Best office I have rented. Very professional building management.", reviewerName: "Samuel G.", date: "Mar 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
   {
     id: "ml-005",
     buildingName: "Zefmesh Grand Mall",
     location: "Kazanchis, Addis Ababa",
+    subcity: "Kirkos",
     officeSize: "30 sq.m",
     floor: "4th Floor",
+    roomNo: "408",
     monthlyRent: "ETB 18,000",
-    amenities: ["WiFi", "Parking"],
+    monthlyRentNumber: 18000,
+    amenities: ["WiFi", "Parking", "Elevator"],
     available: true,
+    spaceType: "Co-working",
+    description: "Flexible co-working space perfect for freelancers and remote teams. Includes access to shared amenities and meeting rooms.",
+    buildingFeatures: ["Shared Meeting Rooms", "Coffee/Tea Station", "High-Speed WiFi", "Flexible Hours", "Community Events"],
+    ownerPhone: "+251 922 34 56 78",
+    ownerName: "Almaz Bekele",
+    reviews: [
+      { rating: 4, text: "Nice community of professionals. Great for networking.", reviewerName: "Tigist H.", date: "Feb 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
   {
     id: "ml-006",
     buildingName: "Merkato Tower",
     location: "Merkato, Addis Ababa",
+    subcity: "Addis Ketema",
     officeSize: "20 sq.m",
     floor: "3rd Floor",
+    roomNo: "315",
     monthlyRent: "ETB 10,000",
+    monthlyRentNumber: 10000,
     amenities: ["WiFi", "24/7 Security"],
     available: true,
+    spaceType: "Shop",
+    description: "Well-maintained shop space suitable for various retail businesses. Good visibility and easy access for customers.",
+    buildingFeatures: ["Good Visibility", "Customer Parking", "Security", "Loading Access"],
+    ownerPhone: "+251 933 45 67 89",
+    ownerName: "Dawit Hailu",
+    reviews: [
+      { rating: 4, text: "Good value for the price. Management is helpful.", reviewerName: "Yonas T.", date: "Mar 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
+  },
+  {
+    id: "ml-007",
+    buildingName: "Sunshine Plaza",
+    location: "Piassa, Addis Ababa",
+    subcity: "Arada",
+    officeSize: "100 sq.m",
+    floor: "Ground Floor",
+    roomNo: "G-05",
+    monthlyRent: "ETB 45,000",
+    monthlyRentNumber: 45000,
+    amenities: ["WiFi", "Parking", "Generator", "AC"],
+    available: true,
+    spaceType: "Event Space",
+    description: "Large event space perfect for conferences, workshops, and corporate gatherings. Fully equipped with audio-visual equipment and flexible seating arrangements.",
+    buildingFeatures: ["AV Equipment", "Flexible Seating", "Catering Kitchen", "Lobby Area", "Dedicated Restrooms"],
+    ownerPhone: "+251 944 56 78 90",
+    ownerName: "Hana Mengistu",
+    reviews: [
+      { rating: 5, text: "Hosted our company retreat here. Everything was perfect!", reviewerName: "Corporate Events Ltd.", date: "Apr 2024" },
+    ],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    listedOnMarketplace: true,
   },
 ]
+
+export function getMarketplaceListingById(id: string): MarketplaceListing | undefined {
+  return marketplaceListings.find((l) => l.id === id)
+}
 
 // Financial Reports Data
 export type FinancialReport = {
@@ -985,5 +1348,1216 @@ export const maintenanceTickets: MaintenanceTicket[] = [
       name: "Abebe Kebede",
       avatar: "/professional-man-headshot-3.png",
     },
+  },
+]
+
+// Broker (Delala) Data (Step 33)
+export type Broker = {
+  id: string
+  name: string
+  phone: string
+  licenseNo: string
+  totalReferrals: number
+  unpaidCommissions: string
+}
+
+export const brokers: Broker[] = [
+  {
+    id: "broker-001",
+    name: "Meseret Taye",
+    phone: "+251 911 22 33 44",
+    licenseNo: "BRK-2024-001",
+    totalReferrals: 8,
+    unpaidCommissions: "ETB 45,000",
+  },
+  {
+    id: "broker-002",
+    name: "Samuel Girma",
+    phone: "+251 922 33 44 55",
+    licenseNo: "BRK-2024-002",
+    totalReferrals: 12,
+    unpaidCommissions: "ETB 15,000",
+  },
+  {
+    id: "broker-003",
+    name: "Helen Yohannes",
+    phone: "+251 933 44 55 66",
+    licenseNo: "BRK-2024-003",
+    totalReferrals: 5,
+    unpaidCommissions: "ETB 0",
+  },
+]
+
+export type CommissionRecord = {
+  id: string
+  brokerId: string
+  brokerName: string
+  leaseId: string
+  roomNo: string
+  tenantName: string
+  commissionAmount: string
+  dateEarned: string
+  status: "Pending" | "Paid"
+  paidDate?: string
+}
+
+export const commissionRecords: CommissionRecord[] = [
+  {
+    id: "comm-001",
+    brokerId: "broker-001",
+    brokerName: "Meseret Taye",
+    leaseId: "lease-310",
+    roomNo: "310",
+    tenantName: "Getachew Temesgen",
+    commissionAmount: "ETB 15,000",
+    dateEarned: "Mar 15, 2024",
+    status: "Pending",
+  },
+  {
+    id: "comm-002",
+    brokerId: "broker-001",
+    brokerName: "Meseret Taye",
+    leaseId: "lease-405",
+    roomNo: "405",
+    tenantName: "Jenbere Gutu",
+    commissionAmount: "ETB 15,000",
+    dateEarned: "Feb 28, 2024",
+    status: "Pending",
+  },
+  {
+    id: "comm-003",
+    brokerId: "broker-002",
+    brokerName: "Samuel Girma",
+    leaseId: "lease-510",
+    roomNo: "510",
+    tenantName: "Alemayehu Goshu",
+    commissionAmount: "ETB 15,000",
+    dateEarned: "Jan 20, 2024",
+    status: "Paid",
+    paidDate: "Feb 5, 2024",
+  },
+]
+
+// Property Assets Data (Step 35)
+export type AssetCondition = "New" | "Good" | "Damaged"
+
+export type PropertyAsset = {
+  id: string
+  propertyId: string
+  name: string
+  serialNumber: string
+  condition: AssetCondition
+  photoUrl: string
+  lastInspected: string
+}
+
+export const propertyAssets: PropertyAsset[] = [
+  {
+    id: "asset-001",
+    propertyId: "p-310",
+    name: "Split A/C Unit",
+    serialNumber: "AC-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 15, 2024",
+  },
+  {
+    id: "asset-002",
+    propertyId: "p-310",
+    name: "Office Desk",
+    serialNumber: "DSK-2024-001",
+    condition: "New",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 15, 2024",
+  },
+  {
+    id: "asset-003",
+    propertyId: "p-310",
+    name: "Office Chair",
+    serialNumber: "CHR-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 15, 2024",
+  },
+  {
+    id: "asset-004",
+    propertyId: "p-405",
+    name: "Backup Generator",
+    serialNumber: "GEN-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 10, 2024",
+  },
+  {
+    id: "asset-005",
+    propertyId: "p-405",
+    name: "Window A/C Unit",
+    serialNumber: "AC-2024-002",
+    condition: "Damaged",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 10, 2024",
+  },
+  {
+    id: "asset-006",
+    propertyId: "p-510",
+    name: "Ceiling Fan",
+    serialNumber: "FAN-2024-001",
+    condition: "Good",
+    photoUrl: "/placeholder.svg",
+    lastInspected: "Apr 12, 2024",
+  },
+]
+
+export function getAssetsForProperty(propertyId: string): PropertyAsset[] {
+  return propertyAssets.filter((a) => a.propertyId === propertyId)
+}
+
+export function getBrokerById(id: string): Broker | undefined {
+  return brokers.find((b) => b.id === id)
+}
+
+// Maintenance Ticket Detail (Expanded)
+export type MaintenanceMessage = {
+  id: string
+  sender: string
+  senderRole: "manager" | "vendor" | "tenant"
+  avatar: string
+  message: string
+  timestamp: string
+  attachments?: {
+    name: string
+    url: string
+    type: "image" | "document"
+  }[]
+}
+
+export type MaintenanceTicketDetail = {
+  id: string
+  ticketNumber: string
+  roomNumber: string
+  tenantName: string
+  tenantPhone: string
+  priority: MaintenancePriority
+  status: MaintenanceStatus
+  title: string
+  description: string
+  dateSubmitted: string
+  vendor: {
+    name: string
+    phone: string
+  }
+  damagePhotos: string[]
+  messages: MaintenanceMessage[]
+}
+
+export const maintenanceTicketDetails: MaintenanceTicketDetail[] = [
+  {
+    id: "mnt-001",
+    ticketNumber: "MNT-102",
+    roomNumber: "310",
+    tenantName: "Getachew Temesgen",
+    tenantPhone: "+251 987 67 56 44",
+    priority: "High",
+    status: "In Progress",
+    title: "Water Leak in Ceiling",
+    description: "Significant water leak coming from ceiling in the main office area. Needs immediate attention to prevent further damage.",
+    dateSubmitted: "Apr 27, 2024",
+    vendor: {
+      name: "Addis Plumbing",
+      phone: "+251 911 55 44 33",
+    },
+    damagePhotos: ["/placeholder.svg", "/placeholder.svg"],
+    messages: [
+      {
+        id: "msg-1",
+        sender: "Getachew Temesgen",
+        senderRole: "tenant",
+        avatar: "/professional-headshot.png",
+        message: "Hi, the ceiling leak is getting worse. Is the plumber coming today?",
+        timestamp: "Apr 27, 2024 - 10:30 AM",
+      },
+      {
+        id: "msg-2",
+        sender: "Property Manager",
+        senderRole: "manager",
+        avatar: "/placeholder.svg",
+        message: "I've called Addis Plumbing and they're on their way. Should be there by 2 PM.",
+        timestamp: "Apr 27, 2024 - 10:45 AM",
+      },
+      {
+        id: "msg-3",
+        sender: "Addis Plumbing",
+        senderRole: "vendor",
+        avatar: "/placeholder.svg",
+        message: "Arrived and inspecting the damage. Will send invoice for parts needed shortly.",
+        timestamp: "Apr 27, 2024 - 2:15 PM",
+        attachments: [
+          {
+            name: "repair-estimate.pdf",
+            url: "#",
+            type: "document",
+          },
+        ],
+      },
+    ],
+  },
+]
+
+// Digital Invoice Detail
+export type InvoiceLineItem = {
+  description: string
+  quantity: number
+  unitPrice: string
+  total: string
+}
+
+export type InvoiceDetail = {
+  id: string
+  invoiceNumber: string
+  issueDate: string
+  dueDate: string
+  status: InvoiceStatus
+  tenantName: string
+  roomNumber: string
+  tenantEmail: string
+  buildingName: string
+  lineItems: InvoiceLineItem[]
+  subtotal: string
+  vat: string
+  withholding: string
+  grandTotal: string
+  paymentMethod?: string
+  transactionRef?: string
+}
+
+export const invoiceDetails: InvoiceDetail[] = [
+  {
+    id: "INV-001",
+    invoiceNumber: "INV-2024-001",
+    issueDate: "Apr 1, 2024",
+    dueDate: "May 5, 2024",
+    status: "Pending",
+    tenantName: "Getachew Temesgen",
+    roomNumber: "310",
+    tenantEmail: "gech.temu@gmail.com",
+    buildingName: "Abuki Bldg.",
+    lineItems: [
+      {
+        description: "Monthly Rent - April 2024",
+        quantity: 1,
+        unitPrice: "ETB 15,000",
+        total: "ETB 15,000",
+      },
+      {
+        description: "Utility Charges (Electricity)",
+        quantity: 1,
+        unitPrice: "ETB 325",
+        total: "ETB 325",
+      },
+      {
+        description: "Water & Maintenance",
+        quantity: 1,
+        unitPrice: "ETB 500",
+        total: "ETB 500",
+      },
+    ],
+    subtotal: "ETB 15,825",
+    vat: "ETB 2,373.75 (15%)",
+    withholding: "ETB 316.50 (2%)",
+    grandTotal: "ETB 18,198.75",
+  },
+  {
+    id: "INV-002",
+    invoiceNumber: "INV-2024-002",
+    issueDate: "Mar 1, 2024",
+    dueDate: "Apr 5, 2024",
+    status: "Paid",
+    tenantName: "Alemayehu Goshu",
+    roomNumber: "510",
+    tenantEmail: "alemayehu.g@gmail.com",
+    buildingName: "Abuki Bldg.",
+    lineItems: [
+      {
+        description: "Monthly Rent - March 2024",
+        quantity: 1,
+        unitPrice: "ETB 15,000",
+        total: "ETB 15,000",
+      },
+      {
+        description: "Utility Charges (Electricity)",
+        quantity: 1,
+        unitPrice: "ETB 280",
+        total: "ETB 280",
+      },
+    ],
+    subtotal: "ETB 15,280",
+    vat: "ETB 2,292 (15%)",
+    withholding: "ETB 305.60 (2%)",
+    grandTotal: "ETB 17,877.60",
+    paymentMethod: "Telebirr",
+    transactionRef: "TXN-20240405-001",
+  },
+]
+
+// Lead/Waitlist Detail
+export type FollowUpActivity = {
+  id: string
+  date: string
+  type: "call" | "email" | "tour" | "meeting"
+  notes: string
+  nextFollowUp?: string
+}
+
+export type LeadDetail = {
+  id: string
+  name: string
+  company: string
+  phone: string
+  email: string
+  warmthScore: "Cold" | "Warm" | "Hot" | "Highly Interested"
+  desiredSize: string
+  budgetRange: string
+  desiredFloor: string
+  desiredLocation: string
+  dateJoined: string
+  status: LeadStatus
+  notes: string
+  activities: FollowUpActivity[]
+}
+
+export const leadDetails: LeadDetail[] = [
+  {
+    id: "lead-001",
+    name: "Abebe Kebede",
+    company: "Kebede Tech Solutions",
+    phone: "+251 911 23 45 67",
+    email: "abebe.k@gmail.com",
+    warmthScore: "Hot",
+    desiredSize: "30 sq.m",
+    budgetRange: "ETB 12,000 - 18,000",
+    desiredFloor: "3rd Floor",
+    desiredLocation: "Bole",
+    dateJoined: "Apr 25, 2024",
+    status: "Interested",
+    notes: "Very interested in modern office space. Flexible with timeline. Mentioned budget can be stretched for the right space.",
+    activities: [
+      {
+        id: "act-1",
+        date: "Apr 28, 2024",
+        type: "tour",
+        notes: "Virtual tour of Room 302 - Showed great interest",
+        nextFollowUp: "May 1, 2024",
+      },
+      {
+        id: "act-2",
+        date: "Apr 25, 2024",
+        type: "call",
+        notes: "Initial inquiry call - explained requirements",
+      },
+    ],
+  },
+]
+
+// Public Listing Detail (Marketplace)
+export type PublicListingDetail = {
+  id: string
+  buildingName: string
+  roomNo: string
+  floor: string
+  size: string
+  monthlyPrice: string
+  location: string
+  subcity: string
+  description: string
+  amenities: string[]
+  buildingFeatures: string[]
+  images: string[]
+  reviews: {
+    rating: number
+    text: string
+    reviewerName: string
+    date: string
+    verified: boolean
+  }[]
+  ownerName: string
+  ownerPhone: string
+  includesUtilities: boolean
+  availableDate: string
+  spaceType: string
+}
+
+export const publicListingDetails: PublicListingDetail[] = [
+  {
+    id: "listing-001",
+    buildingName: "Abuki Bldg.",
+    roomNo: "302",
+    floor: "3rd",
+    size: "25 sq.m",
+    monthlyPrice: "ETB 12,000",
+    location: "Bole, Addis Ababa",
+    subcity: "Bole",
+    description: "Modern office space with excellent natural lighting and city views. Perfect for small teams or startups looking for a professional environment in the heart of Bole. Features dedicated parking and 24/7 security.",
+    amenities: ["WiFi", "Parking", "24/7 Security", "Elevator", "Cleaning Service"],
+    buildingFeatures: ["Backup Generator", "24/7 Security", "Elevator Access", "On-site Parking", "Coffee Service"],
+    images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+    reviews: [
+      {
+        rating: 5,
+        text: "Excellent location and very responsive management. The building has great amenities and the security is top-notch.",
+        reviewerName: "Abebe K.",
+        date: "Mar 2024",
+        verified: true,
+      },
+      {
+        rating: 4,
+        text: "Clean and professional space. The generator backup is a lifesaver during power outages.",
+        reviewerName: "Sara M.",
+        date: "Feb 2024",
+        verified: true,
+      },
+      {
+        rating: 5,
+        text: "Perfect for our startup. Great community and networking opportunities.",
+        reviewerName: "Yonas T.",
+        date: "Jan 2024",
+        verified: true,
+      },
+    ],
+    ownerName: "Kebede Teshome",
+    ownerPhone: "+251 911 23 45 67",
+    includesUtilities: true,
+    availableDate: "May 1, 2024",
+    spaceType: "Office",
+  },
+]
+
+export function getMaintenanceTicketDetail(id: string): MaintenanceTicketDetail | undefined {
+  return maintenanceTicketDetails.find((t) => t.id === id)
+}
+
+export function getInvoiceDetail(id: string): InvoiceDetail | undefined {
+  return invoiceDetails.find((inv) => inv.id === id)
+}
+
+export function getLeadDetail(id: string): LeadDetail | undefined {
+  return leadDetails.find((lead) => lead.id === id)
+}
+
+export function getPublicListingDetail(id: string): PublicListingDetail | undefined {
+  return publicListingDetails.find((listing) => listing.id === id)
+}
+
+// Broker / Delala Detail
+export type CommissionEntry = {
+  tenantId: string
+  tenantName: string
+  roomNumber: string
+  commissionAmount: string
+  dateReferred: string
+  status: "Paid" | "Pending"
+}
+
+export type BrokerDetail = {
+  id: string
+  name: string
+  phone: string
+  email: string
+  trustRating: number
+  avatar: string
+  totalReferrals: number
+  activeTenantsBrought: number
+  conversionRate: string
+  commissions: CommissionEntry[]
+}
+
+export const brokerDetails: BrokerDetail[] = [
+  {
+    id: "broker-001",
+    name: "Abebe Kebede",
+    phone: "+251 911 23 45 67",
+    email: "abebe.kebede@gmail.com",
+    trustRating: 4.8,
+    avatar: "/placeholder.svg",
+    totalReferrals: 24,
+    activeTenantsBrought: 18,
+    conversionRate: "75%",
+    commissions: [
+      {
+        tenantId: "t-getachew",
+        tenantName: "Getachew Temesgen",
+        roomNumber: "310",
+        commissionAmount: "ETB 3,000",
+        dateReferred: "Apr 1, 2024",
+        status: "Paid",
+      },
+      {
+        tenantId: "t-alemayehu",
+        tenantName: "Alemayehu Goshu",
+        roomNumber: "510",
+        commissionAmount: "ETB 3,000",
+        dateReferred: "Apr 5, 2024",
+        status: "Paid",
+      },
+      {
+        tenantId: "t-gete",
+        tenantName: "Gete Alemayehu",
+        roomNumber: "212",
+        commissionAmount: "ETB 3,000",
+        dateReferred: "Apr 10, 2024",
+        status: "Pending",
+      },
+      {
+        tenantId: "t-sara",
+        tenantName: "Sara Mekuria",
+        roomNumber: "405",
+        commissionAmount: "ETB 3,000",
+        dateReferred: "Apr 15, 2024",
+        status: "Pending",
+      },
+    ],
+  },
+]
+
+// Vendor / Contractor Detail
+export type JobRecord = {
+  id: string
+  ticketNumber: string
+  roomNumber: string
+  jobTitle: string
+  completedDate: string
+  jobCost: string
+  status: "Completed" | "In Progress"
+  photos?: string[]
+}
+
+export type VendorDetail = {
+  id: string
+  businessName: string
+  category: string
+  contactName: string
+  phone: string
+  email: string
+  verifiedRating: number
+  avatar: string
+  totalJobsCompleted: number
+  avgResolutionTime: string
+  activeJobs: JobRecord[]
+  jobHistory: JobRecord[]
+  outstandingBalance?: string
+}
+
+export const vendorDetails: VendorDetail[] = [
+  {
+    id: "vendor-001",
+    businessName: "Addis Electric",
+    category: "Electrician",
+    contactName: "Dawit Tesfaye",
+    phone: "+251 911 55 44 33",
+    email: "contact@addiselectric.com",
+    verifiedRating: 4.9,
+    avatar: "/placeholder.svg",
+    totalJobsCompleted: 67,
+    avgResolutionTime: "2.3 days",
+    activeJobs: [
+      {
+        id: "job-active-001",
+        ticketNumber: "MNT-105",
+        roomNumber: "405",
+        jobTitle: "Electrical Fault in Room",
+        completedDate: "",
+        jobCost: "ETB 2,500",
+        status: "In Progress",
+      },
+    ],
+    jobHistory: [
+      {
+        id: "job-001",
+        ticketNumber: "MNT-102",
+        roomNumber: "310",
+        jobTitle: "Complete Electrical Rewiring",
+        completedDate: "Apr 28, 2024",
+        jobCost: "ETB 8,500",
+        status: "Completed",
+        photos: ["/placeholder.svg", "/placeholder.svg"],
+      },
+      {
+        id: "job-002",
+        ticketNumber: "MNT-098",
+        roomNumber: "212",
+        jobTitle: "Light Switch Installation",
+        completedDate: "Apr 20, 2024",
+        jobCost: "ETB 1,200",
+        status: "Completed",
+      },
+      {
+        id: "job-003",
+        ticketNumber: "MNT-095",
+        roomNumber: "510",
+        jobTitle: "Ceiling Fan Repair",
+        completedDate: "Apr 15, 2024",
+        jobCost: "ETB 800",
+        status: "Completed",
+      },
+    ],
+    outstandingBalance: "ETB 2,500",
+  },
+]
+
+// Building Verification (Admin)
+export type ComplianceDocument = {
+  name: string
+  status: "Uploaded" | "Missing" | "Verified"
+  uploadedDate?: string
+  fileUrl?: string
+}
+
+export type BuildingVerification = {
+  id: string
+  buildingName: string
+  location: string
+  ownerName: string
+  ownerPhone: string
+  ownerEmail: string
+  verificationStatus: "Under Review" | "Verified" | "Rejected"
+  complianceDocuments: ComplianceDocument[]
+  isPublicOnMarketplace: boolean
+  platformSubscriptionStatus: "Active" | "Inactive" | "Pending"
+}
+
+export const buildingVerifications: BuildingVerification[] = [
+  {
+    id: "building-verify-001",
+    buildingName: "Zefmesh Grand Mall",
+    location: "Bole, Addis Ababa",
+    ownerName: "Kebede Teshome",
+    ownerPhone: "+251 911 23 45 67",
+    ownerEmail: "kebede@zefmesh.com",
+    verificationStatus: "Under Review",
+    complianceDocuments: [
+      {
+        name: "Property Deed",
+        status: "Uploaded",
+        uploadedDate: "Apr 25, 2024",
+        fileUrl: "/documents/property-deed.pdf",
+      },
+      {
+        name: "Owner ID",
+        status: "Verified",
+        uploadedDate: "Apr 25, 2024",
+        fileUrl: "/documents/owner-id.pdf",
+      },
+      {
+        name: "Building Trade License",
+        status: "Uploaded",
+        uploadedDate: "Apr 26, 2024",
+        fileUrl: "/documents/trade-license.pdf",
+      },
+      {
+        name: "Tax Clearance",
+        status: "Missing",
+      },
+    ],
+    isPublicOnMarketplace: false,
+    platformSubscriptionStatus: "Pending",
+  },
+]
+
+export function getBrokerDetail(id: string): BrokerDetail | undefined {
+  return brokerDetails.find((b) => b.id === id)
+}
+
+export function getVendorDetail(id: string): VendorDetail | undefined {
+  return vendorDetails.find((v) => v.id === id)
+}
+
+export function getBuildingVerification(id: string): BuildingVerification | undefined {
+  return buildingVerifications.find((bv) => bv.id === id)
+}
+
+// API Health Logs (Step 3)
+export type ApiHealthLog = {
+  id: string
+  timestamp: string
+  partner: string
+  endpoint: string
+  responseCode: number
+  latency: number // in milliseconds
+}
+
+export const apiHealthLogs: ApiHealthLog[] = [
+  {
+    id: "ahl-001",
+    timestamp: "Apr 30, 2024 14:32:15",
+    partner: "Commercial Bank of Ethiopia",
+    endpoint: "/v1/credit/verify",
+    responseCode: 200,
+    latency: 120,
+  },
+  {
+    id: "ahl-002",
+    timestamp: "Apr 30, 2024 14:30:08",
+    partner: "Awash Bank",
+    endpoint: "/v1/credit/check",
+    responseCode: 200,
+    latency: 98,
+  },
+  {
+    id: "ahl-003",
+    timestamp: "Apr 30, 2024 14:28:45",
+    partner: "Commercial Bank of Ethiopia",
+    endpoint: "/v1/credit/disburse",
+    responseCode: 500,
+    latency: 2450,
+  },
+  {
+    id: "ahl-004",
+    timestamp: "Apr 30, 2024 14:25:12",
+    partner: "Awash Bank",
+    endpoint: "/v1/credit/verify",
+    responseCode: 200,
+    latency: 145,
+  },
+  {
+    id: "ahl-005",
+    timestamp: "Apr 30, 2024 14:22:30",
+    partner: "M-Birr",
+    endpoint: "/v1/wallet/balance",
+    responseCode: 401,
+    latency: 56,
+  },
+  {
+    id: "ahl-006",
+    timestamp: "Apr 30, 2024 14:20:18",
+    partner: "Commercial Bank of Ethiopia",
+    endpoint: "/v1/credit/verify",
+    responseCode: 200,
+    latency: 112,
+  },
+  {
+    id: "ahl-007",
+    timestamp: "Apr 30, 2024 14:18:05",
+    partner: "Awash Bank",
+    endpoint: "/v1/credit/disburse",
+    responseCode: 200,
+    latency: 234,
+  },
+]
+
+// Credit Utilization by Sub-city (Step 3)
+export type CreditUtilization = {
+  id: string
+  subcity: string
+  totalApplications: number
+  approvalRate: number // percentage
+  totalEtbIssued: string
+  totalEtbNumber: number
+}
+
+export const creditUtilizationData: CreditUtilization[] = [
+  {
+    id: "cu-001",
+    subcity: "Bole",
+    totalApplications: 245,
+    approvalRate: 78,
+    totalEtbIssued: "ETB 1.2M",
+    totalEtbNumber: 1200000,
+  },
+  {
+    id: "cu-002",
+    subcity: "Kirkos",
+    totalApplications: 189,
+    approvalRate: 72,
+    totalEtbIssued: "ETB 890K",
+    totalEtbNumber: 890000,
+  },
+  {
+    id: "cu-003",
+    subcity: "Arada",
+    totalApplications: 156,
+    approvalRate: 65,
+    totalEtbIssued: "ETB 720K",
+    totalEtbNumber: 720000,
+  },
+  {
+    id: "cu-004",
+    subcity: "Yeka",
+    totalApplications: 134,
+    approvalRate: 81,
+    totalEtbIssued: "ETB 650K",
+    totalEtbNumber: 650000,
+  },
+  {
+    id: "cu-005",
+    subcity: "Lideta",
+    totalApplications: 98,
+    approvalRate: 69,
+    totalEtbIssued: "ETB 420K",
+    totalEtbNumber: 420000,
+  },
+]
+
+// Support Tickets (Step 4)
+export type SupportTicketStatus = "New" | "Open" | "Resolved" | "Escalated"
+
+export type SupportTicket = {
+  id: string
+  ownerName: string
+  ownerEmail: string
+  subject: string
+  status: SupportTicketStatus
+  createdAt: string
+  lastUpdated: string
+  messages: {
+    id: string
+    sender: "owner" | "admin"
+    senderName: string
+    message: string
+    timestamp: string
+  }[]
+}
+
+export const supportTickets: SupportTicket[] = [
+  {
+    id: "st-001",
+    ownerName: "Kebede Teshome",
+    ownerEmail: "kebede@gmail.com",
+    subject: "Payment Gateway Error",
+    status: "New",
+    createdAt: "Apr 30, 2024 09:15",
+    lastUpdated: "Apr 30, 2024 09:15",
+    messages: [
+      {
+        id: "msg-001",
+        sender: "owner",
+        senderName: "Kebede Teshome",
+        message: "I am trying to process a tenant payment but the Telebirr integration keeps showing an error. The error code is TBR-500. Can you please help?",
+        timestamp: "Apr 30, 2024 09:15",
+      },
+    ],
+  },
+  {
+    id: "st-002",
+    ownerName: "Almaz Bekele",
+    ownerEmail: "almaz.b@gmail.com",
+    subject: "How to add a second building?",
+    status: "Open",
+    createdAt: "Apr 29, 2024 14:30",
+    lastUpdated: "Apr 30, 2024 08:45",
+    messages: [
+      {
+        id: "msg-002",
+        sender: "owner",
+        senderName: "Almaz Bekele",
+        message: "Hello, I want to add my second building to the platform. I already have Unity Plaza registered. How can I add another building under the same account?",
+        timestamp: "Apr 29, 2024 14:30",
+      },
+      {
+        id: "msg-003",
+        sender: "admin",
+        senderName: "WRM Support",
+        message: "Hi Almaz, thank you for reaching out. You can add a new building by going to Settings > Buildings > Add New Building. You will need to provide the required documents for verification. Would you like me to guide you through the process?",
+        timestamp: "Apr 30, 2024 08:45",
+      },
+    ],
+  },
+  {
+    id: "st-003",
+    ownerName: "Dawit Hailu",
+    ownerEmail: "dawit.h@gmail.com",
+    subject: "Tenant dispute resolution",
+    status: "Open",
+    createdAt: "Apr 28, 2024 11:20",
+    lastUpdated: "Apr 29, 2024 16:00",
+    messages: [
+      {
+        id: "msg-004",
+        sender: "owner",
+        senderName: "Dawit Hailu",
+        message: "I have a tenant who claims they paid rent but my system shows unpaid. We need help resolving this dispute. Transaction ID: TXN-2024-0428-001",
+        timestamp: "Apr 28, 2024 11:20",
+      },
+      {
+        id: "msg-005",
+        sender: "admin",
+        senderName: "WRM Support",
+        message: "We are looking into the transaction. Please allow 24-48 hours for our finance team to investigate.",
+        timestamp: "Apr 29, 2024 16:00",
+      },
+    ],
+  },
+  {
+    id: "st-004",
+    ownerName: "Tigist Mengistu",
+    ownerEmail: "tigist.m@gmail.com",
+    subject: "Cannot generate monthly report",
+    status: "Resolved",
+    createdAt: "Apr 25, 2024 10:00",
+    lastUpdated: "Apr 26, 2024 14:30",
+    messages: [
+      {
+        id: "msg-006",
+        sender: "owner",
+        senderName: "Tigist Mengistu",
+        message: "The monthly report generation is stuck at 50%. It has been like this for 2 hours.",
+        timestamp: "Apr 25, 2024 10:00",
+      },
+      {
+        id: "msg-007",
+        sender: "admin",
+        senderName: "WRM Support",
+        message: "We have identified the issue and fixed it. Please try generating the report again. The issue was related to a large number of transactions in April.",
+        timestamp: "Apr 26, 2024 14:30",
+      },
+    ],
+  },
+]
+
+// System Broadcasts (Step 4)
+export type BroadcastAudience = "All Building Owners" | "All Active Tenants" | "Specific Building"
+
+export type SystemBroadcast = {
+  id: string
+  date: string
+  audience: BroadcastAudience
+  subject: string
+  messagePreview: string
+  deliveryMethods: ("SMS" | "Email" | "In-App")[]
+  successRate: number // percentage
+}
+
+export const systemBroadcasts: SystemBroadcast[] = [
+  {
+    id: "sb-001",
+    date: "Apr 28, 2024",
+    audience: "All Building Owners",
+    subject: "Scheduled Maintenance Notice",
+    messagePreview: "The platform will undergo scheduled maintenance on May 1st from 2:00 AM to 4:00 AM EAT...",
+    deliveryMethods: ["Email", "In-App"],
+    successRate: 98,
+  },
+  {
+    id: "sb-002",
+    date: "Apr 20, 2024",
+    audience: "All Active Tenants",
+    subject: "New Payment Options Available",
+    messagePreview: "We are excited to announce that you can now pay your rent using CBE Birr and M-Pesa...",
+    deliveryMethods: ["SMS", "Email", "In-App"],
+    successRate: 94,
+  },
+  {
+    id: "sb-003",
+    date: "Apr 15, 2024",
+    audience: "All Building Owners",
+    subject: "Tax Season Reminder",
+    messagePreview: "This is a reminder that Q1 tax reports are now available in your dashboard...",
+    deliveryMethods: ["Email"],
+    successRate: 100,
+  },
+]
+
+// Audit Logs (Step 5)
+export type AuditLogRole = "System Admin" | "Building Owner" | "Tenant"
+
+export type AuditLog = {
+  id: string
+  timestamp: string
+  userName: string
+  userEmail: string
+  role: AuditLogRole
+  ipAddress: string
+  action: string
+}
+
+export const auditLogs: AuditLog[] = [
+  {
+    id: "al-001",
+    timestamp: "Apr 30, 2024 14:45:22",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Updated Tax Config: VAT Rate changed to 15%",
+  },
+  {
+    id: "al-002",
+    timestamp: "Apr 30, 2024 14:32:10",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Approved Zefmesh Mall - Workspace Verification",
+  },
+  {
+    id: "al-003",
+    timestamp: "Apr 30, 2024 13:15:45",
+    userName: "Kebede Teshome",
+    userEmail: "kebede@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.45.112",
+    action: "Added new tenant: Hanna Girma to Unit 302",
+  },
+  {
+    id: "al-004",
+    timestamp: "Apr 30, 2024 12:50:33",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Deleted Tenant Record: ID TEN-2024-0089",
+  },
+  {
+    id: "al-005",
+    timestamp: "Apr 30, 2024 11:22:18",
+    userName: "Almaz Bekele",
+    userEmail: "almaz.b@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.67.89",
+    action: "Generated Monthly Financial Report - April 2024",
+  },
+  {
+    id: "al-006",
+    timestamp: "Apr 30, 2024 10:45:00",
+    userName: "Yohannes Haile",
+    userEmail: "yohannes.h@gmail.com",
+    role: "Tenant",
+    ipAddress: "196.188.33.201",
+    action: "Submitted Rent Payment: ETB 15,000 via Telebirr",
+  },
+  {
+    id: "al-007",
+    timestamp: "Apr 29, 2024 16:30:55",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Updated Platform Fee: Gateway Transaction Fee to 2.5%",
+  },
+  {
+    id: "al-008",
+    timestamp: "Apr 29, 2024 14:20:12",
+    userName: "Tigist Mengistu",
+    userEmail: "tigist.m@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.89.156",
+    action: "Updated Building Info: Sunshine Apartments",
+  },
+  {
+    id: "al-009",
+    timestamp: "Apr 29, 2024 11:05:30",
+    userName: "Admin User",
+    userEmail: "admin@wrm.et",
+    role: "System Admin",
+    ipAddress: "196.188.120.45",
+    action: "Triggered Manual DB Backup",
+  },
+  {
+    id: "al-010",
+    timestamp: "Apr 28, 2024 09:15:45",
+    userName: "Dawit Hailu",
+    userEmail: "dawit.h@gmail.com",
+    role: "Building Owner",
+    ipAddress: "196.188.55.78",
+    action: "Evicted Tenant: Samuel Tadesse from Unit 105",
+  },
+]
+
+// UI Translation Strings (Step 5)
+export type TranslationString = {
+  id: string
+  component: string
+  englishString: string
+  amharicTranslation: string
+}
+
+export const translationStrings: TranslationString[] = [
+  {
+    id: "ts-001",
+    component: "Sidebar Navigation",
+    englishString: "Dashboard",
+    amharicTranslation: "ዳሽቦርድ",
+  },
+  {
+    id: "ts-002",
+    component: "Sidebar Navigation",
+    englishString: "My Buildings",
+    amharicTranslation: "ህንፃዎቼ",
+  },
+  {
+    id: "ts-003",
+    component: "Sidebar Navigation",
+    englishString: "Tenants",
+    amharicTranslation: "ተከራዮች",
+  },
+  {
+    id: "ts-004",
+    component: "Sidebar Navigation",
+    englishString: "Payments",
+    amharicTranslation: "ክፍያዎች",
+  },
+  {
+    id: "ts-005",
+    component: "Sidebar Navigation",
+    englishString: "Settings",
+    amharicTranslation: "ቅንብሮች",
+  },
+  {
+    id: "ts-006",
+    component: "Button Labels",
+    englishString: "Submit",
+    amharicTranslation: "አስገባ",
+  },
+  {
+    id: "ts-007",
+    component: "Button Labels",
+    englishString: "Cancel",
+    amharicTranslation: "ሰርዝ",
+  },
+  {
+    id: "ts-008",
+    component: "Button Labels",
+    englishString: "Save Changes",
+    amharicTranslation: "ለውጦችን አስቀምጥ",
+  },
+  {
+    id: "ts-009",
+    component: "Form Labels",
+    englishString: "Full Name",
+    amharicTranslation: "ሙሉ ስም",
+  },
+  {
+    id: "ts-010",
+    component: "Form Labels",
+    englishString: "Phone Number",
+    amharicTranslation: "ስልክ ቁጥር",
+  },
+  {
+    id: "ts-011",
+    component: "Form Labels",
+    englishString: "Email Address",
+    amharicTranslation: "ኢሜይል አድራሻ",
+  },
+  {
+    id: "ts-012",
+    component: "Status Labels",
+    englishString: "Pending",
+    amharicTranslation: "በመጠባበቅ ላይ",
+  },
+  {
+    id: "ts-013",
+    component: "Status Labels",
+    englishString: "Approved",
+    amharicTranslation: "ጸድቋል",
+  },
+  {
+    id: "ts-014",
+    component: "Status Labels",
+    englishString: "Rejected",
+    amharicTranslation: "ውድቅ ተደርጓል",
+  },
+  {
+    id: "ts-015",
+    component: "Notifications",
+    englishString: "Payment Received",
+    amharicTranslation: "ክፍያ ደርሷል",
   },
 ]

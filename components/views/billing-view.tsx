@@ -3,6 +3,9 @@
 import { useState } from "react"
 import { MoreHorizontal, Plus, FileText } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AutomatedInvoices } from "@/components/automated-invoices"
+import { PaymentReminders } from "@/components/payment-reminders"
+import { DunningSequences } from "@/components/dunning-sequences"
 import {
   Table,
   TableBody,
@@ -30,6 +33,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import {
   invoices,
@@ -48,6 +52,27 @@ function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
   return (
     <Badge className={`${variants[status]} border-none font-medium`}>
       {status}
+    </Badge>
+  )
+}
+
+function UrgencyBadge({ daysOverdue }: { daysOverdue: number }) {
+  if (daysOverdue <= 0) return null
+  
+  let variant = "bg-yellow-100 text-yellow-800"
+  let label = `${daysOverdue}d overdue`
+  
+  if (daysOverdue >= 30) {
+    variant = "bg-red-100 text-red-800"
+    label = `${daysOverdue}d overdue - CRITICAL`
+  } else if (daysOverdue >= 14) {
+    variant = "bg-orange-100 text-orange-800"
+    label = `${daysOverdue}d overdue - HIGH`
+  }
+  
+  return (
+    <Badge className={`${variant} border-none font-medium text-xs`}>
+      {label}
     </Badge>
   )
 }
@@ -81,16 +106,36 @@ const paymentMethods = [
   },
 ]
 
-export function BillingView() {
+function getDaysOverdue(dueDateStr: string): number {
+  const today = new Date()
+  const dueDate = new Date(dueDateStr)
+  const diffTime = today.getTime() - dueDate.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays > 0 ? diffDays : 0
+}
+
+type BillingViewProps = {
+  onOpenInvoiceDetail?: (invoiceId: string) => void
+}
+
+export function BillingView({ onOpenInvoiceDetail }: BillingViewProps) {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [invoiceDetailModalOpen, setInvoiceDetailModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
   const [paymentAmount, setPaymentAmount] = useState("")
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("chapa")
+  const [includesWHT, setIncludesWHT] = useState(false)
+  const [whtAmount, setWhtAmount] = useState("")
+  const [whtReceiptNumber, setWhtReceiptNumber] = useState("")
 
   // Tax calculations (would normally come from settings)
   const vatRate = 15
   const serviceRate = 2
+
+  // Calculate WHT breakdown
+  const cashReceived = parseFloat(paymentAmount || "0")
+  const whtCredit = parseFloat(whtAmount || "0")
+  const totalRentCleared = includesWHT ? cashReceived + whtCredit : cashReceived
 
   const handleRecordPayment = (invoiceId: string) => {
     const invoice = invoices.find((inv) => inv.id === invoiceId)
@@ -102,8 +147,26 @@ export function BillingView() {
   }
 
   const handleViewInvoiceDetails = (invoiceId: string) => {
-    setSelectedInvoice(invoiceId)
-    setInvoiceDetailModalOpen(true)
+    onOpenInvoiceDetail?.(invoiceId)
+    setInvoiceDetailModalOpen(false)
+  }
+
+  const handleSendReminder = (invoiceId: string) => {
+    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    if (invoice) {
+      toast.success("Reminder Sent", {
+        description: `Payment reminder sent to tenant for invoice ${invoiceId}`,
+      })
+    }
+  }
+
+  const handleVoidInvoice = (invoiceId: string) => {
+    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    if (invoice) {
+      toast.success("Invoice Voided", {
+        description: `Invoice ${invoiceId} has been voided successfully`,
+      })
+    }
   }
 
   const getInvoiceTaxDetails = (invoiceId: string) => {
@@ -124,28 +187,38 @@ export function BillingView() {
 
   const handleConfirmPayment = () => {
     setPaymentModalOpen(false)
+    const whtInfo = includesWHT ? ` (includes WHT: ETB ${whtAmount})` : ""
     toast.success("Digital Receipt Sent", {
-      description: `Payment of ETB ${paymentAmount} recorded successfully via ${paymentMethods.find((m) => m.id === selectedPaymentMethod)?.name}.`,
+      description: `Payment of ETB ${totalRentCleared.toLocaleString()} recorded successfully via ${paymentMethods.find((m) => m.id === selectedPaymentMethod)?.name}${whtInfo}.`,
     })
     setSelectedInvoice(null)
     setPaymentAmount("")
     setSelectedPaymentMethod("chapa")
+    setIncludesWHT(false)
+    setWhtAmount("")
+    setWhtReceiptNumber("")
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4 sm:gap-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl 2xl:text-3xl">
             Financials & Billing
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs text-slate-500 sm:text-sm">
             Manage invoices, receipts, and payment requests
           </p>
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-md bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2"
+          onClick={() => {
+            setSelectedInvoice(null)
+            toast.success("Invoice Generated", {
+              description: "New invoice has been created successfully",
+            })
+          }}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2 sm:w-auto sm:px-5 sm:py-2.5 sm:text-sm"
         >
           <span>Generate Invoice</span>
           <Plus className="h-4 w-4" aria-hidden="true" />
@@ -157,11 +230,11 @@ export function BillingView() {
           <TabsTrigger value="invoices" className="px-6">
             Invoices
           </TabsTrigger>
-          <TabsTrigger value="receipts" className="px-6">
-            Receipts
+          <TabsTrigger value="payment-verification" className="px-6">
+            Payment Verification
           </TabsTrigger>
-          <TabsTrigger value="credit" className="px-6">
-            Credit/BNPL Requests
+          <TabsTrigger value="utility-splitter" className="px-6">
+            Utility Cost Splitter
           </TabsTrigger>
         </TabsList>
 
@@ -187,6 +260,9 @@ export function BillingView() {
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700">
                     Status
+                  </TableHead>
+                  <TableHead className="font-semibold text-slate-700">
+                    Urgency
                   </TableHead>
                   <TableHead className="font-semibold text-slate-700">
                     Actions
@@ -215,6 +291,9 @@ export function BillingView() {
                       <InvoiceStatusBadge status={invoice.status} />
                     </TableCell>
                     <TableCell>
+                      <UrgencyBadge daysOverdue={getDaysOverdue(invoice.dueDate)} />
+                    </TableCell>
+                    <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button
@@ -235,8 +314,15 @@ export function BillingView() {
                           >
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Send Reminder</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
+                          <DropdownMenuItem
+                            onClick={() => handleSendReminder(invoice.id)}
+                          >
+                            Send Reminder
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleVoidInvoice(invoice.id)}
+                          >
                             Void Invoice
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -249,7 +335,7 @@ export function BillingView() {
           </div>
         </TabsContent>
 
-        <TabsContent value="receipts">
+        <TabsContent value="payment-verification">
           <div className="rounded-lg border border-slate-200 bg-white">
             <Table>
               <TableHeader>
@@ -322,78 +408,67 @@ export function BillingView() {
           </div>
         </TabsContent>
 
-        <TabsContent value="credit">
-          <div className="rounded-lg border border-slate-200 bg-white">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="font-semibold text-slate-700">
-                    Request ID
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Tenant Name
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Room No
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Requested Amount
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Request Date
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Status
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {creditRequests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="font-medium text-slate-900">
-                      {request.id}
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {request.tenantName}
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {request.roomNo}
-                    </TableCell>
-                    <TableCell className="font-medium text-slate-900">
-                      {request.requestedAmount}
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {request.requestDate}
-                    </TableCell>
-                    <TableCell>
-                      <CreditStatusBadge status={request.status} />
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Approve</DropdownMenuItem>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            Reject
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        <TabsContent value="utility-splitter" className="space-y-6">
+          <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <div className="flex flex-col gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Utility Cost Splitter</h3>
+                <p className="text-sm text-slate-500 mb-6">Calculate and distribute master utility bills to tenants based on occupied room size.</p>
+              </div>
+
+              {/* Utility Type Selection */}
+              <div>
+                <Label className="text-base font-semibold text-slate-900 mb-3 block">Utility Type</Label>
+                <RadioGroup defaultValue="electricity" className="flex gap-6">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="electricity" id="electricity" />
+                    <Label htmlFor="electricity" className="font-medium cursor-pointer">Electric</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="water" id="water" />
+                    <Label htmlFor="water" className="font-medium cursor-pointer">Water</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Master Bill Input */}
+              <div>
+                <Label htmlFor="master-bill" className="text-base font-semibold text-slate-900 mb-2 block">Master Bill Amount (ETB)</Label>
+                <Input id="master-bill" type="number" placeholder="Enter total bill amount" className="max-w-md" />
+              </div>
+
+              {/* Calculation Result */}
+              <div className="rounded-lg bg-slate-50 p-4 border border-slate-200">
+                <p className="text-sm font-semibold text-slate-900 mb-3">Distribution Summary</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Total Occupied Space</span>
+                    <span className="font-medium text-slate-900">450 sq.m</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Cost per sq.m</span>
+                    <span className="font-medium text-slate-900">ETB 22.22</span>
+                  </div>
+                  <div className="border-t border-slate-200 pt-2 mt-2">
+                    <p className="text-xs text-slate-500 mb-2">Top consumers:</p>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span>Room 301 (60 sq.m)</span>
+                        <span className="font-medium">ETB 1,333.33</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Room 302 (55 sq.m)</span>
+                        <span className="font-medium">ETB 1,222.22</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Button className="w-full bg-orange-500 hover:bg-orange-600">
+                Generate Utility Invoices
+              </Button>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
@@ -409,7 +484,7 @@ export function BillingView() {
           </DialogHeader>
           <div className="flex flex-col gap-6 py-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">Cash Amount Received</Label>
               <Input
                 id="amount"
                 type="text"
@@ -419,6 +494,70 @@ export function BillingView() {
                 className="w-full"
               />
             </div>
+
+            {/* WHT Checkbox */}
+            <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-4">
+              <Checkbox
+                id="wht"
+                checked={includesWHT}
+                onCheckedChange={(checked) => setIncludesWHT(checked === true)}
+              />
+              <div className="flex flex-col">
+                <Label htmlFor="wht" className="cursor-pointer font-medium">
+                  Includes Withholding Tax?
+                </Label>
+                <span className="text-xs text-slate-500">
+                  Check if the tenant has withheld tax from this payment
+                </span>
+              </div>
+            </div>
+
+            {/* WHT Fields (shown when checkbox is checked) */}
+            {includesWHT && (
+              <div className="flex flex-col gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="wht-amount">WHT Amount (ETB)</Label>
+                  <Input
+                    id="wht-amount"
+                    type="text"
+                    value={whtAmount}
+                    onChange={(e) => setWhtAmount(e.target.value)}
+                    placeholder="e.g., 2000"
+                    className="bg-white"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="wht-receipt">WHT Receipt Number</Label>
+                  <Input
+                    id="wht-receipt"
+                    type="text"
+                    value={whtReceiptNumber}
+                    onChange={(e) => setWhtReceiptNumber(e.target.value)}
+                    placeholder="e.g., WHT-2024-001234"
+                    className="bg-white"
+                  />
+                </div>
+                {/* WHT Validation Summary */}
+                <div className="rounded-md border border-slate-200 bg-white p-3">
+                  <p className="text-xs font-medium text-slate-500 mb-2">Payment Summary:</p>
+                  <div className="flex flex-col gap-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Cash Received:</span>
+                      <span className="font-medium">ETB {cashReceived.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-amber-600">
+                      <span>+ WHT Credit:</span>
+                      <span className="font-medium">ETB {whtCredit.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-slate-200 pt-1 mt-1">
+                      <span className="font-semibold text-slate-900">= Total Rent Cleared:</span>
+                      <span className="font-bold text-emerald-600">ETB {totalRentCleared.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col gap-3">
               <Label>Payment Method</Label>
               <RadioGroup

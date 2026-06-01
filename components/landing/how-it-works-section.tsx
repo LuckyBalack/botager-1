@@ -22,9 +22,9 @@ const STEPS = [
 export function HowItWorksSection() {
   return (
     <section className="bg-white pb-28 pt-8">
-      <div className="mx-auto max-w-7xl px-6 lg:px-10">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10 2xl:max-w-[1800px]">
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
-          <h2 className="text-4xl font-extrabold tracking-tight text-slate-900">
+          <h2 className="text-4xl font-extrabold tracking-tight text-slate-900 lg:text-5xl 2xl:text-5xl">
             How it works
           </h2>
           <p className="text-pretty text-base text-slate-500">
