@@ -1503,21 +1503,30 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
 
   // Subscriptions view
   if (view === "subscriptions") {
+    const mrrData = [
+      { month: "Jan", revenue: 142000 },
+      { month: "Feb", revenue: 156000 },
+      { month: "Mar", revenue: 165000 },
+      { month: "Apr", revenue: 178000 },
+      { month: "May", revenue: 185000 },
+      { month: "Jun", revenue: 192000 },
+    ]
+
     return (
       <div className="flex flex-col gap-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Building Owner Subscriptions</h1>
           <p className="mt-1 text-slate-500">
-            Track and manage SaaS subscription plans and renewals
+            Track and manage SaaS subscription plans, renewals, and revenue forecasts
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
           {[
-            { label: "Active Subscriptions", value: "142", color: "bg-blue-100 text-blue-700" },
-            { label: "Pending Renewals", value: "18", color: "bg-amber-100 text-amber-700" },
-            { label: "Expired Subscriptions", value: "7", color: "bg-red-100 text-red-700" },
-            { label: "MRR", value: "ETB 185K", color: "bg-emerald-100 text-emerald-700" },
+            { label: "Active Subscriptions", value: "142", change: "+8", color: "bg-blue-100 text-blue-700" },
+            { label: "Pending Renewals", value: "18", change: "-2", color: "bg-amber-100 text-amber-700" },
+            { label: "Churn Rate", value: "3.2%", change: "-0.5%", color: "bg-red-100 text-red-700" },
+            { label: "MRR", value: "ETB 185K", change: "+7K", color: "bg-emerald-100 text-emerald-700" },
           ].map((stat, idx) => (
             <Card key={idx}>
               <CardHeader className="pb-3">
@@ -1525,15 +1534,68 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
               </CardHeader>
               <CardContent>
                 <div className={`text-3xl font-bold ${stat.color.split(" ").join(" ")}`}>{stat.value}</div>
+                <p className="mt-2 text-xs text-slate-500">{stat.change} from last month</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>MRR Growth Forecast</CardTitle>
+              <CardDescription>6-month revenue trend and projection</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={mrrData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => `ETB ${value.toLocaleString()}`} />
+                  <Bar dataKey="revenue" fill="#3b82f6" name="Monthly Recurring Revenue" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Plan Distribution</CardTitle>
+              <CardDescription>Breakdown by subscription tier</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: "Basic", value: 45, color: "#94a3b8" },
+                      { name: "Professional", value: 72, color: "#3b82f6" },
+                      { name: "Enterprise", value: 25, color: "#10b981" },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    <Cell fill="#94a3b8" />
+                    <Cell fill="#3b82f6" />
+                    <Cell fill="#10b981" />
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Active Subscriptions</CardTitle>
-            <CardDescription>Building owner subscription management</CardDescription>
+            <CardDescription>Building owner subscription management and renewal tracking</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -1544,15 +1606,18 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
                   <TableHead>Renewal Date</TableHead>
                   <TableHead>Payment Status</TableHead>
                   <TableHead>MRR</TableHead>
+                  <TableHead>Days Until Renewal</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {[
-                  { owner: "Abebe Properties Ltd", plan: "Professional", renewal: "Jun 5, 2026", payment: "Paid", mrr: "ETB 5,000", status: "Active" },
-                  { owner: "Marta Constructions", plan: "Enterprise", renewal: "Jun 12, 2026", payment: "Paid", mrr: "ETB 12,000", status: "Active" },
-                  { owner: "Girma Real Estate", plan: "Basic", renewal: "May 28, 2026", payment: "Pending", mrr: "ETB 2,000", status: "At Risk" },
-                  { owner: "Addis Mixed Use", plan: "Professional", renewal: "Jul 1, 2026", payment: "Paid", mrr: "ETB 5,000", status: "Active" },
+                  { owner: "Abebe Properties Ltd", plan: "Professional", renewal: "Jun 5, 2026", payment: "Paid", mrr: "ETB 5,000", days: 4, status: "Active" },
+                  { owner: "Marta Constructions", plan: "Enterprise", renewal: "Jun 12, 2026", payment: "Paid", mrr: "ETB 12,000", days: 11, status: "Active" },
+                  { owner: "Girma Real Estate", plan: "Basic", renewal: "May 28, 2026", payment: "Pending", mrr: "ETB 2,000", days: -4, status: "At Risk" },
+                  { owner: "Addis Mixed Use", plan: "Professional", renewal: "Jul 1, 2026", payment: "Paid", mrr: "ETB 5,000", days: 30, status: "Active" },
+                  { owner: "Bole Office Complex", plan: "Basic", renewal: "Jun 18, 2026", payment: "Paid", mrr: "ETB 2,000", days: 17, status: "Active" },
+                  { owner: "Nifas Silk Tower", plan: "Professional", renewal: "Jun 22, 2026", payment: "Pending", mrr: "ETB 5,000", days: 21, status: "Active" },
                 ].map((sub, idx) => (
                   <TableRow key={idx} className="hover:bg-slate-50">
                     <TableCell className="font-medium text-slate-900">{sub.owner}</TableCell>
@@ -1565,6 +1630,15 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
                     </TableCell>
                     <TableCell className="font-medium text-slate-900">{sub.mrr}</TableCell>
                     <TableCell>
+                      <Badge className={`border-none text-xs ${
+                        sub.days < 0 ? "bg-red-100 text-red-700" :
+                        sub.days < 7 ? "bg-orange-100 text-orange-700" :
+                        "bg-emerald-100 text-emerald-700"
+                      }`}>
+                        {sub.days < 0 ? `Overdue ${Math.abs(sub.days)}d` : `${sub.days}d`}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       <Badge className={`border-none text-xs ${sub.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
                         {sub.status}
                       </Badge>
@@ -1575,6 +1649,57 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
             </Table>
           </CardContent>
         </Card>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Renewals (Next 30 Days)</CardTitle>
+              <CardDescription>Building owners with renewals due soon</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { owner: "Abebe Properties Ltd", date: "Jun 5", plan: "Professional", mrr: "ETB 5,000" },
+                  { owner: "Marta Constructions", date: "Jun 12", plan: "Enterprise", mrr: "ETB 12,000" },
+                  { owner: "Bole Office Complex", date: "Jun 18", plan: "Basic", mrr: "ETB 2,000" },
+                ].map((renewal, idx) => (
+                  <div key={idx} className="flex items-center justify-between border-b pb-3 last:border-0">
+                    <div>
+                      <p className="font-medium text-slate-900">{renewal.owner}</p>
+                      <p className="text-sm text-slate-500">{renewal.plan} • {renewal.mrr}</p>
+                    </div>
+                    <Badge className="bg-amber-100 text-amber-700 border-none">{renewal.date}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue Metrics</CardTitle>
+              <CardDescription>Key subscription health indicators</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-600">Expansion Revenue (New Features)</span>
+                <span className="font-semibold text-emerald-700">+ETB 23K</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-600">Contraction Revenue (Downgrades)</span>
+                <span className="font-semibold text-red-700">-ETB 8K</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-600">Net Revenue Retention</span>
+                <span className="font-semibold text-slate-900">124%</span>
+              </div>
+              <div className="flex items-center justify-between border-t pt-4">
+                <span className="text-sm font-medium text-slate-600">Projected Annual Revenue</span>
+                <span className="text-lg font-bold text-blue-700">ETB 2.3M</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
