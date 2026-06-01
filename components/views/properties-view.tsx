@@ -36,9 +36,10 @@ const leaseOptions = [
 
 type PropertiesViewProps = {
   onSelectProperty?: (id: string) => void
+  onNavigateToSpaceMap?: () => void
 }
 
-export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
+export function PropertiesView({ onSelectProperty, onNavigateToSpaceMap }: PropertiesViewProps) {
   const [search, setSearch] = useState("")
   const [floor, setFloor] = useState("all")
   const [lease, setLease] = useState("all")
@@ -196,7 +197,7 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
                 <Button
                   variant={viewMode === "map" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setViewMode("map")}
+                  onClick={onNavigateToSpaceMap}
                   className={`h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm ${viewMode === "map" ? "bg-slate-900" : ""}`}
                 >
                   <LayoutGrid className="mr-1 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />
