@@ -270,15 +270,15 @@ export function WorkspaceDetailView({
                       {averageRating}
                     </span>
                     <span className="text-slate-500">
-                      ({listing.reviews.length} review
-                      {listing.reviews.length !== 1 ? "s" : ""})
+                      ({listing.reviews?.length || 0} review
+                      {(listing.reviews?.length || 0) !== 1 ? "s" : ""})
                     </span>
                   </div>
                 </div>
 
-                {listing.reviews.length > 0 ? (
+                {(listing.reviews?.length || 0) > 0 ? (
                   <div className="mt-6 space-y-6">
-                    {listing.reviews.map((review, index) => (
+                    {listing.reviews?.map((review, index) => (
                       <div
                         key={index}
                         className="border-b border-slate-100 pb-6 last:border-0 last:pb-0"
