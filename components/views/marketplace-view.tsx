@@ -40,10 +40,13 @@ import {
 } from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { marketplaceListings, auctionListings, type MarketplaceListing } from "@/lib/data"
+import { marketplaceListings, auctionListings, type MarketplaceListing, type AuctionListing } from "@/lib/data"
 import { MarketplaceSegmentedControl, type MarketplaceMode } from "@/components/marketplace-segmented-control"
 import { WorkspaceDetailView } from "./workspace-detail-view"
 import { PreoccupyFormView } from "./preoccupy-form-view"
+import { AuctionDetailView } from "./auction-detail-view"
+import { PlaceBidModal } from "@/components/place-bid-modal"
+import { BidHistoryModal } from "@/components/bid-history-modal"
 
 type MarketplaceViewProps = {
   onSignIn?: () => void
@@ -51,7 +54,7 @@ type MarketplaceViewProps = {
   onBackToAdmin?: () => void
 }
 
-type MarketplaceSubView = "listings" | "detail" | "preoccupy"
+type MarketplaceSubView = "listings" | "detail" | "preoccupy" | "auction-detail"
 
 export function MarketplaceView({
   onSignIn,
@@ -60,6 +63,9 @@ export function MarketplaceView({
 }: MarketplaceViewProps) {
   const [subView, setSubView] = useState<MarketplaceSubView>("listings")
   const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null)
+  const [selectedAuction, setSelectedAuction] = useState<AuctionListing | null>(null)
+  const [showPlaceBidModal, setShowPlaceBidModal] = useState(false)
+  const [showBidHistoryModal, setShowBidHistoryModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [spaceType, setSpaceType] = useState<string>("all")
   const [priceRange, setPriceRange] = useState<string>("all")
@@ -147,9 +153,20 @@ export function MarketplaceView({
     setSubView("preoccupy")
   }
 
+  const handleViewAuctionDetails = (auction: AuctionListing) => {
+    setSelectedAuction(auction)
+    setSubView("auction-detail")
+  }
+
+  const handlePlaceBid = (auction: AuctionListing) => {
+    setSelectedAuction(auction)
+    setShowPlaceBidModal(true)
+  }
+
   const handleBackToListings = () => {
     setSubView("listings")
     setSelectedListing(null)
+    setSelectedAuction(null)
   }
 
   // Workspace Detail View
@@ -176,6 +193,32 @@ export function MarketplaceView({
         showBackToAdmin={showBackToAdmin}
         onBackToAdmin={onBackToAdmin}
       />
+    )
+  }
+
+  // Auction Detail View
+  if (subView === "auction-detail" && selectedAuction) {
+    return (
+      <>
+        <AuctionDetailView
+          auction={selectedAuction}
+          onBack={handleBackToListings}
+          onPlaceBid={() => handlePlaceBid(selectedAuction)}
+          onSignIn={onSignIn}
+          showBackToAdmin={showBackToAdmin}
+          onBackToAdmin={onBackToAdmin}
+        />
+        <PlaceBidModal
+          open={showPlaceBidModal}
+          onOpenChange={setShowPlaceBidModal}
+          auction={selectedAuction}
+          userInfo={{
+            name: "John Doe",
+            email: "john@example.com",
+            phone: "+251 911 000 000",
+          }}
+        />
+      </>
     )
   }
 
@@ -445,12 +488,13 @@ export function MarketplaceView({
                           <Button
                             variant="outline"
                             className="flex-1"
-                            onClick={() => handleViewDetails(listing as any)}
+                            onClick={() => handleViewAuctionDetails(listing as any)}
                           >
                             View Details
                           </Button>
                           <Button
                             className="flex-1 bg-orange-500 text-white hover:bg-orange-600"
+                            onClick={() => handlePlaceBid(listing as any)}
                           >
                             Place Bid
                           </Button>
