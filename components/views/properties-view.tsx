@@ -538,7 +538,7 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="listing-type">
+        <TabsContent value="listing-type" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Listing Type Selection */}
             <Card className="lg:col-span-2">
