@@ -294,7 +294,7 @@ export function DashboardApp() {
             <div className="mx-auto max-w-[1800px]">
               {systemAdminView === "moderation" && <AdvancedModerationView />}
               {systemAdminView === "sys-financials" && <PlatformFinancialsView />}
-              {(systemAdminView === "credit-partners" || systemAdminView === "system-helpdesk" || systemAdminView === "settings") && (
+              {(systemAdminView === "dashboard" || systemAdminView === "subscriptions" || systemAdminView === "credit-partners" || systemAdminView === "system-helpdesk" || systemAdminView === "settings") && (
                 <SystemAdminView view={systemAdminView} />
               )}
             </div>
