@@ -4,9 +4,11 @@ import { BenefitsPreviewCards } from "@/components/landing/preview-cards"
 
 type BenefitsSectionProps = {
   onGetStarted: () => void
+  currentPath?: string
+  onNavigate?: (path: any) => void
 }
 
-export function BenefitsSection({ onGetStarted }: BenefitsSectionProps) {
+export function BenefitsSection({ onGetStarted, currentPath, onNavigate }: BenefitsSectionProps) {
   return (
     <section className="bg-orange-50/70 py-24">
       <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 lg:grid-cols-2 lg:px-10 2xl:max-w-[1800px]">

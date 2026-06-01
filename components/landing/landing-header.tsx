@@ -12,9 +12,12 @@ const NAV = [
 type LandingHeaderProps = {
   onGetStarted: () => void
   onLogin?: () => void
+  onPostListing?: () => void
+  currentPath?: string
+  onNavigate?: (path: any) => void
 }
 
-export function LandingHeader({ onGetStarted, onLogin }: LandingHeaderProps) {
+export function LandingHeader({ onGetStarted, onLogin, onPostListing, currentPath, onNavigate }: LandingHeaderProps) {
   return (
     <header className="absolute inset-x-0 top-0 z-20">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 sm:py-6 lg:px-10 2xl:max-w-[1800px]">
@@ -36,6 +39,13 @@ export function LandingHeader({ onGetStarted, onLogin }: LandingHeaderProps) {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={onPostListing}
+            className="hidden rounded-md border border-orange-500 px-4 py-1.5 text-xs font-semibold text-slate-900 transition-colors hover:bg-orange-50 sm:inline-flex sm:px-5 sm:py-2 sm:text-sm"
+          >
+            Post a Listing
+          </button>
           <button
             type="button"
             onClick={onLogin ?? onGetStarted}
