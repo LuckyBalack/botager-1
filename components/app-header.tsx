@@ -190,26 +190,6 @@ export function AppHeader({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Role Toggle - Hidden on mobile, shown from tablet up */}
-        {onRoleToggle && (
-          <button
-            type="button"
-            onClick={onRoleToggle}
-            className="hidden rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 md:block md:px-4 md:py-2 md:text-sm"
-          >
-            <span className="hidden lg:inline">
-              {userRole === "admin" && "Switch to Tenant View"}
-              {userRole === "tenant" && "Switch to System Admin"}
-              {userRole === "system-admin" && "Switch to Admin View"}
-            </span>
-            <span className="lg:hidden">
-              {userRole === "admin" && "Tenant"}
-              {userRole === "tenant" && "Sys Admin"}
-              {userRole === "system-admin" && "Admin"}
-            </span>
-          </button>
-        )}
-
         {/* Add Tenant Button */}
         {showAddTenant && (
           <button

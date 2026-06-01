@@ -283,7 +283,6 @@ export function DashboardApp() {
           <AppHeader
             title={systemAdminTitleMap[systemAdminView]}
             userRole={userRole}
-            onRoleToggle={handleRoleToggle}
             onMenuToggle={() => setMobileMenuOpen(true)}
             sidebarCollapsed={effectiveCollapsed}
             onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -319,7 +318,6 @@ export function DashboardApp() {
           <AppHeader
             title={tenantTitleMap[tenantView]}
             userRole={userRole}
-            onRoleToggle={handleRoleToggle}
             showMenuButton={false}
             sidebarCollapsed={effectiveCollapsed}
             onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -413,7 +411,6 @@ export function DashboardApp() {
           showAddTenant={showAddTenant}
           onAddTenant={openAddTenant}
           userRole={userRole}
-          onRoleToggle={handleRoleToggle}
           onMenuToggle={() => setMobileMenuOpen(true)}
           sidebarCollapsed={effectiveCollapsed}
           onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
