@@ -481,9 +481,6 @@ export function DashboardApp() {
           </div>
         </main>
       </div>
-
-      {/* Live Chat Widget - Always visible */}
-      <LiveChatWidget />
     </div>
   )
 }
