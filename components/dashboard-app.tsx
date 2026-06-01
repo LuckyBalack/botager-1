@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/auth-context"
 
 import { AppSidebar, AppSidebarMobile, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
 import { AppHeader, type UserRole } from "@/components/app-header"
@@ -46,9 +47,10 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
   SheetDescription,
+  SheetTitle,
 } from "@/components/ui/sheet"
+import { toast } from "sonner"
 import type { TenantViewKey } from "@/components/tenant-sidebar"
 import { useResponsive } from "@/hooks/use-responsive"
 
@@ -79,8 +81,17 @@ const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", str
 
 export function DashboardApp() {
   const { isTablet } = useResponsive()
+  const { user } = useAuth()
   
-  const [userRole, setUserRole] = useState<UserRole>("admin")
+  // Get role from authenticated user
+  const [userRole, setUserRole] = useState<UserRole>("landlord")
+  
+  // Set role from authenticated user on mount
+  useEffect(() => {
+    if (user?.role) {
+      setUserRole(user.role as UserRole)
+    }
+  }, [user?.role])
   const [activeView, setActiveView] = useState<ActiveView>("dashboard")
   const [tenantView, setTenantView] = useState<TenantViewKey>("my-lease")
   const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")
@@ -283,7 +294,6 @@ export function DashboardApp() {
           <AppHeader
             title={systemAdminTitleMap[systemAdminView]}
             userRole={userRole}
-            onRoleToggle={handleRoleToggle}
             onMenuToggle={() => setMobileMenuOpen(true)}
             sidebarCollapsed={effectiveCollapsed}
             onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -319,7 +329,6 @@ export function DashboardApp() {
           <AppHeader
             title={tenantTitleMap[tenantView]}
             userRole={userRole}
-            onRoleToggle={handleRoleToggle}
             showMenuButton={false}
             sidebarCollapsed={effectiveCollapsed}
             onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -413,7 +422,6 @@ export function DashboardApp() {
           showAddTenant={showAddTenant}
           onAddTenant={openAddTenant}
           userRole={userRole}
-          onRoleToggle={handleRoleToggle}
           onMenuToggle={() => setMobileMenuOpen(true)}
           sidebarCollapsed={effectiveCollapsed}
           onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -432,8 +440,19 @@ export function DashboardApp() {
             {activeView === "tenants" && (
               <TenantsView onSelectTenant={openTenantDetail} />
             )}
-            {activeView === "billing" && <BillingView />}
-            {activeView === "maintenance" && <MaintenanceView />}
+            {activeView === "billing" && (
+              <BillingView onOpenInvoiceDetail={openInvoiceDetail} />
+            )}
+            {activeView === "maintenance" && (
+              <MaintenanceView 
+                onSelectTicket={openMaintenanceTicketDetail}
+                onNewRequest={() => {
+                  toast.success("New Request", {
+                    description: "Maintenance request form would open here",
+                  })
+                }}
+              />
+            )}
             {activeView === "accounting" && <AccountingView />}
             {activeView === "documents" && <DocumentsView />}
             {activeView === "messages" && <MessagesView />}

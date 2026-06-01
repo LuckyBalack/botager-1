@@ -114,7 +114,11 @@ function getDaysOverdue(dueDateStr: string): number {
   return diffDays > 0 ? diffDays : 0
 }
 
-export function BillingView() {
+type BillingViewProps = {
+  onOpenInvoiceDetail?: (invoiceId: string) => void
+}
+
+export function BillingView({ onOpenInvoiceDetail }: BillingViewProps) {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [invoiceDetailModalOpen, setInvoiceDetailModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
@@ -143,8 +147,26 @@ export function BillingView() {
   }
 
   const handleViewInvoiceDetails = (invoiceId: string) => {
-    setSelectedInvoice(invoiceId)
-    setInvoiceDetailModalOpen(true)
+    onOpenInvoiceDetail?.(invoiceId)
+    setInvoiceDetailModalOpen(false)
+  }
+
+  const handleSendReminder = (invoiceId: string) => {
+    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    if (invoice) {
+      toast.success("Reminder Sent", {
+        description: `Payment reminder sent to tenant for invoice ${invoiceId}`,
+      })
+    }
+  }
+
+  const handleVoidInvoice = (invoiceId: string) => {
+    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    if (invoice) {
+      toast.success("Invoice Voided", {
+        description: `Invoice ${invoiceId} has been voided successfully`,
+      })
+    }
   }
 
   const getInvoiceTaxDetails = (invoiceId: string) => {
@@ -190,6 +212,12 @@ export function BillingView() {
         </div>
         <button
           type="button"
+          onClick={() => {
+            setSelectedInvoice(null)
+            toast.success("Invoice Generated", {
+              description: "New invoice has been created successfully",
+            })
+          }}
           className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2 sm:w-auto sm:px-5 sm:py-2.5 sm:text-sm"
         >
           <span>Generate Invoice</span>
@@ -286,8 +314,15 @@ export function BillingView() {
                           >
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Send Reminder</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
+                          <DropdownMenuItem
+                            onClick={() => handleSendReminder(invoice.id)}
+                          >
+                            Send Reminder
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleVoidInvoice(invoice.id)}
+                          >
                             Void Invoice
                           </DropdownMenuItem>
                         </DropdownMenuContent>

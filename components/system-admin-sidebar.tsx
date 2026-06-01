@@ -8,6 +8,7 @@ import {
   LogOut,
   Home,
 } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import {
   Tooltip,
@@ -49,6 +50,12 @@ export function SystemAdminSidebar({
   onLogout,
   collapsed = false,
 }: SystemAdminSidebarProps) {
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = "/"
+  }
   return (
     <TooltipProvider delayDuration={0}>
       <aside
@@ -149,7 +156,7 @@ export function SystemAdminSidebar({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  onClick={onLogout}
+                  onClick={handleLogout}
                   className="flex h-10 w-10 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
                 >
                   <LogOut className="h-5 w-5" aria-hidden="true" />
@@ -163,7 +170,7 @@ export function SystemAdminSidebar({
             <>
               <button
                 type="button"
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
               >
                 <LogOut className="h-5 w-5" aria-hidden="true" />
@@ -186,6 +193,13 @@ export function SystemAdminSidebarMobile({
   onLogout,
   onClose,
 }: SystemAdminSidebarProps & { onClose?: () => void }) {
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = "/"
+  }
+
   const handleNavigate = (view: SystemAdminViewKey) => {
     onNavigate(view)
     onClose?.()
@@ -232,7 +246,7 @@ export function SystemAdminSidebarMobile({
       <div className="mt-auto flex flex-col gap-1">
         <button
           type="button"
-          onClick={onLogout}
+          onClick={handleLogout}
           className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
         >
           <LogOut className="h-5 w-5" aria-hidden="true" />

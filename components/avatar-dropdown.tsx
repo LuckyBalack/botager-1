@@ -3,28 +3,26 @@
 import { useState } from "react"
 import { LogOut, LayoutDashboard, User } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
-import { useRouter } from "@/lib/router-context"
 
 export function AvatarDropdown() {
   const [open, setOpen] = useState(false)
   const { user, logout } = useAuth()
-  const { navigate } = useRouter()
 
   if (!user) return null
 
   const handleLogout = () => {
     logout()
-    navigate("/")
+    window.location.href = "/"
     setOpen(false)
   }
 
   const handleDashboard = () => {
     if (user.role === "landlord") {
-      navigate("/landlord-dashboard")
+      window.location.href = "/landlord-dashboard"
     } else if (user.role === "admin") {
-      navigate("/system-admin-dashboard")
+      window.location.href = "/system-admin-dashboard"
     } else {
-      navigate("/tenant-dashboard")
+      window.location.href = "/tenant-dashboard"
     }
     setOpen(false)
   }
@@ -88,7 +86,7 @@ export function AvatarDropdown() {
               </button>
               <button
                 onClick={() => {
-                  navigate("/")
+                  window.location.href = "/"
                   setOpen(false)
                 }}
                 className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100 flex items-center gap-3 transition-colors"

@@ -1,42 +1,138 @@
 "use client"
 
-import { TrendingUp, TrendingDown } from "lucide-react"
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
-type KPICardProps = {
+// Sample data for charts
+const revenueData = [
+  { month: "Jan", revenue: 1.2 },
+  { month: "Feb", revenue: 1.4 },
+  { month: "Mar", revenue: 1.3 },
+  { month: "Apr", revenue: 1.6 },
+  { month: "May", revenue: 1.8 },
+  { month: "Jun", revenue: 1.8 },
+]
+
+const occupancyData = [
+  { month: "Jan", occupancy: 75 },
+  { month: "Feb", occupancy: 80 },
+  { month: "Mar", occupancy: 85 },
+  { month: "Apr", occupancy: 88 },
+  { month: "May", occupancy: 90 },
+  { month: "Jun", occupancy: 90 },
+]
+
+const rentData = [
+  { month: "Jan", outstanding: 250 },
+  { month: "Feb", outstanding: 200 },
+  { month: "Mar", outstanding: 180 },
+  { month: "Apr", outstanding: 150 },
+  { month: "May", outstanding: 156 },
+  { month: "Jun", outstanding: 156 },
+]
+
+const ticketsData = [
+  { month: "Jan", tickets: 12 },
+  { month: "Feb", tickets: 15 },
+  { month: "Mar", tickets: 18 },
+  { month: "Apr", tickets: 16 },
+  { month: "May", tickets: 22 },
+  { month: "Jun", tickets: 24 },
+]
+
+type KPIChartProps = {
   label: string
   value: string | number
-  change: number
-  trend: "up" | "down"
-  icon: React.ComponentType<{ className?: string }>
+  unit?: string
 }
 
-function KPICard({ label, value, change, trend, icon: Icon }: KPICardProps) {
-  const isPositive = trend === "up"
-  const trendColor = isPositive ? "text-emerald-600" : "text-red-600"
-  const bgColor = isPositive ? "bg-emerald-50" : "bg-red-50"
-  
+function RevenueChart({ label, value }: KPIChartProps) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-slate-500 sm:text-sm">{label}</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">{value}</p>
-          <div className="mt-3 flex items-center gap-1.5">
-            <div className={`flex items-center gap-1 rounded-full ${bgColor} px-2 py-1`}>
-              {trend === "up" ? (
-                <TrendingUp className={`h-3 w-3 sm:h-4 sm:w-4 ${trendColor}`} />
-              ) : (
-                <TrendingDown className={`h-3 w-3 sm:h-4 sm:w-4 ${trendColor}`} />
-              )}
-              <span className={`text-xs font-semibold sm:text-sm ${trendColor}`}>
-                {change}%
-              </span>
-            </div>
-            <span className="text-xs text-slate-500 sm:text-sm">vs last month</span>
-          </div>
-        </div>
-        <Icon className="h-8 w-8 text-slate-400 sm:h-10 sm:w-10" strokeWidth={1.5} />
+    <div className="rounded-lg border border-slate-200 bg-white p-6">
+      <div className="mb-4">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="mt-1 text-2xl font-bold text-slate-900">ETB {value}M</p>
       </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <LineChart data={revenueData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="month" stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+            formatter={(value) => `ETB ${value}M`}
+          />
+          <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ fill: "#3b82f6", r: 4 }} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+function OccupancyChart({ label, value }: KPIChartProps) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-6">
+      <div className="mb-4">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="mt-1 text-2xl font-bold text-slate-900">{value}%</p>
+      </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={occupancyData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="month" stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} domain={[0, 100]} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+            formatter={(value) => `${value}%`}
+          />
+          <Bar dataKey="occupancy" fill="#10b981" radius={[8, 8, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+function OutstandingRentChart({ label, value }: KPIChartProps) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-6">
+      <div className="mb-4">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="mt-1 text-2xl font-bold text-slate-900">ETB {value}K</p>
+      </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <LineChart data={rentData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="month" stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+            formatter={(value) => `ETB ${value}K`}
+          />
+          <Line type="monotone" dataKey="outstanding" stroke="#ef4444" strokeWidth={2} dot={{ fill: "#ef4444", r: 4 }} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+function MaintenanceTicketsChart({ label, value }: KPIChartProps) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-6">
+      <div className="mb-4">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
+      </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={ticketsData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="month" stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+            formatter={(value) => `${value} tickets`}
+          />
+          <Bar dataKey="tickets" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   )
 }
@@ -45,51 +141,11 @@ export function DashboardKPIs() {
   return (
     <section aria-label="Key Performance Indicators" className="space-y-4">
       <h2 className="text-lg font-semibold text-slate-900">Key Metrics</h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KPICard
-          label="Monthly Revenue"
-          value="ETB 1.8M"
-          change={12}
-          trend="up"
-          icon={({ className }) => (
-            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-        />
-        <KPICard
-          label="Occupancy Rate"
-          value="90%"
-          change={5}
-          trend="up"
-          icon={({ className }) => (
-            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5.581m0 0H9m5.581 0a2 2 0 100-4H9m0 0a2 2 0 100 4m0 0b" />
-            </svg>
-          )}
-        />
-        <KPICard
-          label="Outstanding Rent"
-          value="ETB 156K"
-          change={3}
-          trend="down"
-          icon={({ className }) => (
-            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-        />
-        <KPICard
-          label="Maintenance Tickets"
-          value="24"
-          change={8}
-          trend="up"
-          icon={({ className }) => (
-            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          )}
-        />
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <RevenueChart label="Monthly Revenue" value="1.8" />
+        <OccupancyChart label="Occupancy Rate" value="90" />
+        <OutstandingRentChart label="Outstanding Rent" value="156" />
+        <MaintenanceTicketsChart label="Maintenance Tickets" value="24" />
       </div>
     </section>
   )

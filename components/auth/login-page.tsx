@@ -37,14 +37,8 @@ export function LoginPage() {
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
     })
 
-    // Route based on role
-    if (role === "admin") {
-      navigate("/system-admin-dashboard")
-    } else if (role === "landlord") {
-      navigate("/landlord-dashboard")
-    } else {
-      navigate("/tenant-dashboard")
-    }
+    // Navigate to home - DashboardApp will render based on authenticated user's role
+    navigate("/")
   }
 
   return (

@@ -61,12 +61,8 @@ export function RegisterPage({ preSelectedRole }: RegisterPageProps) {
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.email}`,
     })
 
-    // Route based on role
-    if (selectedRole === "landlord") {
-      navigate("/landlord-dashboard")
-    } else {
-      navigate("/tenant-dashboard")
-    }
+    // Navigate to home - DashboardApp will render based on authenticated user's role
+    navigate("/")
   }
 
   // Role Selection Step

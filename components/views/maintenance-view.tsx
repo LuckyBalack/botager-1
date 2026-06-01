@@ -32,9 +32,10 @@ type KanbanColumnProps = {
   title: string
   status: MaintenanceStatus
   count: number
+  onSelectTicket?: (ticketId: string) => void
 }
 
-function KanbanColumn({ title, status, count }: KanbanColumnProps) {
+function KanbanColumn({ title, status, count, onSelectTicket }: KanbanColumnProps) {
   const tickets = maintenanceTickets.filter((t) => t.status === status)
 
   return (
@@ -52,7 +53,8 @@ function KanbanColumn({ title, status, count }: KanbanColumnProps) {
         {tickets.map((ticket) => (
           <div
             key={ticket.id}
-            className="group cursor-grab rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+            onClick={() => onSelectTicket?.(ticket.id)}
+            className="group cursor-pointer rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-slate-300 active:scale-95"
           >
             {/* Drag handle indicator */}
             <div className="mb-3 flex items-center justify-between">
@@ -93,7 +95,7 @@ function KanbanColumn({ title, status, count }: KanbanColumnProps) {
   )
 }
 
-export function MaintenanceView() {
+export function MaintenanceView({ onSelectTicket, onNewRequest }: { onSelectTicket?: (ticketId: string) => void; onNewRequest?: () => void }) {
   const openCount = maintenanceTickets.filter((t) => t.status === "Open").length
   const inProgressCount = maintenanceTickets.filter(
     (t) => t.status === "In Progress"
@@ -116,6 +118,7 @@ export function MaintenanceView() {
         </div>
         <button
           type="button"
+          onClick={onNewRequest}
           className="inline-flex items-center gap-2 rounded-md bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
@@ -142,13 +145,14 @@ export function MaintenanceView() {
         <TabsContent value="board">
           {/* Kanban Board */}
           <div className="flex gap-6">
-            <KanbanColumn title="Open" status="Open" count={openCount} />
+            <KanbanColumn title="Open" status="Open" count={openCount} onSelectTicket={onSelectTicket} />
             <KanbanColumn
               title="In Progress"
               status="In Progress"
               count={inProgressCount}
+              onSelectTicket={onSelectTicket}
             />
-            <KanbanColumn title="Resolved" status="Resolved" count={resolvedCount} />
+            <KanbanColumn title="Resolved" status="Resolved" count={resolvedCount} onSelectTicket={onSelectTicket} />
           </div>
         </TabsContent>
 
