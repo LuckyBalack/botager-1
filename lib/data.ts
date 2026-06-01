@@ -287,6 +287,130 @@ export const creditPartners: CreditPartner[] = [
 // Space Type for Marketplace (Step 28)
 export type SpaceType = "Shop" | "Office" | "Co-working" | "Event Space"
 
+// Bid Types for Auctions
+export type Bid = {
+  id: string
+  bidderId: string
+  bidderName: string
+  amount: number
+  placedAt: string // ISO timestamp
+  status: "current" | "outbid" | "won"
+}
+
+// Marketplace Auction Listings
+export type AuctionListing = {
+  id: string
+  buildingName: string
+  location: string
+  subcity: string
+  officeSize: string
+  floor: string
+  roomNo: string
+  startingBid: number
+  currentBid: number
+  minimumIncrement: number
+  highestBidder: string
+  auctionEndsAt: string
+  amenities: string[]
+  image?: string
+  spaceType: SpaceType
+  description: string
+  buildingFeatures: string[]
+  ownerPhone: string
+  ownerName: string
+  totalBids: number
+  bidHistory: Bid[]
+  auctionStatus: "live" | "ending-soon" | "ended"
+  reservePrice?: number
+}
+
+export const auctionListings: AuctionListing[] = [
+  {
+    id: "auction-001",
+    buildingName: "Synergy Tower",
+    location: "Nifas Silk, Addis Ababa",
+    subcity: "Nifas Silk",
+    officeSize: "35 sq.m",
+    floor: "6th Floor",
+    roomNo: "601",
+    startingBid: 15000,
+    currentBid: 28500,
+    minimumIncrement: 500,
+    highestBidder: "Tegist Holdings",
+    auctionEndsAt: "2024-05-15T14:30:00",
+    amenities: ["WiFi", "Parking", "24/7 Security", "Elevator"],
+    spaceType: "Office",
+    description: "Premium office space with modern amenities in Synergy Tower. High-speed internet and professional environment ideal for growing businesses.",
+    buildingFeatures: ["24/7 Security", "Backup Generator", "Elevator Access", "On-site Parking", "Cleaning Services"],
+    ownerPhone: "+251 933 45 67 89",
+    ownerName: "Yonas Tesfaye",
+    totalBids: 12,
+    auctionStatus: "ending-soon",
+    reservePrice: 25000,
+    bidHistory: [
+      { id: "bid-1", bidderId: "user-001", bidderName: "Bidder #1", amount: 28500, placedAt: "2024-05-14T10:45:00", status: "current" },
+      { id: "bid-2", bidderId: "user-002", bidderName: "Bidder #2", amount: 28000, placedAt: "2024-05-14T09:30:00", status: "outbid" },
+      { id: "bid-3", bidderId: "user-003", bidderName: "Bidder #3", amount: 27500, placedAt: "2024-05-14T08:15:00", status: "outbid" },
+      { id: "bid-4", bidderId: "user-004", bidderName: "Bidder #4", amount: 27000, placedAt: "2024-05-14T07:00:00", status: "outbid" },
+      { id: "bid-5", bidderId: "user-005", bidderName: "Bidder #5", amount: 26500, placedAt: "2024-05-14T05:45:00", status: "outbid" },
+    ],
+  },
+  {
+    id: "auction-002",
+    buildingName: "Commerce Center",
+    location: "Mexico, Addis Ababa",
+    subcity: "Mexico",
+    officeSize: "50 sq.m",
+    floor: "4th Floor",
+    roomNo: "408",
+    startingBid: 20000,
+    currentBid: 35000,
+    minimumIncrement: 500,
+    highestBidder: "Addis Trading Co.",
+    auctionEndsAt: "2024-05-16T16:45:00",
+    amenities: ["WiFi", "Conference Room", "Parking", "Generator"],
+    spaceType: "Office",
+    description: "Spacious commercial office in the heart of Mexico. Perfect for established businesses seeking premium workspace with full amenities.",
+    buildingFeatures: ["Premium Finishes", "Conference Room Access", "High-Speed Internet", "Central AC", "24/7 Access"],
+    ownerPhone: "+251 944 56 78 90",
+    ownerName: "Hana Mengistu",
+    totalBids: 18,
+    auctionStatus: "live",
+    reservePrice: 30000,
+    bidHistory: [
+      { id: "bid-1", bidderId: "user-001", bidderName: "Bidder #1", amount: 35000, placedAt: "2024-05-14T14:00:00", status: "current" },
+      { id: "bid-2", bidderId: "user-002", bidderName: "Bidder #2", amount: 34500, placedAt: "2024-05-14T13:45:00", status: "outbid" },
+      { id: "bid-3", bidderId: "user-003", bidderName: "Bidder #3", amount: 34000, placedAt: "2024-05-14T13:30:00", status: "outbid" },
+    ],
+  },
+  {
+    id: "auction-003",
+    buildingName: "Silver Plaza",
+    location: "Piassa, Addis Ababa",
+    subcity: "Piassa",
+    officeSize: "30 sq.m",
+    floor: "2nd Floor",
+    roomNo: "205",
+    startingBid: 12000,
+    currentBid: 19800,
+    minimumIncrement: 400,
+    highestBidder: "Growth Ventures",
+    auctionEndsAt: "2024-05-17T11:20:00",
+    amenities: ["WiFi", "Parking", "Security"],
+    spaceType: "Office",
+    description: "Compact modern office in Silver Plaza with excellent visibility from the main road. Suitable for startups and small teams.",
+    buildingFeatures: ["24/7 Security", "Elevator Access", "On-site Parking"],
+    ownerPhone: "+251 911 23 45 67",
+    ownerName: "Kebede Teshome",
+    totalBids: 8,
+    auctionStatus: "live",
+    bidHistory: [
+      { id: "bid-1", bidderId: "user-001", bidderName: "Bidder #1", amount: 19800, placedAt: "2024-05-14T16:20:00", status: "current" },
+      { id: "bid-2", bidderId: "user-002", bidderName: "Bidder #2", amount: 19400, placedAt: "2024-05-14T16:00:00", status: "outbid" },
+    ],
+  },
+]
+
 
 export function getBuildingById(id: string): Building | undefined {
   return buildings.find((b) => b.id === id)

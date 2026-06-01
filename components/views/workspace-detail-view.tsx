@@ -45,7 +45,7 @@ export function WorkspaceDetailView({
   const [activeImageIndex, setActiveImageIndex] = useState(0)
 
   const averageRating =
-    listing.reviews.length > 0
+    listing.reviews && listing.reviews.length > 0
       ? (
           listing.reviews.reduce((sum, r) => sum + r.rating, 0) /
           listing.reviews.length
@@ -53,14 +53,16 @@ export function WorkspaceDetailView({
       : "N/A"
 
   const nextImage = () => {
+    const imageCount = listing.images?.length || 0
     setActiveImageIndex((prev) =>
-      prev === listing.images.length - 1 ? 0 : prev + 1
+      prev === imageCount - 1 ? 0 : prev + 1
     )
   }
 
   const prevImage = () => {
+    const imageCount = listing.images?.length || 0
     setActiveImageIndex((prev) =>
-      prev === 0 ? listing.images.length - 1 : prev - 1
+      prev === 0 ? imageCount - 1 : prev - 1
     )
   }
 
@@ -126,11 +128,11 @@ export function WorkspaceDetailView({
               variant="secondary"
               className="absolute right-4 top-4 bg-white/90"
             >
-              {listing.spaceType}
+                          {listing.spaceType || "Space"}
             </Badge>
 
             {/* Navigation arrows */}
-            {listing.images.length > 1 && (
+            {(listing.images?.length ?? 0) > 1 && (
               <>
                 <button
                   type="button"
@@ -151,7 +153,7 @@ export function WorkspaceDetailView({
 
             {/* Image indicators */}
             <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
-              {listing.images.map((_, index) => (
+              {(listing.images || []).map((_, index) => (
                 <button
                   type="button"
                   key={index}
@@ -165,8 +167,8 @@ export function WorkspaceDetailView({
           </div>
 
           {/* Thumbnail Gallery */}
-          <div className="mt-4 flex gap-3 overflow-x-auto">
-            {listing.images.map((_, index) => (
+          <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+            {(listing.images || []).map((_, index) => (
               <button
                 type="button"
                 key={index}
@@ -201,7 +203,7 @@ export function WorkspaceDetailView({
               <div className="mt-3 flex flex-wrap gap-2">
                 <Badge variant="secondary">{listing.officeSize}</Badge>
                 <Badge variant="secondary">{listing.floor}</Badge>
-                <Badge variant="secondary">{listing.spaceType}</Badge>
+                <Badge variant="secondary">{listing.spaceType || "Space"}</Badge>
               </div>
             </div>
 
@@ -224,7 +226,7 @@ export function WorkspaceDetailView({
                   Building Features
                 </h2>
                 <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {listing.buildingFeatures.map((feature) => (
+                  {(listing.buildingFeatures || []).map((feature) => (
                     <li
                       key={feature}
                       className="flex items-center gap-2 text-slate-600"
@@ -246,7 +248,7 @@ export function WorkspaceDetailView({
                   Amenities
                 </h2>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {listing.amenities.map((amenity) => (
+                  {(listing.amenities || []).map((amenity) => (
                     <Badge key={amenity} variant="outline" className="py-1.5">
                       {amenity}
                     </Badge>
@@ -345,10 +347,12 @@ export function WorkspaceDetailView({
               <Card className="shadow-lg">
                 <CardContent className="p-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-slate-900">
-                      {listing.monthlyRent}
-                    </div>
-                    <p className="text-slate-500">per month</p>
+                  <div className="text-3xl font-bold text-slate-900">
+                    {(listing as any).monthlyRent || (listing as any).currentBid || "N/A"}
+                  </div>
+                  <p className="text-slate-500">
+                    {(listing as any).monthlyRent ? "per month" : "current bid"}
+                  </p>
                   </div>
 
                   <div className="mt-6 space-y-3">
@@ -406,7 +410,7 @@ export function WorkspaceDetailView({
                       <div className="flex justify-between">
                         <dt className="text-slate-500">Type</dt>
                         <dd className="font-medium text-slate-900">
-                          {listing.spaceType}
+              {listing.spaceType || "Space"}
                         </dd>
                       </div>
                       <div className="flex justify-between">

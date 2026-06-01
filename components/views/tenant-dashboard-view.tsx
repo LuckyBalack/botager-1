@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Building2,
   Calendar,
@@ -16,6 +17,7 @@ import {
   Wifi,
   Car,
   Shield,
+  Send,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -23,6 +25,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { TenantKPIs } from "@/components/tenant-kpis"
 import { LeaseCountdown } from "@/components/lease-countdown"
+import { PaymentUSSDModal } from "@/components/payment-ussd-modal"
 import { type TenantViewKey } from "@/components/tenant-sidebar"
 
 const recentActivity = [
@@ -70,6 +73,8 @@ type TenantDashboardViewProps = {
 }
 
 export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+  
   // Calculate lease progress (mock data - 6 months into 12 month lease)
   const leaseProgress = 50
 
@@ -102,7 +107,7 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
           </div>
           <button
             type="button"
-            onClick={() => onNavigate?.("invoices")}
+            onClick={() => setPaymentModalOpen(true)}
             className="rounded-lg bg-orange-600 px-12 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-orange-700 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2"
           >
             Pay Now
@@ -113,7 +118,7 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
       {/* Quick Actions */}
       <div>
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Quick Actions</h2>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           <button
             type="button"
             onClick={() => onNavigate?.("invoices")}
@@ -123,7 +128,7 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
               <Receipt className="h-6 w-6 text-orange-600" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-slate-900">View Invoices</h3>
+              <h3 className="font-semibold text-slate-900">Payment History</h3>
               <p className="text-sm text-slate-500">Check your billing history</p>
             </div>
             <ChevronRight className="h-5 w-5 text-slate-400" />
@@ -146,15 +151,15 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
 
           <button
             type="button"
-            onClick={() => onNavigate?.("messages")}
-            className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 text-left transition-all hover:border-orange-200 hover:shadow-md"
+            onClick={() => window.open("https://t.me/", "_blank")}
+            className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 text-left transition-all hover:border-orange-200 hover:shadow-md md:col-span-2"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100">
-              <MessageSquare className="h-6 w-6 text-emerald-600" />
+              <Send className="h-6 w-6 text-emerald-600" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-slate-900">Message Manager</h3>
-              <p className="text-sm text-slate-500">Contact property manager</p>
+              <h3 className="font-semibold text-slate-900">Contact Manager on Telegram</h3>
+              <p className="text-sm text-slate-500">Chat directly with property manager</p>
             </div>
             <ChevronRight className="h-5 w-5 text-slate-400" />
           </button>
@@ -311,13 +316,21 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
           <Button
             variant="outline"
             className="gap-2"
-            onClick={() => onNavigate?.("messages")}
+            onClick={() => window.open("https://t.me/", "_blank")}
           >
-            <MessageSquare className="h-4 w-4" />
-            Send Message
+            <Send className="h-4 w-4" />
+            Message on Telegram
           </Button>
         </CardContent>
       </Card>
+
+      {/* Payment Modal */}
+      <PaymentUSSDModal
+        open={paymentModalOpen}
+        onOpenChange={setPaymentModalOpen}
+        amount="ETB 15,000"
+        dueDate="May 5, 2024"
+      />
     </div>
   )
 }
