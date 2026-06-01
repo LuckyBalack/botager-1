@@ -5,7 +5,7 @@ import { ListToolbar } from "@/components/list-toolbar"
 import { TablePagination } from "@/components/table-pagination"
 import { LeasePill } from "@/components/status-pills"
 import { AddPropertyView } from "@/components/views/add-property-view"
-import { properties, getTenantNameForProperty, type Property } from "@/lib/data"
+import { useProperties } from "@/hooks/use-database"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -40,6 +40,7 @@ type PropertiesViewProps = {
 }
 
 export function PropertiesView({ onSelectProperty, onNavigateToSpaceMap }: PropertiesViewProps) {
+  const { properties: dbProperties, loading } = useProperties()
   const [search, setSearch] = useState("")
   const [floor, setFloor] = useState("all")
   const [lease, setLease] = useState("all")
@@ -47,7 +48,14 @@ export function PropertiesView({ onSelectProperty, onNavigateToSpaceMap }: Prope
   const [viewMode, setViewMode] = useState<"list" | "map">("list")
   const [selectedPropertyIds, setSelectedPropertyIds] = useState<Set<string>>(new Set())
   const [showAddPropertyForm, setShowAddPropertyForm] = useState(false)
-  const [propertiesList, setPropertiesList] = useState<Property[]>(properties)
+  const [propertiesList, setPropertiesList] = useState([])
+  
+  // Update local state when database properties load
+  useState(() => {
+    if (dbProperties?.length > 0) {
+      setPropertiesList(dbProperties)
+    }
+  }, [dbProperties])
   
   // Pricing Logic State
   const [isDimensionBased, setIsDimensionBased] = useState(false)
