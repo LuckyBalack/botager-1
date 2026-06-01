@@ -16,6 +16,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { AvatarDropdown } from "./avatar-dropdown"
 
 export type UserRole = "admin" | "tenant" | "system-admin"
 
@@ -259,22 +260,7 @@ export function AppHeader({
         </Popover>
 
         {/* User Profile - Simplified on mobile */}
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-md p-1 transition-colors hover:bg-slate-50 sm:gap-3"
-          aria-label="Open user menu"
-        >
-          <img
-            src="/professional-headshot.png"
-            alt=""
-            className="h-8 w-8 rounded-full object-cover sm:h-10 sm:w-10"
-          />
-          <div className="hidden flex-col items-start text-left leading-tight md:flex">
-            <span className="text-sm font-semibold text-slate-900">Alemu Getachew</span>
-            <span className="text-xs text-slate-500">Admin</span>
-          </div>
-          <ChevronDown className="hidden h-4 w-4 text-slate-500 sm:block" aria-hidden="true" />
-        </button>
+        <AvatarDropdown />
       </div>
     </header>
   )

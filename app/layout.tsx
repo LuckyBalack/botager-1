@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { AuthProvider } from '@/lib/auth-context'
+import { RouterProvider } from '@/lib/router-context'
 import './globals.css'
 
 const inter = Inter({
@@ -22,7 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} bg-background`}>
       <body className="font-sans antialiased">
-        {children}
+        <AuthProvider>
+          <RouterProvider>
+            {children}
+          </RouterProvider>
+        </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

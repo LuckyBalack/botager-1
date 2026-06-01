@@ -1,6 +1,7 @@
 "use client"
 
 import { LayoutGrid, Building2, Users, Settings, LogOut, Receipt, Wrench, Store } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import {
   Select,
@@ -52,6 +53,12 @@ export function AppSidebar({
   onBuildingChange,
   collapsed = false,
 }: AppSidebarProps) {
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = "/"
+  }
   const currentBuilding = buildings.find((b) => b.id === selectedBuilding)
   const displayName = selectedBuilding === "all" ? "All Properties" : currentBuilding?.name ?? "Select Building"
 
@@ -183,7 +190,7 @@ export function AppSidebar({
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    onClick={onLogout}
+                    onClick={handleLogout}
                     className="flex h-10 w-10 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                   >
                     <LogOut className="h-5 w-5" aria-hidden="true" />
@@ -212,7 +219,7 @@ export function AppSidebar({
               </button>
               <button
                 type="button"
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
               >
                 <LogOut className="h-5 w-5" aria-hidden="true" />
@@ -236,6 +243,13 @@ export function AppSidebarMobile({
   onBuildingChange,
   onClose,
 }: AppSidebarProps & { onClose?: () => void }) {
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = "/"
+  }
+
   const currentBuilding = buildings.find((b) => b.id === selectedBuilding)
   const displayName = selectedBuilding === "all" ? "All Properties" : currentBuilding?.name ?? "Select Building"
 
@@ -306,7 +320,7 @@ export function AppSidebarMobile({
         </button>
         <button
           type="button"
-          onClick={onLogout}
+          onClick={handleLogout}
           className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
         >
           <LogOut className="h-5 w-5" aria-hidden="true" />
