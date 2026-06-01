@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Upload, User, Bell, Shield, Palette, Globe, CreditCard, Users, Receipt, Plus, Trash2, Crown } from "lucide-react"
+import { Upload, User, Bell, Shield, Palette, Globe, CreditCard, Users, Receipt, Plus, Trash2, Crown, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { taxRules as initialTaxRules, type TaxRule } from "@/lib/data"
 import type { ViewKey } from "@/components/app-sidebar"
 
@@ -37,6 +38,27 @@ export function SettingsView({ onNavigate, onSystemSubscription }: SettingsViewP
   const [newTaxName, setNewTaxName] = useState("")
   const [newTaxRate, setNewTaxRate] = useState("")
   const [isVatRegistered, setIsVatRegistered] = useState(true)
+  
+  // Notification Templates State
+  const [smsTemplates, setSmsTemplates] = useState({
+    rentReminder: {
+      en: "Dear [Tenant], your rent of ETB [RentAmount] is due on [DueDate]. Please pay now.",
+      am: "ውድ [ተከራይ]፣ የኪራይ ክፍያዎ ETB [RentAmount] በ[DueDate] ዕለት ይገባል። እባክዎ ይክፈሉ።"
+    },
+    paymentConfirmation: {
+      en: "Payment received! Your rent payment of ETB [RentAmount] has been confirmed. Thank you!",
+      am: "ክፍያ ደርሷል! የጤንታ ክፍያዎ ETB [RentAmount] ተረጋግጧል። ምስጋና!"
+    },
+    maintenanceNotification: {
+      en: "Maintenance request received. We will address issue [IssueTitle] within 24 hours.",
+      am: "የልብ-ወለደ ጥያቄ ተቀበልን። ጉዳዩ [IssueTitle] በ24 ሰዓት ውስጥ ይፍታል።"
+    },
+    leaseExpiry: {
+      en: "Your lease is expiring on [LeaseEndDate]. Contact your landlord to renew or discuss next steps.",
+      am: "የጤንታ ስምምነትዎ በ[LeaseEndDate] ያበቃል። የመገንጠል ወይም ማራመድን ለመወያየት ባለ-ቤት ያነጋግሩ።"
+    }
+  })
+  const [editingTemplate, setEditingTemplate] = useState<string | null>(null)
 
   const handleToggleTax = (id: string) => {
     setTaxRulesList(
@@ -154,7 +176,179 @@ export function SettingsView({ onNavigate, onSystemSubscription }: SettingsViewP
           </CardContent>
         </Card>
 
-        {/* Communication Settings */}
+        {/* Notification SMS Templates */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-slate-600" />
+              <CardTitle>SMS Notification Templates (Bilingual)</CardTitle>
+            </div>
+            <CardDescription>Configure automated SMS messages in English and Amharic with dynamic placeholders</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-8">
+            {/* Rent Reminder */}
+            <div className="rounded-lg border border-slate-200 p-6">
+              <div className="mb-4">
+                <h4 className="font-semibold text-slate-900 mb-2">Rent Payment Reminder</h4>
+                <p className="text-sm text-slate-500 mb-4">Sent 3 days before payment due date</p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="rent-reminder-en" className="font-medium">English</Label>
+                  <Textarea
+                    id="rent-reminder-en"
+                    value={smsTemplates.rentReminder.en}
+                    onChange={(e) => setSmsTemplates({
+                      ...smsTemplates,
+                      rentReminder: { ...smsTemplates.rentReminder, en: e.target.value }
+                    })}
+                    placeholder="English template"
+                    className="h-32 resize-none font-sm"
+                  />
+                  <p className="text-xs text-slate-500">Placeholders: [Tenant], [RentAmount], [DueDate]</p>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="rent-reminder-am" className="font-medium">Amharic</Label>
+                  <Textarea
+                    id="rent-reminder-am"
+                    value={smsTemplates.rentReminder.am}
+                    onChange={(e) => setSmsTemplates({
+                      ...smsTemplates,
+                      rentReminder: { ...smsTemplates.rentReminder, am: e.target.value }
+                    })}
+                    placeholder="Amharic template"
+                    className="h-32 resize-none font-sm"
+                    style={{ fontFamily: "Nyala, Abyssinica SIL, sans-serif" }}
+                  />
+                  <p className="text-xs text-slate-500">Placeholders: [ተከራይ], [RentAmount], [DueDate]</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Confirmation */}
+            <div className="rounded-lg border border-slate-200 p-6">
+              <div className="mb-4">
+                <h4 className="font-semibold text-slate-900 mb-2">Payment Confirmation</h4>
+                <p className="text-sm text-slate-500 mb-4">Sent immediately after payment is recorded</p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="payment-confirm-en" className="font-medium">English</Label>
+                  <Textarea
+                    id="payment-confirm-en"
+                    value={smsTemplates.paymentConfirmation.en}
+                    onChange={(e) => setSmsTemplates({
+                      ...smsTemplates,
+                      paymentConfirmation: { ...smsTemplates.paymentConfirmation, en: e.target.value }
+                    })}
+                    placeholder="English template"
+                    className="h-32 resize-none text-sm"
+                  />
+                  <p className="text-xs text-slate-500">Placeholders: [Tenant], [RentAmount]</p>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="payment-confirm-am" className="font-medium">Amharic</Label>
+                  <Textarea
+                    id="payment-confirm-am"
+                    value={smsTemplates.paymentConfirmation.am}
+                    onChange={(e) => setSmsTemplates({
+                      ...smsTemplates,
+                      paymentConfirmation: { ...smsTemplates.paymentConfirmation, am: e.target.value }
+                    })}
+                    placeholder="Amharic template"
+                    className="h-32 resize-none text-sm"
+                    style={{ fontFamily: "Nyala, Abyssinica SIL, sans-serif" }}
+                  />
+                  <p className="text-xs text-slate-500">Placeholders: [ተከራይ], [RentAmount]</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Maintenance Notification */}
+            <div className="rounded-lg border border-slate-200 p-6">
+              <div className="mb-4">
+                <h4 className="font-semibold text-slate-900 mb-2">Maintenance Request Received</h4>
+                <p className="text-sm text-slate-500 mb-4">Sent when maintenance ticket is created</p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="maint-en" className="font-medium">English</Label>
+                  <Textarea
+                    id="maint-en"
+                    value={smsTemplates.maintenanceNotification.en}
+                    onChange={(e) => setSmsTemplates({
+                      ...smsTemplates,
+                      maintenanceNotification: { ...smsTemplates.maintenanceNotification, en: e.target.value }
+                    })}
+                    placeholder="English template"
+                    className="h-32 resize-none text-sm"
+                  />
+                  <p className="text-xs text-slate-500">Placeholders: [Tenant], [IssueTitle]</p>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="maint-am" className="font-medium">Amharic</Label>
+                  <Textarea
+                    id="maint-am"
+                    value={smsTemplates.maintenanceNotification.am}
+                    onChange={(e) => setSmsTemplates({
+                      ...smsTemplates,
+                      maintenanceNotification: { ...smsTemplates.maintenanceNotification, am: e.target.value }
+                    })}
+                    placeholder="Amharic template"
+                    className="h-32 resize-none text-sm"
+                    style={{ fontFamily: "Nyala, Abyssinica SIL, sans-serif" }}
+                  />
+                  <p className="text-xs text-slate-500">Placeholders: [ተከራይ], [IssueTitle]</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Lease Expiry Alert */}
+            <div className="rounded-lg border border-slate-200 p-6">
+              <div className="mb-4">
+                <h4 className="font-semibold text-slate-900 mb-2">Lease Expiration Notice</h4>
+                <p className="text-sm text-slate-500 mb-4">Sent 30 days before lease ends</p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="lease-en" className="font-medium">English</Label>
+                  <Textarea
+                    id="lease-en"
+                    value={smsTemplates.leaseExpiry.en}
+                    onChange={(e) => setSmsTemplates({
+                      ...smsTemplates,
+                      leaseExpiry: { ...smsTemplates.leaseExpiry, en: e.target.value }
+                    })}
+                    placeholder="English template"
+                    className="h-32 resize-none text-sm"
+                  />
+                  <p className="text-xs text-slate-500">Placeholders: [Tenant], [LeaseEndDate]</p>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="lease-am" className="font-medium">Amharic</Label>
+                  <Textarea
+                    id="lease-am"
+                    value={smsTemplates.leaseExpiry.am}
+                    onChange={(e) => setSmsTemplates({
+                      ...smsTemplates,
+                      leaseExpiry: { ...smsTemplates.leaseExpiry, am: e.target.value }
+                    })}
+                    placeholder="Amharic template"
+                    className="h-32 resize-none text-sm"
+                    style={{ fontFamily: "Nyala, Abyssinica SIL, sans-serif" }}
+                  />
+                  <p className="text-xs text-slate-500">Placeholders: [ተከራይ], [LeaseEndDate]</p>
+                </div>
+              </div>
+            </div>
+
+            <Button className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto">
+              Save SMS Templates
+            </Button>
+          </CardContent>
+        </Card>
+
+        
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
