@@ -44,6 +44,8 @@ import { marketplaceListings, auctionListings, type MarketplaceListing, type Auc
 import { MarketplaceSegmentedControl, type MarketplaceMode } from "@/components/marketplace-segmented-control"
 import { WorkspaceDetailView } from "./workspace-detail-view"
 import { PreoccupyFormView } from "./preoccupy-form-view"
+import { AuctionDetailView } from "./auction-detail-view"
+import { PlaceBidModal } from "@/components/place-bid-modal"
 
 type MarketplaceViewProps = {
   onSignIn?: () => void
@@ -51,7 +53,7 @@ type MarketplaceViewProps = {
   onBackToAdmin?: () => void
 }
 
-type MarketplaceSubView = "listings" | "detail" | "preoccupy"
+type MarketplaceSubView = "listings" | "detail" | "preoccupy" | "auction-detail"
 
 export function MarketplaceView({
   onSignIn,
@@ -60,6 +62,8 @@ export function MarketplaceView({
 }: MarketplaceViewProps) {
   const [subView, setSubView] = useState<MarketplaceSubView>("listings")
   const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null)
+  const [selectedAuction, setSelectedAuction] = useState<AuctionListing | null>(null)
+  const [showBidModal, setShowBidModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [spaceType, setSpaceType] = useState<string>("all")
   const [priceRange, setPriceRange] = useState<string>("all")
@@ -137,9 +141,14 @@ export function MarketplaceView({
     )
   })
 
-  const handleViewDetails = (listing: MarketplaceListing) => {
-    setSelectedListing(listing)
-    setSubView("detail")
+  const handleViewDetails = (listing: MarketplaceListing | AuctionListing) => {
+    if (marketplaceMode === "auction") {
+      setSelectedAuction(listing as AuctionListing)
+      setSubView("auction-detail")
+    } else {
+      setSelectedListing(listing as MarketplaceListing)
+      setSubView("detail")
+    }
   }
 
   const handlePreoccupy = (listing: MarketplaceListing) => {
@@ -150,6 +159,38 @@ export function MarketplaceView({
   const handleBackToListings = () => {
     setSubView("listings")
     setSelectedListing(null)
+    setSelectedAuction(null)
+    setShowBidModal(false)
+  }
+
+  const handlePlaceBid = () => {
+    setShowBidModal(true)
+  }
+
+  // Auction Detail View
+  if (subView === "auction-detail" && selectedAuction) {
+    return (
+      <>
+        <AuctionDetailView
+          auction={selectedAuction}
+          onBack={handleBackToListings}
+          onPlaceBid={handlePlaceBid}
+          onSignIn={onSignIn}
+          showBackToAdmin={showBackToAdmin}
+          onBackToAdmin={onBackToAdmin}
+        />
+        <PlaceBidModal
+          open={showBidModal}
+          onOpenChange={setShowBidModal}
+          auction={selectedAuction}
+          userInfo={{
+            name: "User",
+            email: "user@example.com",
+            phone: "555-0000",
+          }}
+        />
+      </>
+    )
   }
 
   // Workspace Detail View
@@ -451,6 +492,11 @@ export function MarketplaceView({
                           </Button>
                           <Button
                             className="flex-1 bg-orange-500 text-white hover:bg-orange-600"
+                            onClick={() => {
+                              const auctionListing = listing as AuctionListing
+                              setSelectedAuction(auctionListing)
+                              setShowBidModal(true)
+                            }}
                           >
                             Place Bid
                           </Button>
@@ -585,6 +631,20 @@ export function MarketplaceView({
           <p>&copy; 2024 Mamulka WRM. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Place Bid Modal */}
+      {selectedAuction && (
+        <PlaceBidModal
+          open={showBidModal}
+          onOpenChange={setShowBidModal}
+          auction={selectedAuction}
+          userInfo={{
+            name: "User",
+            email: "user@example.com",
+            phone: "555-0000",
+          }}
+        />
+      )}
 
       {/* Floating Back to Admin Button */}
       {showBackToAdmin && (
