@@ -153,7 +153,7 @@ export function WorkspaceDetailView({
 
             {/* Image indicators */}
             <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
-              {listing.images.map((_, index) => (
+              {(listing.images || []).map((_, index) => (
                 <button
                   type="button"
                   key={index}
