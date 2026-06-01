@@ -271,6 +271,22 @@ export function AuctionDetailView({
                   </ul>
                 </div>
 
+                {/* Location Map */}
+                <div>
+                  <h3 className="font-semibold text-slate-900">Location</h3>
+                  <div className="mt-4 aspect-[16/9] rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center border border-slate-300">
+                    <div className="text-center">
+                      <MapPin className="mx-auto h-12 w-12 text-slate-400" />
+                      <p className="mt-2 text-sm font-medium text-slate-600">
+                        {auction.location}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Map integration coming soon
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Bid History */}
                 <div>
                   <h3 className="font-semibold text-slate-900">
