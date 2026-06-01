@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/auth-context"
 
 import { AppSidebar, AppSidebarMobile, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
 import { AppHeader, type UserRole } from "@/components/app-header"
@@ -79,8 +80,17 @@ const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", str
 
 export function DashboardApp() {
   const { isTablet } = useResponsive()
+  const { user } = useAuth()
   
-  const [userRole, setUserRole] = useState<UserRole>("admin")
+  // Get role from authenticated user
+  const [userRole, setUserRole] = useState<UserRole>("landlord")
+  
+  // Set role from authenticated user on mount
+  useEffect(() => {
+    if (user?.role) {
+      setUserRole(user.role as UserRole)
+    }
+  }, [user?.role])
   const [activeView, setActiveView] = useState<ActiveView>("dashboard")
   const [tenantView, setTenantView] = useState<TenantViewKey>("my-lease")
   const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")

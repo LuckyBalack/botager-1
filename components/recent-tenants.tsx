@@ -48,9 +48,9 @@ type RecentTenantsProps = {
 
 export function RecentTenants({ onSeeAll }: RecentTenantsProps) {
   return (
-    <section aria-labelledby="recent-tenants-heading" className="mt-10">
-      <div className="flex items-center justify-between">
-        <h3 id="recent-tenants-heading" className="text-xl font-semibold text-slate-900">
+    <section aria-labelledby="recent-tenants-heading">
+      <div className="flex items-center justify-between mb-6">
+        <h3 id="recent-tenants-heading" className="text-lg font-semibold text-slate-900">
           Recent Tenants
         </h3>
         <button
@@ -58,68 +58,47 @@ export function RecentTenants({ onSeeAll }: RecentTenantsProps) {
           onClick={onSeeAll}
           className="inline-flex items-center gap-1 text-sm font-medium text-teal-700 hover:text-teal-800"
         >
-          Tenants
+          View All
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
-      <div className="mt-4 overflow-hidden">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b border-slate-200 text-left">
-              <th scope="col" className="py-3 pr-4 text-sm font-semibold text-slate-900">
-                Name
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-semibold text-slate-900">
-                Contact
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-semibold text-slate-900">
-                Room No.
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-semibold text-slate-900">
-                Payment Status
-              </th>
-              <th scope="col" className="py-3 pr-4 text-sm font-semibold text-slate-900">
-                Lease Status
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {tenants.map((t) => (
-              <tr key={t.id} className="border-b border-slate-200 last:border-b-0">
-                <td className="py-5 pr-4">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={t.avatar || "/placeholder.svg"}
-                      alt=""
-                      className="h-10 w-10 rounded-full object-cover"
-                    />
-                    <span className="text-sm font-semibold text-slate-900">{t.name}</span>
-                  </div>
-                </td>
-                <td className="py-5 pr-4">
-                  <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center gap-2 text-sm text-slate-700">
-                      <Phone className="h-4 w-4 text-slate-500" aria-hidden="true" />
-                      <span>{t.phone}</span>
+      <div className="space-y-3">
+        {tenants.map((tenant) => (
+          <div key={tenant.id} className="rounded-lg border border-slate-200 bg-white p-4 hover:bg-slate-50 transition-colors">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                <img
+                  src={tenant.avatar || "/placeholder.svg"}
+                  alt=""
+                  className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-slate-900 text-sm">{tenant.name}</h4>
+                  <div className="mt-1.5 space-y-1 text-xs text-slate-600">
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                      <span>{tenant.phone}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-700">
-                      <Mail className="h-4 w-4 text-slate-500" aria-hidden="true" />
-                      <span>{t.email}</span>
+                    <div className="flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                      <span className="truncate">{tenant.email}</span>
                     </div>
                   </div>
-                </td>
-                <td className="py-5 pr-4 text-sm text-slate-700">{t.roomNo}</td>
-                <td className="py-5 pr-4">
-                  <PaymentPill status={t.payment} />
-                </td>
-                <td className="py-5 pr-4">
-                  <LeasePill status={t.lease} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 items-end flex-shrink-0">
+                <div className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                  Room {tenant.roomNo}
+                </div>
+                <div className="flex gap-1.5">
+                  <PaymentPill status={tenant.payment} />
+                  <LeasePill status={tenant.lease} />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   )
