@@ -202,14 +202,11 @@ export function BillingView() {
           <TabsTrigger value="invoices" className="px-6">
             Invoices
           </TabsTrigger>
-          <TabsTrigger value="receipts" className="px-6">
-            Receipts
+          <TabsTrigger value="payment-verification" className="px-6">
+            Payment Verification
           </TabsTrigger>
-          <TabsTrigger value="credit" className="px-6">
-            Credit/BNPL Requests
-          </TabsTrigger>
-          <TabsTrigger value="automation" className="px-6">
-            Automation
+          <TabsTrigger value="utility-splitter" className="px-6">
+            Utility Cost Splitter
           </TabsTrigger>
         </TabsList>
 
@@ -303,7 +300,7 @@ export function BillingView() {
           </div>
         </TabsContent>
 
-        <TabsContent value="receipts">
+        <TabsContent value="payment-verification">
           <div className="rounded-lg border border-slate-200 bg-white">
             <Table>
               <TableHeader>
@@ -376,84 +373,67 @@ export function BillingView() {
           </div>
         </TabsContent>
 
-        <TabsContent value="automation" className="space-y-6">
-          <AutomatedInvoices />
-          <PaymentReminders />
-          <DunningSequences />
-        </TabsContent>
+        <TabsContent value="utility-splitter" className="space-y-6">
+          <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <div className="flex flex-col gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Utility Cost Splitter</h3>
+                <p className="text-sm text-slate-500 mb-6">Calculate and distribute master utility bills to tenants based on occupied room size.</p>
+              </div>
 
-        <TabsContent value="credit">
-          <div className="rounded-lg border border-slate-200 bg-white">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="font-semibold text-slate-700">
-                    Request ID
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Tenant Name
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Room No
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Requested Amount
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Request Date
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Status
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {creditRequests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="font-medium text-slate-900">
-                      {request.id}
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {request.tenantName}
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {request.roomNo}
-                    </TableCell>
-                    <TableCell className="font-medium text-slate-900">
-                      {request.requestedAmount}
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {request.requestDate}
-                    </TableCell>
-                    <TableCell>
-                      <CreditStatusBadge status={request.status} />
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Approve</DropdownMenuItem>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            Reject
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+              {/* Utility Type Selection */}
+              <div>
+                <Label className="text-base font-semibold text-slate-900 mb-3 block">Utility Type</Label>
+                <RadioGroup defaultValue="electricity" className="flex gap-6">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="electricity" id="electricity" />
+                    <Label htmlFor="electricity" className="font-medium cursor-pointer">Electric</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="water" id="water" />
+                    <Label htmlFor="water" className="font-medium cursor-pointer">Water</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Master Bill Input */}
+              <div>
+                <Label htmlFor="master-bill" className="text-base font-semibold text-slate-900 mb-2 block">Master Bill Amount (ETB)</Label>
+                <Input id="master-bill" type="number" placeholder="Enter total bill amount" className="max-w-md" />
+              </div>
+
+              {/* Calculation Result */}
+              <div className="rounded-lg bg-slate-50 p-4 border border-slate-200">
+                <p className="text-sm font-semibold text-slate-900 mb-3">Distribution Summary</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Total Occupied Space</span>
+                    <span className="font-medium text-slate-900">450 sq.m</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Cost per sq.m</span>
+                    <span className="font-medium text-slate-900">ETB 22.22</span>
+                  </div>
+                  <div className="border-t border-slate-200 pt-2 mt-2">
+                    <p className="text-xs text-slate-500 mb-2">Top consumers:</p>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span>Room 301 (60 sq.m)</span>
+                        <span className="font-medium">ETB 1,333.33</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Room 302 (55 sq.m)</span>
+                        <span className="font-medium">ETB 1,222.22</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Button className="w-full bg-orange-500 hover:bg-orange-600">
+                Generate Utility Invoices
+              </Button>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
