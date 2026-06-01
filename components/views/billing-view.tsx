@@ -455,117 +455,116 @@ export function BillingView() {
             </Table>
           </div>
         </TabsContent>
-      </Tabs>
 
-      {/* Utility Cost Splitter Tab */}
-      <TabsContent value="utilities" className="mt-6">
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Input Card */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Calculator className="h-5 w-5 text-slate-600" />
-                <CardTitle>Master Utility Bill Entry</CardTitle>
-              </div>
-              <CardDescription>Input the master utility bill details for automatic distribution</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="utility-type">Utility Type</Label>
-                <select
-                  id="utility-type"
-                  value={utilityType}
-                  onChange={(e) => setUtilityType(e.target.value)}
-                  className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-                >
-                  <option value="electricity">Electricity (kWh)</option>
-                  <option value="water">Water (m³)</option>
-                </select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="master-amount">Total Bill Amount (ETB)</Label>
-                <Input
-                  id="master-amount"
-                  type="number"
-                  value={masterBillAmount}
-                  onChange={(e) => setMasterBillAmount(e.target.value)}
-                  placeholder="Enter total bill"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="unit-qty">Total Units Consumed ({utilityType === "electricity" ? "kWh" : "m³"})</Label>
-                <Input
-                  id="unit-qty"
-                  type="number"
-                  value={unitQuantity}
-                  onChange={(e) => setUnitQuantity(e.target.value)}
-                  placeholder="Enter units"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="rate-unit">Rate Per Unit (ETB/{utilityType === "electricity" ? "kWh" : "m³"})</Label>
-                <Input
-                  id="rate-unit"
-                  type="number"
-                  step="0.01"
-                  value={ratePerUnit}
-                  onChange={(e) => setRatePerUnit(e.target.value)}
-                  placeholder="Auto-calculated"
-                  disabled
-                />
-                <p className="text-xs text-slate-500">Auto-calculated: {masterBillAmount} ÷ {unitQuantity} = {(parseFloat(masterBillAmount || "0") / parseFloat(unitQuantity || "1")).toFixed(2)} ETB</p>
-              </div>
-              <Button className="bg-orange-500 hover:bg-orange-600 w-full">
-                Generate Tenant Invoices
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Utility Cost Splitter Tab */}
+        <TabsContent value="utilities" className="mt-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Input Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Calculator className="h-5 w-5 text-slate-600" />
+                  <CardTitle>Master Utility Bill Entry</CardTitle>
+                </div>
+                <CardDescription>Input the master utility bill details for automatic distribution</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+                <div className="grid gap-2">
+                  <Label htmlFor="utility-type">Utility Type</Label>
+                  <select
+                    id="utility-type"
+                    value={utilityType}
+                    onChange={(e) => setUtilityType(e.target.value)}
+                    className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+                  >
+                    <option value="electricity">Electricity (kWh)</option>
+                    <option value="water">Water (m³)</option>
+                  </select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="master-amount">Total Bill Amount (ETB)</Label>
+                  <Input
+                    id="master-amount"
+                    type="number"
+                    value={masterBillAmount}
+                    onChange={(e) => setMasterBillAmount(e.target.value)}
+                    placeholder="Enter total bill"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="unit-qty">Total Units Consumed ({utilityType === "electricity" ? "kWh" : "m³"})</Label>
+                  <Input
+                    id="unit-qty"
+                    type="number"
+                    value={unitQuantity}
+                    onChange={(e) => setUnitQuantity(e.target.value)}
+                    placeholder="Enter units"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="rate-unit">Rate Per Unit (ETB/{utilityType === "electricity" ? "kWh" : "m³"})</Label>
+                  <Input
+                    id="rate-unit"
+                    type="number"
+                    step="0.01"
+                    value={ratePerUnit}
+                    onChange={(e) => setRatePerUnit(e.target.value)}
+                    placeholder="Auto-calculated"
+                    disabled
+                  />
+                  <p className="text-xs text-slate-500">Auto-calculated: {masterBillAmount} ÷ {unitQuantity} = {(parseFloat(masterBillAmount || "0") / parseFloat(unitQuantity || "1")).toFixed(2)} ETB</p>
+                </div>
+                <Button className="bg-orange-500 hover:bg-orange-600 w-full">
+                  Generate Tenant Invoices
+                </Button>
+              </CardContent>
+            </Card>
 
-          {/* Distribution Summary Card */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-slate-600" />
-                <CardTitle>Tenant Distribution (Sample)</CardTitle>
-              </div>
-              <CardDescription>Auto-split based on room size percentage</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <div className="space-y-3">
-                {/* Sample distribution */}
-                {[
-                  { room: "302", size: "30 m²", percentage: 25, allocation: Math.round((parseFloat(masterBillAmount || "5000") * 0.25)) },
-                  { room: "303", size: "24 m²", percentage: 20, allocation: Math.round((parseFloat(masterBillAmount || "5000") * 0.20)) },
-                  { room: "304", size: "36 m²", percentage: 30, allocation: Math.round((parseFloat(masterBillAmount || "5000") * 0.30)) },
-                  { room: "305", size: "30 m²", percentage: 25, allocation: Math.round((parseFloat(masterBillAmount || "5000") * 0.25)) },
-                ].map((item) => (
-                  <div key={item.room} className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
-                    <div>
-                      <p className="font-medium text-slate-900">Room {item.room}</p>
-                      <p className="text-xs text-slate-500">{item.size} ({item.percentage}% of building)</p>
+            {/* Distribution Summary Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-slate-600" />
+                  <CardTitle>Tenant Distribution (Sample)</CardTitle>
+                </div>
+                <CardDescription>Auto-split based on room size percentage</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <div className="space-y-3">
+                  {/* Sample distribution */}
+                  {[
+                    { room: "302", size: "30 m²", percentage: 25, allocation: Math.round((parseFloat(masterBillAmount || "5000") * 0.25)) },
+                    { room: "303", size: "24 m²", percentage: 20, allocation: Math.round((parseFloat(masterBillAmount || "5000") * 0.20)) },
+                    { room: "304", size: "36 m²", percentage: 30, allocation: Math.round((parseFloat(masterBillAmount || "5000") * 0.30)) },
+                    { room: "305", size: "30 m²", percentage: 25, allocation: Math.round((parseFloat(masterBillAmount || "5000") * 0.25)) },
+                  ].map((item) => (
+                    <div key={item.room} className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
+                      <div>
+                        <p className="font-medium text-slate-900">Room {item.room}</p>
+                        <p className="text-xs text-slate-500">{item.size} ({item.percentage}% of building)</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-slate-900">ETB {item.allocation.toLocaleString()}</p>
+                        <p className="text-xs text-slate-500">{item.percentage}% of ETB {masterBillAmount}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-slate-900">ETB {item.allocation.toLocaleString()}</p>
-                      <p className="text-xs text-slate-500">{item.percentage}% of ETB {masterBillAmount}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 mt-2">
-                <p className="text-xs text-slate-500 mb-1">Total Distribution</p>
-                <p className="font-bold text-emerald-700">ETB {masterBillAmount} = {(Object.values(
-                  {
-                    room302: Math.round((parseFloat(masterBillAmount || "5000") * 0.25)),
-                    room303: Math.round((parseFloat(masterBillAmount || "5000") * 0.20)),
-                    room304: Math.round((parseFloat(masterBillAmount || "5000") * 0.30)),
-                    room305: Math.round((parseFloat(masterBillAmount || "5000") * 0.25)),
-                  } as Record<string, number>
-                ) as unknown as number[]).reduce((a: number, b: number) => a + b, 0).toLocaleString()}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </TabsContent>
+                  ))}
+                </div>
+                <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 mt-2">
+                  <p className="text-xs text-slate-500 mb-1">Total Distribution</p>
+                  <p className="font-bold text-emerald-700">ETB {masterBillAmount} = {(Object.values(
+                    {
+                      room302: Math.round((parseFloat(masterBillAmount || "5000") * 0.25)),
+                      room303: Math.round((parseFloat(masterBillAmount || "5000") * 0.20)),
+                      room304: Math.round((parseFloat(masterBillAmount || "5000") * 0.30)),
+                      room305: Math.round((parseFloat(masterBillAmount || "5000") * 0.25)),
+                    } as Record<string, number>
+                  ) as unknown as number[]).reduce((a: number, b: number) => a + b, 0).toLocaleString()}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Record Payment Modal */}
