@@ -10,6 +10,7 @@ import { SystemAdminSidebar, SystemAdminSidebarMobile, type SystemAdminViewKey }
 import { TenantDashboardView } from "@/components/views/tenant-dashboard-view"
 import { TenantInvoicesView } from "@/components/views/tenant-invoices-view"
 import { TenantMaintenanceView } from "@/components/views/tenant-maintenance-view"
+import { TenantMessagesView } from "@/components/views/tenant-messages-view"
 import { DashboardView } from "@/components/views/dashboard-view"
 import { PropertiesView } from "@/components/views/properties-view"
 import { TenantsView } from "@/components/views/tenants-view"
@@ -300,8 +301,9 @@ export function DashboardApp() {
   // Tenant view titles
   const tenantTitleMap: Record<TenantViewKey, string> = {
     "my-lease": "My Lease",
-    "payment-history": "Payment History",
+    invoices: "Invoices & Payments",
     maintenance: "Maintenance",
+    messages: "Messages",
   }
 
   // System Admin View Titles
@@ -390,8 +392,9 @@ export function DashboardApp() {
           <main className="flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 2xl:px-12 2xl:py-10">
             <div className="mx-auto max-w-[1800px]">
               {tenantView === "my-lease" && <TenantDashboardView onNavigate={setTenantView} />}
-              {tenantView === "payment-history" && <TenantInvoicesView />}
+              {tenantView === "invoices" && <TenantInvoicesView />}
               {tenantView === "maintenance" && <TenantMaintenanceView />}
+              {tenantView === "messages" && <TenantMessagesView />}
             </div>
           </main>
         </div>

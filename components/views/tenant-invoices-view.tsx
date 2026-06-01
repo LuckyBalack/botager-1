@@ -25,7 +25,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -119,9 +118,6 @@ export function TenantInvoicesView() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("chapa")
   const [isProcessing, setIsProcessing] = useState(false)
-  const [paymentTab, setPaymentTab] = useState<"online" | "offline">("online")
-  const [transactionRef, setTransactionRef] = useState("")
-  const [paymentDate, setPaymentDate] = useState("")
 
   const pendingInvoices = tenantInvoices.filter((i) => i.status === "pending")
   const paidInvoices = tenantInvoices.filter((i) => i.status === "paid")
@@ -296,127 +292,65 @@ export function TenantInvoicesView() {
 
       {/* Payment Modal */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Pay Your Rent</DialogTitle>
+            <DialogTitle>Pay Invoice</DialogTitle>
             <DialogDescription>
-              Invoice {selectedInvoice?.id} - {selectedInvoice?.month}
+              Choose a payment method to pay your {selectedInvoice?.month} invoice
             </DialogDescription>
           </DialogHeader>
 
-          <div className="py-4">
+          <div className="py-6">
             {/* Invoice Summary */}
             <div className="mb-6 rounded-lg bg-slate-50 p-4">
               <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-500">Invoice</span>
+                <span className="font-medium text-slate-900">{selectedInvoice?.id}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between">
                 <span className="text-sm text-slate-500">Amount Due</span>
-                <span className="text-2xl font-bold text-slate-900">
+                <span className="text-xl font-bold text-slate-900">
                   ETB {selectedInvoice?.amount.toLocaleString()}
                 </span>
               </div>
             </div>
 
-            {/* Payment Tabs */}
-            <Tabs value={paymentTab} onValueChange={(v) => setPaymentTab(v as "online" | "offline")} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="online">Pay Online</TabsTrigger>
-                <TabsTrigger value="offline">Pay Offline / USSD</TabsTrigger>
-              </TabsList>
-
-              {/* Pay Online Tab */}
-              <TabsContent value="online" className="space-y-4">
-                <div className="rounded-lg border border-slate-200 p-4">
-                  <Label className="mb-3 block text-sm font-medium">Select Payment Gateway</Label>
-                  <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod} className="space-y-3">
-                    {paymentMethods.map((method) => {
-                      const Icon = method.icon
-                      return (
-                        <div
-                          key={method.id}
-                          className={cn(
-                            "flex cursor-pointer items-center gap-4 rounded-lg border p-4 transition-colors",
-                            selectedPaymentMethod === method.id
-                              ? "border-orange-500 bg-orange-50"
-                              : "border-slate-200 hover:bg-slate-50"
-                          )}
-                          onClick={() => setSelectedPaymentMethod(method.id)}
-                        >
-                          <RadioGroupItem value={method.id} id={method.id} />
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm">
-                            <Icon className="h-5 w-5 text-slate-600" />
-                          </div>
-                          <div className="flex-1">
-                            <Label htmlFor={method.id} className="cursor-pointer font-medium">
-                              {method.name}
-                            </Label>
-                            <p className="text-sm text-slate-500">{method.description}</p>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </RadioGroup>
-                </div>
-              </TabsContent>
-
-              {/* Pay Offline / USSD Tab */}
-              <TabsContent value="offline" className="space-y-4">
-                <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-                  <h4 className="font-semibold text-blue-900 mb-2">Offline Payment Instructions</h4>
-                  <p className="text-sm text-blue-800 mb-4">
-                    For unstable 4G signal, you can pay via USSD codes or direct bank transfer. Follow the steps below:
-                  </p>
-                  
-                  <div className="space-y-3">
-                    <div className="rounded bg-white p-3 border border-blue-100">
-                      <p className="text-sm font-medium text-slate-900 mb-1">Step 1: Dial USSD Code</p>
-                      <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded font-mono text-sm">
-                        <span>CBE Birr: *127#</span>
-                        <button type="button" className="ml-auto text-xs text-blue-600 hover:text-blue-700 font-medium">Copy</button>
+            {/* Payment Methods */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Select Payment Method</Label>
+              <RadioGroup
+                value={selectedPaymentMethod}
+                onValueChange={setSelectedPaymentMethod}
+                className="space-y-3"
+              >
+                {paymentMethods.map((method) => {
+                  const Icon = method.icon
+                  return (
+                    <div
+                      key={method.id}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-4 rounded-lg border p-4 transition-colors",
+                        selectedPaymentMethod === method.id
+                          ? "border-orange-500 bg-orange-50"
+                          : "border-slate-200 hover:bg-slate-50"
+                      )}
+                      onClick={() => setSelectedPaymentMethod(method.id)}
+                    >
+                      <RadioGroupItem value={method.id} id={method.id} />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm">
+                        <Icon className="h-5 w-5 text-slate-600" />
                       </div>
-                      <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded font-mono text-sm mt-2">
-                        <span>Telebirr: *127#</span>
-                        <button type="button" className="ml-auto text-xs text-blue-600 hover:text-blue-700 font-medium">Copy</button>
+                      <div>
+                        <Label htmlFor={method.id} className="cursor-pointer font-medium">
+                          {method.name}
+                        </Label>
+                        <p className="text-sm text-slate-500">{method.description}</p>
                       </div>
                     </div>
-
-                    <div className="rounded bg-white p-3 border border-blue-100">
-                      <p className="text-sm font-medium text-slate-900 mb-1">Step 2: Landlord Bank Account</p>
-                      <div className="text-sm text-slate-600">
-                        <p>Name: Kebede Teshome</p>
-                        <p>Account: 1000123456789</p>
-                        <p>Bank: Commercial Bank of Ethiopia</p>
-                      </div>
-                    </div>
-
-                    <div className="rounded bg-white p-3 border border-blue-100">
-                      <p className="text-sm font-medium text-slate-900 mb-3">Step 3: Confirm Your Payment</p>
-                      <div className="space-y-3">
-                        <div>
-                          <Label htmlFor="trans-ref" className="text-sm font-medium">Transaction Reference Number</Label>
-                          <Input
-                            id="trans-ref"
-                            placeholder="e.g., TXN-2024-05-12345"
-                            value={transactionRef}
-                            onChange={(e) => setTransactionRef(e.target.value)}
-                            className="mt-1"
-                          />
-                          <p className="text-xs text-slate-500 mt-1">You'll see this after completing the transfer</p>
-                        </div>
-                        <div>
-                          <Label htmlFor="pay-date" className="text-sm font-medium">Payment Date</Label>
-                          <Input
-                            id="pay-date"
-                            type="date"
-                            value={paymentDate}
-                            onChange={(e) => setPaymentDate(e.target.value)}
-                            className="mt-1"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+                  )
+                })}
+              </RadioGroup>
+            </div>
           </div>
 
           <DialogFooter>
@@ -426,7 +360,7 @@ export function TenantInvoicesView() {
             <Button
               className="bg-orange-600 hover:bg-orange-700"
               onClick={handleConfirmPayment}
-              disabled={isProcessing || (paymentTab === "offline" && (!transactionRef || !paymentDate))}
+              disabled={isProcessing}
             >
               {isProcessing ? "Processing..." : `Pay ETB ${selectedInvoice?.amount.toLocaleString()}`}
             </Button>

@@ -5,17 +5,17 @@ import {
   Calendar,
   FileText,
   CheckCircle2,
-  Download,
+  Receipt,
   Wrench,
-  Send,
+  MessageSquare,
   ChevronRight,
+  AlertCircle,
   Clock,
   Phone,
   MapPin,
   Wifi,
   Car,
   Shield,
-  MessageCircle,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -97,72 +97,29 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
           </div>
           <button
             type="button"
-            onClick={() => onNavigate?.("payment-history")}
+            onClick={() => onNavigate?.("invoices")}
             className="rounded-lg bg-orange-600 px-12 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-orange-700 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2"
           >
-            Pay Rent
+            Pay Now
           </button>
-        </CardContent>
-      </Card>
-
-      {/* Lease Summary Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-slate-600" />
-            Lease Summary
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg bg-slate-50 px-4 py-3">
-              <span className="text-sm text-slate-500">Room Number</span>
-              <p className="font-semibold text-slate-900">Room 310</p>
-            </div>
-            <div className="rounded-lg bg-slate-50 px-4 py-3">
-              <span className="text-sm text-slate-500">Floor</span>
-              <p className="font-semibold text-slate-900">3rd Floor</p>
-            </div>
-            <div className="rounded-lg bg-slate-50 px-4 py-3">
-              <span className="text-sm text-slate-500">Base Rent (ETB)</span>
-              <p className="font-semibold text-slate-900">ETB 15,000</p>
-            </div>
-            <div className="rounded-lg bg-slate-50 px-4 py-3">
-              <span className="text-sm text-slate-500">Lease Status</span>
-              <p className="font-semibold text-emerald-700">Active</p>
-            </div>
-          </div>
-          <div className="border-t pt-4">
-            <div className="mb-3 text-sm text-slate-600">
-              <p>Lease Start: Sene 30, 2018 E.C. (May 7, 2024)</p>
-              <p>Lease End: Sene 30, 2019 E.C. (May 7, 2025)</p>
-            </div>
-            <button
-              type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-medium text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300"
-            >
-              <Download className="h-4 w-4" />
-              Download Lease PDF
-            </button>
-          </div>
         </CardContent>
       </Card>
 
       {/* Quick Actions */}
       <div>
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Quick Actions</h2>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <button
             type="button"
-            onClick={() => onNavigate?.("payment-history")}
+            onClick={() => onNavigate?.("invoices")}
             className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 text-left transition-all hover:border-orange-200 hover:shadow-md"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100">
-              <Download className="h-6 w-6 text-orange-600" />
+              <Receipt className="h-6 w-6 text-orange-600" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-slate-900">Payment History</h3>
-              <p className="text-sm text-slate-500">View and download receipts</p>
+              <h3 className="font-semibold text-slate-900">View Invoices</h3>
+              <p className="text-sm text-slate-500">Check your billing history</p>
             </div>
             <ChevronRight className="h-5 w-5 text-slate-400" />
           </button>
@@ -176,33 +133,179 @@ export function TenantDashboardView({ onNavigate }: TenantDashboardViewProps) {
               <Wrench className="h-6 w-6 text-blue-600" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-slate-900">Report Issue</h3>
-              <p className="text-sm text-slate-500">Request maintenance</p>
+              <h3 className="font-semibold text-slate-900">Request Maintenance</h3>
+              <p className="text-sm text-slate-500">Report an issue</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-slate-400" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onNavigate?.("messages")}
+            className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 text-left transition-all hover:border-orange-200 hover:shadow-md"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100">
+              <MessageSquare className="h-6 w-6 text-emerald-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-slate-900">Message Manager</h3>
+              <p className="text-sm text-slate-500">Contact property manager</p>
             </div>
             <ChevronRight className="h-5 w-5 text-slate-400" />
           </button>
         </div>
       </div>
 
-      {/* Contact Manager Section */}
-      <Card className="border-2 border-slate-200">
-        <CardContent className="flex flex-col gap-4 py-6">
-          <div className="flex items-center gap-3">
+      {/* Active Maintenance Alert */}
+      {activeMaintenance && (
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                <Wrench className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900">{activeMaintenance.title}</h3>
+                  <Badge className="border-none bg-blue-100 text-blue-700">
+                    <Clock className="mr-1 h-3 w-3" />
+                    In Progress
+                  </Badge>
+                </div>
+                <p className="text-sm text-slate-500">{activeMaintenance.lastUpdate}</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onNavigate?.("maintenance")}
+            >
+              View Details
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Two Column Layout */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* My Office Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Building2 className="h-5 w-5 text-slate-500" />
+              My Office
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                <span className="text-sm text-slate-500">Room Number</span>
+                <span className="font-semibold text-slate-900">Room 310</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                <span className="text-sm text-slate-500">Floor</span>
+                <span className="font-semibold text-slate-900">3rd Floor</span>
+              </div>
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                <span className="text-sm text-slate-500">Monthly Rent</span>
+                <span className="font-semibold text-slate-900">ETB 15,000</span>
+              </div>
+
+              {/* Lease Progress */}
+              <div className="rounded-lg border border-slate-200 p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-700">Lease Progress</span>
+                  <span className="text-sm text-slate-500">6 of 12 months</span>
+                </div>
+                <Progress value={leaseProgress} className="h-2" />
+                <p className="mt-2 text-xs text-slate-500">Expires: Mar 25, 2025</p>
+              </div>
+
+              {/* Amenities */}
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className="gap-1">
+                  <Wifi className="h-3 w-3" /> WiFi
+                </Badge>
+                <Badge variant="secondary" className="gap-1">
+                  <Car className="h-3 w-3" /> Parking
+                </Badge>
+                <Badge variant="secondary" className="gap-1">
+                  <Shield className="h-3 w-3" /> 24/7 Security
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity Card */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Calendar className="h-5 w-5 text-slate-500" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative flex flex-col gap-1">
+              {recentActivity.map((item, index) => {
+                const Icon = item.icon
+                return (
+                  <div key={item.id} className="flex items-start gap-4 py-3">
+                    {/* Timeline line */}
+                    <div className="relative flex flex-col items-center">
+                      <div
+                        className={`flex h-8 w-8 items-center justify-center rounded-full ${item.iconColor}`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      {index < recentActivity.length - 1 && (
+                        <div className="absolute top-8 h-full w-px bg-slate-200" />
+                      )}
+                    </div>
+                    {/* Content */}
+                    <div className="flex flex-1 flex-col">
+                      <span className="font-medium text-slate-900">
+                        {item.event}
+                      </span>
+                      <span className="text-sm text-slate-500">{item.date}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Property Manager Contact */}
+      <Card>
+        <CardContent className="flex items-center justify-between py-6">
+          <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
               <Building2 className="h-6 w-6 text-slate-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900">Need help?</h3>
-              <p className="text-sm text-slate-500">Contact your building manager</p>
+              <h3 className="font-semibold text-slate-900">Abuki Building Management</h3>
+              <div className="mt-1 flex items-center gap-4 text-sm text-slate-500">
+                <span className="flex items-center gap-1">
+                  <Phone className="h-4 w-4" />
+                  +251 911 23 45 67
+                </span>
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  Bole, Addis Ababa
+                </span>
+              </div>
             </div>
           </div>
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-3 font-semibold text-white transition-all hover:bg-slate-800"
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => onNavigate?.("messages")}
           >
-            <MessageCircle className="h-5 w-5" />
-            Contact Manager on Telegram
-          </button>
+            <MessageSquare className="h-4 w-4" />
+            Send Message
+          </Button>
         </CardContent>
       </Card>
     </div>
