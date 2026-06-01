@@ -409,7 +409,45 @@ export function SettingsView({ onNavigate, onSystemSubscription }: SettingsViewP
         </Card>
       </div>
 
-      {/* Add Tax Rule Modal */}
+      {/* Notification Templates */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Bell className="h-5 w-5 text-slate-600" />
+            <CardTitle>Notification Templates</CardTitle>
+          </div>
+          <CardDescription>Customize SMS notification messages in English and Amharic</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6">
+          {/* English Template */}
+          <div>
+            <Label htmlFor="sms-template-en" className="text-base font-semibold text-slate-900 mb-2 block">English SMS Template</Label>
+            <textarea
+              id="sms-template-en"
+              className="w-full min-h-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              defaultValue="Dear [TenantName], Your rent for [PropertyName] is due on [DueDate]. Amount: ETB [Amount]. Please pay on time to avoid penalties."
+            />
+            <p className="text-xs text-slate-500 mt-1">Use [TenantName], [PropertyName], [DueDate], [Amount] as placeholders</p>
+          </div>
+
+          {/* Amharic Template */}
+          <div>
+            <Label htmlFor="sms-template-am" className="text-base font-semibold text-slate-900 mb-2 block">Amharic SMS Template</Label>
+            <textarea
+              id="sms-template-am"
+              className="w-full min-h-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              defaultValue="ውድ [ተከራይ]፣ የ[ንብረት] ኪራይዎ በ[ፈጸም] መቅጠር ይታገሳል። መጠን: ETB [ወጪ]። ዘግይታ ማስከተልን ለማስወገድ በጊዜ ይክፈሉ።"
+            />
+            <p className="text-xs text-slate-500 mt-1">Use [ተከራይ], [ንብረት], [ፈጸም], [ወጪ] as placeholders</p>
+          </div>
+
+          <Button className="w-full bg-orange-500 hover:bg-orange-600">
+            Save Notification Templates
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Add Tax Modal Dialog */}
       <Dialog open={addTaxModalOpen} onOpenChange={setAddTaxModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

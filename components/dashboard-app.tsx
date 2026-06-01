@@ -20,28 +20,13 @@ import { AddTenantView } from "@/components/views/add-tenant-view"
 import { PublicListingDetailView } from "@/components/views/public-listing-detail-view"
 import { MaintenanceTicketDetailView } from "@/components/views/maintenance-ticket-detail-view"
 import { DigitalInvoiceDetailView } from "@/components/views/digital-invoice-detail-view"
-import { LeadDetailView } from "@/components/views/lead-detail-view"
-import { BrokerDetailView } from "@/components/views/broker-detail-view"
-import { VendorDetailView } from "@/components/views/vendor-detail-view"
 import { BuildingVerificationView } from "@/components/views/building-verification-view"
 import { PortfolioDashboardView } from "@/components/views/portfolio-dashboard-view"
 import { BillingView } from "@/components/views/billing-view"
 import { MaintenanceView } from "@/components/views/maintenance-view"
 import { MarketplaceView } from "@/components/views/marketplace-view"
-import { AccountingView } from "@/components/views/accounting-view"
-import { DocumentsView } from "@/components/views/documents-view"
-import { MessagesView } from "@/components/views/messages-view"
-import { TeamSettingsView } from "@/components/views/team-settings-view"
-import { AutomationsView } from "@/components/views/automations-view"
-import { HelpCenterView, LiveChatWidget } from "@/components/views/help-center-view"
-import { DataImportView } from "@/components/views/data-import-view"
-import { InspectionsView } from "@/components/views/inspections-view"
-import { VendorsView } from "@/components/views/vendors-view"
 import { SettingsView } from "@/components/views/settings-view"
-import { UtilityTrackingView } from "@/components/views/utility-tracking-view"
 import { LeaseSettlementView } from "@/components/views/lease-settlement-view"
-import { WaitlistView } from "@/components/views/waitlist-view"
-import { BrokersView } from "@/components/views/brokers-view"
 import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
 import { SystemAdminView } from "@/components/views/system-admin-view"
 import { PlatformFinancialsView } from "@/components/views/platform-financials-view"
@@ -76,11 +61,8 @@ type ActiveView =
   | "listing-detail"
   | "maintenance-ticket-detail"
   | "invoice-detail"
-  | "lead-detail"
-  | "broker-detail"
-  | "vendor-detail"
   | "building-verification"
-type DetailKind = "tenant" | "property" | "listing" | "maintenance-ticket" | "invoice" | "lead" | "broker" | "vendor" | "building"
+type DetailKind = "tenant" | "property" | "listing" | "maintenance-ticket" | "invoice" | "building"
 type Selected = { kind: DetailKind; id: string } | null
 
 const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", string> = {
@@ -89,23 +71,10 @@ const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", str
   tenants: "Tenants",
   billing: "Financials & Billing",
   maintenance: "Work Orders & Maintenance",
-  accounting: "Accounting & Reports",
-  documents: "Documents",
-  messages: "Messages",
   marketplace: "Marketplace",
   settings: "Settings",
-  "portfolio-dashboard": "Portfolio Overview",
-  "team-settings": "Staff & Branch Management",
-  automations: "Automated Workflows",
-  "help-center": "Help Center & Support",
-  "data-import": "Data Migration & Import",
-  inspections: "Property Inspections",
-  vendors: "External Vendors & Contacts",
   "system-subscription": "System Subscription",
-  "utility-tracking": "Utility Meter Readings",
-  "waitlist": "Prospective Tenants & Waitlist",
   "lease-settlement": "Final Lease Settlement",
-  "brokers": "Brokers & Commissions",
 }
 
 export function DashboardApp() {
@@ -188,21 +157,6 @@ export function DashboardApp() {
     setActiveView("invoice-detail")
   }
 
-  const openLeadDetail = (id: string) => {
-    setSelected({ kind: "lead", id })
-    setActiveView("lead-detail")
-  }
-
-  const openBrokerDetail = (id: string) => {
-    setSelected({ kind: "broker", id })
-    setActiveView("broker-detail")
-  }
-
-  const openVendorDetail = (id: string) => {
-    setSelected({ kind: "vendor", id })
-    setActiveView("vendor-detail")
-  }
-
   const openBuildingVerification = (id: string) => {
     setSelected({ kind: "building", id })
     setActiveView("building-verification")
@@ -221,15 +175,9 @@ export function DashboardApp() {
             ? "maintenance"
             : activeView === "invoice-detail"
               ? "billing"
-              : activeView === "lead-detail"
-                ? "waitlist"
-                : activeView === "broker-detail"
-                  ? "brokers"
-                  : activeView === "vendor-detail"
-                    ? "vendors"
-                    : activeView === "building-verification"
-                      ? "dashboard"
-                      : activeView as ViewKey
+              : activeView === "building-verification"
+                ? "dashboard"
+                : activeView as ViewKey
 
   const headerTitle =
     activeView === "detail"
@@ -280,18 +228,6 @@ export function DashboardApp() {
   const selectedInvoice =
     activeView === "invoice-detail" && selected?.kind === "invoice"
       ? getInvoiceDetail(selected.id)
-      : undefined
-  const selectedLead =
-    activeView === "lead-detail" && selected?.kind === "lead"
-      ? getLeadDetail(selected.id)
-      : undefined
-  const selectedBroker =
-    activeView === "broker-detail" && selected?.kind === "broker"
-      ? getBrokerDetail(selected.id)
-      : undefined
-  const selectedVendor =
-    activeView === "vendor-detail" && selected?.kind === "vendor"
-      ? getVendorDetail(selected.id)
       : undefined
   const selectedBuildingVerification =
     activeView === "building-verification" && selected?.kind === "building"
@@ -517,22 +453,7 @@ export function DashboardApp() {
                 onSystemSubscription={() => setActiveView("system-subscription")}
               />
             )}
-            {activeView === "team-settings" && <TeamSettingsView />}
-            {activeView === "automations" && <AutomationsView />}
-            {activeView === "help-center" && <HelpCenterView />}
-            {activeView === "data-import" && <DataImportView />}
-            {activeView === "inspections" && <InspectionsView />}
-            {activeView === "vendors" && <VendorsView />}
-            {activeView === "brokers" && <BrokersView />}
             {activeView === "system-subscription" && <SystemSubscriptionView />}
-            {activeView === "utility-tracking" && <UtilityTrackingView />}
-            {activeView === "waitlist" && (
-              <WaitlistView
-                onInviteToLease={(leadData) => {
-                  openAddTenant()
-                }}
-              />
-            )}
             {activeView === "lease-settlement" && selectedTenant && (
               <LeaseSettlementView
                 tenant={selectedTenant}
@@ -551,24 +472,6 @@ export function DashboardApp() {
             {activeView === "invoice-detail" && selectedInvoice && (
               <DigitalInvoiceDetailView invoice={selectedInvoice} />
             )}
-            {activeView === "lead-detail" && selectedLead && (
-              <LeadDetailView
-                lead={selectedLead}
-                onConvert={() => openAddTenant()}
-              />
-            )}
-            {activeView === "broker-detail" && selectedBroker && (
-              <BrokerDetailView
-                broker={selectedBroker}
-                onBack={() => navigate("brokers")}
-              />
-            )}
-            {activeView === "vendor-detail" && selectedVendor && (
-              <VendorDetailView
-                vendor={selectedVendor}
-                onBack={() => navigate("vendors")}
-              />
-            )}
             {activeView === "building-verification" && selectedBuildingVerification && (
               <BuildingVerificationView
                 building={selectedBuildingVerification}
@@ -578,9 +481,6 @@ export function DashboardApp() {
           </div>
         </main>
       </div>
-
-      {/* Live Chat Widget - Always visible */}
-      <LiveChatWidget />
     </div>
   )
 }

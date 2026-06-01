@@ -51,6 +51,11 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
   const [pricePerSqMeter, setPricePerSqMeter] = useState("500")
   const [roomSize, setRoomSize] = useState("30") // Default room size in sq.m
   
+  // Listing Type State
+  const [listingType, setListingType] = useState<"standard" | "auction">("standard")
+  const [auctionStartingPrice, setAuctionStartingPrice] = useState("12000")
+  const [auctionDuration, setAuctionDuration] = useState("7") // days
+  
   // Calculate auto total for dimension-based pricing
   const autoCalculatedTotal = isDimensionBased 
     ? (parseFloat(pricePerSqMeter || "0") * parseFloat(roomSize || "0")).toFixed(2)
@@ -154,6 +159,7 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
         <TabsList className="mb-6 bg-slate-100">
           <TabsTrigger value="properties" className="px-6">Properties</TabsTrigger>
           <TabsTrigger value="pricing" className="px-6">Pricing Logic</TabsTrigger>
+          <TabsTrigger value="listing-type" className="px-6">Listing Type</TabsTrigger>
         </TabsList>
 
         <TabsContent value="properties">
@@ -529,6 +535,96 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="listing-type" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Listing Type Selection */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Listing Type Configuration</CardTitle>
+                <CardDescription>Choose how properties are listed and rented out</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-6">
+                {/* Standard Rental Option */}
+                <div
+                  className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors ${
+                    listingType === "standard" ? "border-orange-500 bg-orange-50" : "border-slate-200"
+                  }`}
+                  onClick={() => setListingType("standard")}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${listingType === "standard" ? "bg-orange-500 text-white" : "bg-slate-100 text-slate-600"}`}>
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">Standard Rental</p>
+                      <p className="text-sm text-slate-500">Fixed tenant application and approval process</p>
+                    </div>
+                  </div>
+                  <Switch checked={listingType === "standard"} onCheckedChange={(checked) => checked && setListingType("standard")} />
+                </div>
+
+                {/* Auction/Bidding Option */}
+                <div
+                  className={`flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors ${
+                    listingType === "auction" ? "border-orange-500 bg-orange-50" : "border-slate-200"
+                  }`}
+                  onClick={() => setListingType("auction")}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${listingType === "auction" ? "bg-orange-500 text-white" : "bg-slate-100 text-slate-600"}`}>
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">Auction/Bidding</p>
+                      <p className="text-sm text-slate-500">Competitive bidding process for highest lease value</p>
+                    </div>
+                  </div>
+                  <Switch checked={listingType === "auction"} onCheckedChange={(checked) => checked && setListingType("auction")} />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Auction Configuration (shown when auction selected) */}
+            {listingType === "auction" && (
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Auction Settings</CardTitle>
+                  <CardDescription>Configure auction parameters for bidding</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="starting-price">Starting Bid Price (ETB)</Label>
+                      <Input
+                        id="starting-price"
+                        type="number"
+                        value={auctionStartingPrice}
+                        onChange={(e) => setAuctionStartingPrice(e.target.value)}
+                        placeholder="Enter starting bid price"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="auction-duration">Auction Duration (Days)</Label>
+                      <Input
+                        id="auction-duration"
+                        type="number"
+                        value={auctionDuration}
+                        onChange={(e) => setAuctionDuration(e.target.value)}
+                        placeholder="Enter duration in days"
+                      />
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                    <p className="text-sm text-blue-900">
+                      <span className="font-semibold">Auction Summary:</span> Properties will be listed for bidding starting at <span className="font-medium">ETB {auctionStartingPrice}</span> for <span className="font-medium">{auctionDuration} days</span>.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TabsContent>
       </Tabs>
