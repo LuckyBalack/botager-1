@@ -26,9 +26,10 @@ const paymentOptions = [
 
 type TenantsViewProps = {
   onSelectTenant?: (id: string) => void
+  onNavigateToWaitlist?: () => void
 }
 
-export function TenantsView({ onSelectTenant }: TenantsViewProps) {
+export function TenantsView({ onSelectTenant, onNavigateToWaitlist }: TenantsViewProps) {
   const [search, setSearch] = useState("")
   const [lease, setLease] = useState("all")
   const [payment, setPayment] = useState("all")
@@ -56,6 +57,7 @@ export function TenantsView({ onSelectTenant }: TenantsViewProps) {
         <TabsList className="mb-6 bg-slate-100">
           <TabsTrigger value="active-tenants" className="px-6">Active Tenants</TabsTrigger>
           <TabsTrigger value="applications" className="px-6">Lease Applications</TabsTrigger>
+          <TabsTrigger value="waitlist" className="px-6">Waitlist</TabsTrigger>
         </TabsList>
 
         <TabsContent value="active-tenants">
@@ -169,6 +171,25 @@ export function TenantsView({ onSelectTenant }: TenantsViewProps) {
 
         <TabsContent value="applications">
           <LeaseApplicationsComponent onReview={(appId) => console.log("Reviewing application:", appId)} />
+        </TabsContent>
+
+        <TabsContent value="waitlist">
+          <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <div className="text-center space-y-4">
+              <h3 className="text-lg font-semibold text-slate-900">Prospective Tenants & Waitlist</h3>
+              <p className="text-sm text-slate-600">View and manage leads from your waitlist</p>
+              {onNavigateToWaitlist ? (
+                <button
+                  onClick={onNavigateToWaitlist}
+                  className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
+                >
+                  View Waitlist
+                </button>
+              ) : (
+                <p className="text-xs text-slate-500">Waitlist feature unavailable</p>
+              )}
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

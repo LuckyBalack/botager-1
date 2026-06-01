@@ -114,11 +114,14 @@ function getDaysOverdue(dueDateStr: string): number {
   return diffDays > 0 ? diffDays : 0
 }
 
+import { Zap } from "lucide-react"
+
 type BillingViewProps = {
   onOpenInvoiceDetail?: (invoiceId: string) => void
+  onNavigateToUtilities?: () => void
 }
 
-export function BillingView({ onOpenInvoiceDetail }: BillingViewProps) {
+export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: BillingViewProps) {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [invoiceDetailModalOpen, setInvoiceDetailModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
@@ -233,10 +236,29 @@ export function BillingView({ onOpenInvoiceDetail }: BillingViewProps) {
           <TabsTrigger value="payment-verification" className="px-6">
             Payment Verification
           </TabsTrigger>
+          <TabsTrigger value="utilities" className="px-6">
+            <Zap className="mr-2 h-4 w-4" />
+            Utilities
+          </TabsTrigger>
           <TabsTrigger value="utility-splitter" className="px-6">
             Utility Cost Splitter
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="utilities" className="space-y-4">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm text-amber-900">
+              Track and manage utility meter readings, generate utility bills, and monitor consumption across all units.
+            </p>
+          </div>
+          <Button
+            onClick={onNavigateToUtilities}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
+            <Zap className="mr-2 h-4 w-4" />
+            View Utility Tracker
+          </Button>
+        </TabsContent>
 
         <TabsContent value="invoices">
           <div className="rounded-lg border border-slate-200 bg-white">

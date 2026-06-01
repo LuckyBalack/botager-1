@@ -28,6 +28,10 @@ import { MaintenanceView } from "@/components/views/maintenance-view"
 import { MarketplaceView } from "@/components/views/marketplace-view"
 import { SettingsView } from "@/components/views/settings-view"
 import { LeaseSettlementView } from "@/components/views/lease-settlement-view"
+import { UtilityTrackingView } from "@/components/views/utility-tracking-view"
+import { LeaseSettlementDetailView } from "@/components/views/lease-settlement-detail-view"
+import { SpaceMapView } from "@/components/views/space-map-view"
+import { WaitlistView } from "@/components/views/waitlist-view"
 import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
 import { SystemAdminView } from "@/components/views/system-admin-view"
 import { PlatformFinancialsView } from "@/components/views/platform-financials-view"
@@ -60,6 +64,10 @@ type ActiveView =
   | "add-tenant"
   | "system-subscription"
   | "lease-settlement"
+  | "lease-settlement-detail"
+  | "utility-tracking"
+  | "space-map"
+  | "waitlist"
   | "listing-detail"
   | "maintenance-ticket-detail"
   | "invoice-detail"
@@ -67,7 +75,7 @@ type ActiveView =
 type DetailKind = "tenant" | "property" | "listing" | "maintenance-ticket" | "invoice" | "building"
 type Selected = { kind: DetailKind; id: string } | null
 
-const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", string> = {
+const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement" | "lease-settlement-detail" | "utility-tracking" | "space-map" | "waitlist", string> = {
   dashboard: "Dashboard",
   properties: "Properties",
   tenants: "Tenants",
@@ -77,6 +85,10 @@ const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", str
   settings: "Settings",
   "system-subscription": "System Subscription",
   "lease-settlement": "Final Lease Settlement",
+  "lease-settlement-detail": "Lease Settlement Details",
+  "utility-tracking": "Utility Meter Readings",
+  "space-map": "Floor Plan & Space Map",
+  "waitlist": "Prospective Tenants & Waitlist",
 }
 
 export function DashboardApp() {
@@ -150,7 +162,7 @@ export function DashboardApp() {
 
   const openLeaseSettlement = (tenantId: string) => {
     setSelected({ kind: "tenant", id: tenantId })
-    setActiveView("lease-settlement")
+    setActiveView("lease-settlement-detail")
   }
 
   const openListingDetail = (id: string) => {
@@ -435,13 +447,22 @@ export function DashboardApp() {
               <DashboardView onNavigate={handleNavigate} />
             )}
             {activeView === "properties" && (
-              <PropertiesView onSelectProperty={openPropertyDetail} />
+              <PropertiesView 
+                onSelectProperty={openPropertyDetail}
+                onNavigateToSpaceMap={() => setActiveView("space-map")}
+              />
             )}
             {activeView === "tenants" && (
-              <TenantsView onSelectTenant={openTenantDetail} />
+              <TenantsView 
+                onSelectTenant={openTenantDetail}
+                onNavigateToWaitlist={() => setActiveView("waitlist")}
+              />
             )}
             {activeView === "billing" && (
-              <BillingView onOpenInvoiceDetail={openInvoiceDetail} />
+              <BillingView 
+                onOpenInvoiceDetail={openInvoiceDetail}
+                onNavigateToUtilities={() => setActiveView("utility-tracking")}
+              />
             )}
             {activeView === "maintenance" && (
               <MaintenanceView 
@@ -497,6 +518,15 @@ export function DashboardApp() {
                 onBack={() => navigate("dashboard")}
               />
             )}
+            {activeView === "utility-tracking" && <UtilityTrackingView />}
+            {activeView === "lease-settlement-detail" && (
+              <LeaseSettlementDetailView
+                onClose={() => navigate("tenants")}
+                onFinalize={() => navigate("tenants")}
+              />
+            )}
+            {activeView === "space-map" && <SpaceMapView />}
+            {activeView === "waitlist" && <WaitlistView />}
           </div>
         </main>
       </div>
