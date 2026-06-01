@@ -6,6 +6,8 @@ import { KeyFeaturesSection } from "@/components/landing/key-features-section"
 import { HowItWorksSection } from "@/components/landing/how-it-works-section"
 import { BenefitsSection } from "@/components/landing/benefits-section"
 import { TestimonialsSection } from "@/components/landing/testimonials-section"
+import { PricingSection } from "@/components/landing/pricing-section"
+import { ContactSection } from "@/components/landing/contact-section"
 import { LandingFooter } from "@/components/landing/landing-footer"
 
 type LandingPageProps = {
@@ -41,6 +43,8 @@ export function LandingPage({ onGetStarted, onLogin, onPostListing, currentPath,
           onNavigate={onNavigate}
         />
         <TestimonialsSection />
+        <PricingSection />
+        <ContactSection />
       </main>
       <LandingFooter />
     </div>
