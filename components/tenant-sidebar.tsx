@@ -1,6 +1,6 @@
 "use client"
 
-import { FileText, Receipt, Wrench, MessageSquare } from "lucide-react"
+import { FileText, History, Wrench } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Tooltip,
@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-export type TenantViewKey = "my-lease" | "invoices" | "maintenance" | "messages"
+export type TenantViewKey = "my-lease" | "payment-history" | "maintenance"
 
 type NavItem = {
   key: TenantViewKey
@@ -19,9 +19,8 @@ type NavItem = {
 
 export const tenantNav: NavItem[] = [
   { key: "my-lease", label: "My Lease", icon: FileText },
-  { key: "invoices", label: "Invoices & Payments", icon: Receipt },
+  { key: "payment-history", label: "Payment History", icon: History },
   { key: "maintenance", label: "Maintenance", icon: Wrench },
-  { key: "messages", label: "Messages", icon: MessageSquare },
 ]
 
 type TenantSidebarProps = {
