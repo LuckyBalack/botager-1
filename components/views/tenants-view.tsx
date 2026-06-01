@@ -7,6 +7,8 @@ import { LeasePill, PaymentPill } from "@/components/status-pills"
 import { tenants } from "@/lib/data"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ResponsiveTable, HiddenOnMobileCell, HiddenOnMobileHeader } from "@/components/responsive-table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { LeaseApplicationsComponent } from "@/components/lease-applications"
 
 const leaseOptions = [
   { value: "all", label: "All statuses" },
@@ -50,7 +52,13 @@ export function TenantsView({ onSelectTenant }: TenantsViewProps) {
 
   return (
     <div className="flex flex-col">
-      <ListToolbar
+      <Tabs defaultValue="active-tenants" className="w-full">
+        <TabsList className="mb-6 bg-slate-100">
+          <TabsTrigger value="active-tenants" className="px-6">Active Tenants</TabsTrigger>
+          <TabsTrigger value="applications" className="px-6">Lease Applications</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="active-tenants">
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search by name, email, or company..."
@@ -156,6 +164,12 @@ export function TenantsView({ onSelectTenant }: TenantsViewProps) {
       </div>
 
       <TablePagination currentPage={page} totalPages={Math.ceil(tenants.length / 10)} onPageChange={setPage} />
+        </TabsContent>
+
+        <TabsContent value="applications">
+          <LeaseApplicationsComponent onReview={(appId) => console.log("Reviewing application:", appId)} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
