@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { MoreHorizontal, Plus, FileText } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AutomatedInvoices } from "@/components/automated-invoices"
@@ -35,12 +35,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
-import {
-  invoices,
-  receipts,
-  creditRequests,
-  type InvoiceStatus,
-} from "@/lib/data"
+import { useInvoices, useProperties } from "@/hooks/use-database"
+import { Zap } from "lucide-react"
+
+type BillingViewProps = {
+  onOpenInvoiceDetail?: (invoiceId: string) => void
+  onNavigateToUtilities?: () => void
+}
 
 function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
   const variants: Record<InvoiceStatus, string> = {
@@ -114,14 +115,12 @@ function getDaysOverdue(dueDateStr: string): number {
   return diffDays > 0 ? diffDays : 0
 }
 
-import { Zap } from "lucide-react"
-
-type BillingViewProps = {
-  onOpenInvoiceDetail?: (invoiceId: string) => void
-  onNavigateToUtilities?: () => void
-}
-
 export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: BillingViewProps) {
+  const { properties, loading: propertiesLoading } = useProperties()
+  const selectedProperty = properties?.[0]
+  const { invoices: dbInvoices, loading: invoicesLoading } = useInvoices(selectedProperty?.id || null)
+  
+  const [invoicesList, setInvoicesList] = useState([])
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [invoiceDetailModalOpen, setInvoiceDetailModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
@@ -130,6 +129,13 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   const [includesWHT, setIncludesWHT] = useState(false)
   const [whtAmount, setWhtAmount] = useState("")
   const [whtReceiptNumber, setWhtReceiptNumber] = useState("")
+
+  // Sync database invoices to local state
+  useEffect(() => {
+    if (dbInvoices && Array.isArray(dbInvoices) && dbInvoices.length > 0) {
+      setInvoicesList(dbInvoices)
+    }
+  }, [dbInvoices])
 
   // Tax calculations (would normally come from settings)
   const vatRate = 15
@@ -141,10 +147,10 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   const totalRentCleared = includesWHT ? cashReceived + whtCredit : cashReceived
 
   const handleRecordPayment = (invoiceId: string) => {
-    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    const invoice = invoicesList.find((inv: any) => inv.id === invoiceId)
     if (invoice) {
       setSelectedInvoice(invoiceId)
-      setPaymentAmount(invoice.amountDue.replace("ETB ", "").replace(",", ""))
+      setPaymentAmount(invoice.amountDue?.toString() || "")
       setPaymentModalOpen(true)
     }
   }
@@ -155,7 +161,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   }
 
   const handleSendReminder = (invoiceId: string) => {
-    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    const invoice = invoicesList.find((inv: any) => inv.id === invoiceId)
     if (invoice) {
       toast.success("Reminder Sent", {
         description: `Payment reminder sent to tenant for invoice ${invoiceId}`,

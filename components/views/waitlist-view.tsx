@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -19,6 +19,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, UserPlus, Plus } from "lucide-react"
 import { toast } from "sonner"
+import { useWaitlistLeads } from "@/hooks/use-database"
+import { useProperties } from "@/hooks/use-database"
 
 interface WaitlistLead {
   id: string
@@ -38,78 +40,31 @@ interface WaitlistViewProps {
   onAddLead?: () => void
 }
 
-const mockLeads: WaitlistLead[] = [
-  {
-    id: "lead-001",
-    name: "Aron Tegene",
-    phone: "+251912345678",
-    email: "aron@example.com",
-    desiredSize: "45-55 m²",
-    budgetRange: "ETB 8,000 - 12,000",
-    desiredFloor: "2nd - 3rd",
-    dateJoined: "Apr 10, 2024",
-    status: "Interested",
-  },
-  {
-    id: "lead-002",
-    name: "Sintayehu Kebede",
-    phone: "+251987654321",
-    email: "sintayehu@example.com",
-    desiredSize: "50-60 m²",
-    budgetRange: "ETB 10,000 - 15,000",
-    desiredFloor: "4th floor",
-    dateJoined: "Apr 8, 2024",
-    status: "Contacted",
-  },
-  {
-    id: "lead-003",
-    name: "Eliana Tadesse",
-    phone: "+251911111111",
-    email: "eliana@example.com",
-    desiredSize: "40-50 m²",
-    budgetRange: "ETB 7,000 - 10,000",
-    desiredFloor: "2nd floor",
-    dateJoined: "Apr 15, 2024",
-    status: "Waiting",
-  },
-  {
-    id: "lead-004",
-    name: "Girma Assefa",
-    phone: "+251922222222",
-    email: "girma@example.com",
-    desiredSize: "55-70 m²",
-    budgetRange: "ETB 12,000 - 18,000",
-    desiredFloor: "3rd - 4th",
-    dateJoined: "Apr 5, 2024",
-    status: "Interested",
-  },
-  {
-    id: "lead-005",
-    name: "Zainab Mustafa",
-    phone: "+251933333333",
-    email: "zainab@example.com",
-    desiredSize: "45-50 m²",
-    budgetRange: "ETB 8,500 - 11,000",
-    desiredFloor: "Any",
-    dateJoined: "Apr 12, 2024",
-    status: "Waiting",
-  },
-]
-
 export function WaitlistView({
-  leads = mockLeads,
+  leads = undefined,
   onInviteToLease,
   onAddLead,
 }: WaitlistViewProps) {
-  const [displayLeads, setDisplayLeads] = useState<WaitlistLead[]>(leads)
-  const [selectedStatus, setSelectedStatus] = useState<"All" | "Contacted" | "Interested" | "Waiting">(
-    "All"
-  )
+  const { properties, loading: propertiesLoading } = useProperties()
+  const selectedProperty = properties?.[0]
+  const { leads: dbLeads, loading: leadsLoading } = useWaitlistLeads(selectedProperty?.id || null)
+  
+  const [localLeads, setLocalLeads] = useState<WaitlistLead[]>(leads || [])
+  const [statusFilter, setStatusFilter] = useState<string>("All")
+
+  // Sync database leads to local state
+  useEffect(() => {
+    if (dbLeads && Array.isArray(dbLeads) && dbLeads.length > 0) {
+      setLocalLeads(dbLeads)
+    } else if (leads) {
+      setLocalLeads(leads)
+    }
+  }, [dbLeads, leads])
 
   const filteredLeads =
-    selectedStatus === "All"
-      ? displayLeads
-      : displayLeads.filter((lead) => lead.status === selectedStatus)
+    statusFilter === "All"
+      ? localLeads
+      : localLeads.filter((lead) => lead.status === statusFilter)
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -135,7 +90,7 @@ export function WaitlistView({
     leadId: string,
     newStatus: "Contacted" | "Interested" | "Waiting"
   ) => {
-    setDisplayLeads((prev) =>
+    setLocalLeads((prev) =>
       prev.map((lead) =>
         lead.id === leadId ? { ...lead, status: newStatus } : lead
       )
@@ -144,8 +99,12 @@ export function WaitlistView({
   }
 
   const handleRemoveLead = (leadId: string, leadName: string) => {
-    setDisplayLeads((prev) => prev.filter((lead) => lead.id !== leadId))
+    setLocalLeads((prev) => prev.filter((lead) => lead.id !== leadId))
     toast.success(`${leadName} removed from waitlist`)
+  }
+
+  if (propertiesLoading || leadsLoading) {
+    return <div className="text-center text-slate-500">Loading waitlist data...</div>
   }
 
   return (

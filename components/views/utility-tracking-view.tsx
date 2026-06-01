@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -11,13 +11,33 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import { utilityReadings, type UtilityReading } from "@/lib/data"
 import { toast } from "sonner"
 import { Zap } from "lucide-react"
+import { useUtilityReadings } from "@/hooks/use-database"
+import { useProperties } from "@/hooks/use-database"
+
+interface UtilityReading {
+  id: string
+  roomName: string
+  unitType: "electricity" | "water" | "gas"
+  previousReading: number
+  currentReading: number
+  ratePerUnit: number
+}
 
 export function UtilityTrackingView() {
-  const [readings, setReadings] = useState<UtilityReading[]>(utilityReadings)
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const { properties, loading: propertiesLoading } = useProperties()
+  const selectedProperty = properties?.[0]
+  const { readings: dbReadings, loading: readingsLoading } = useUtilityReadings(selectedProperty?.id || null)
+  
+  const [readings, setReadings] = useState<UtilityReading[]>([])
+
+  // Sync database readings to local state
+  useEffect(() => {
+    if (dbReadings && Array.isArray(dbReadings) && dbReadings.length > 0) {
+      setReadings(dbReadings)
+    }
+  }, [dbReadings])
 
   const handleCurrentReadingChange = (id: string, value: string) => {
     const numValue = parseFloat(value)
@@ -45,6 +65,11 @@ export function UtilityTrackingView() {
   }
 
   const handleGenerateInvoices = () => {
+    if (readings.length === 0) {
+      toast.error("No utility readings to process")
+      return
+    }
+
     const totalCost = readings.reduce((sum, reading) => sum + getTotalCost(reading), 0)
     
     toast.success("Utility invoices generated successfully!", {
@@ -59,8 +84,6 @@ export function UtilityTrackingView() {
         currentReading: reading.currentReading,
       }))
     )
-
-    setEditingId(null)
   }
 
   const totalConsumption = readings.reduce(
@@ -68,6 +91,14 @@ export function UtilityTrackingView() {
     0
   )
   const totalBilling = readings.reduce((sum, reading) => sum + getTotalCost(reading), 0)
+
+  if (propertiesLoading || readingsLoading) {
+    return <div className="text-center text-slate-500">Loading utility data...</div>
+  }
+
+  if (!selectedProperty) {
+    return <div className="text-center text-slate-500">No properties found. Create a property first.</div>
+  }
 
   return (
     <div className="space-y-6">

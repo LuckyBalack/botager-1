@@ -7,6 +7,7 @@ import {
   getMaintenanceRequestsByProperty,
   getWaitlistLeadsByProperty,
   getUtilityReadingsByProperty,
+  getMarketplaceListingsByProperty,
 } from '@/lib/db'
 
 // Hook to fetch properties for current user
@@ -170,4 +171,31 @@ export function useUtilityReadings(propertyId: string | null) {
   }, [propertyId])
 
   return { readings, loading, error }
+}
+
+// Hook to fetch marketplace listings for a property
+export function useMarketplaceListings(propertyId: string | null) {
+  const [listings, setListings] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    if (!propertyId) return
+
+    const fetchListings = async () => {
+      try {
+        setLoading(true)
+        const data = await getMarketplaceListingsByProperty(propertyId)
+        setListings(data || [])
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch marketplace listings'))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchListings()
+  }, [propertyId])
+
+  return { listings, loading, error }
 }

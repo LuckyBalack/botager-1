@@ -1,14 +1,14 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { ListToolbar } from "@/components/list-toolbar"
 import { TablePagination } from "@/components/table-pagination"
 import { LeasePill, PaymentPill } from "@/components/status-pills"
-import { tenants } from "@/lib/data"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ResponsiveTable, HiddenOnMobileCell, HiddenOnMobileHeader } from "@/components/responsive-table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LeaseApplicationsComponent } from "@/components/lease-applications"
+import { useTenants, useProperties } from "@/hooks/use-database"
 
 const leaseOptions = [
   { value: "all", label: "All statuses" },
@@ -30,26 +30,46 @@ type TenantsViewProps = {
 }
 
 export function TenantsView({ onSelectTenant, onNavigateToWaitlist }: TenantsViewProps) {
+  const { properties, loading: propertiesLoading } = useProperties()
+  const selectedProperty = properties?.[0]
+  const { tenants: dbTenants, loading: tenantsLoading } = useTenants(selectedProperty?.id || null)
+  
   const [search, setSearch] = useState("")
   const [lease, setLease] = useState("all")
   const [payment, setPayment] = useState("all")
   const [page, setPage] = useState(1)
+  const [tenantsList, setTenantsList] = useState([])
+
+  // Sync database tenants to local state
+  useEffect(() => {
+    if (dbTenants && Array.isArray(dbTenants) && dbTenants.length > 0) {
+      setTenantsList(dbTenants)
+    }
+  }, [dbTenants])
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return tenants.filter((t) => {
-      const fullName = `${t.firstName} ${t.lastName}`.toLowerCase()
+    return tenantsList.filter((t: any) => {
+      const fullName = `${t.firstName || t.first_name || ''} ${t.lastName || t.last_name || ''}`.toLowerCase()
       const matchesSearch =
         !q ||
         fullName.includes(q) ||
-        t.email.toLowerCase().includes(q) ||
-        t.companyName.toLowerCase().includes(q) ||
-        t.roomNo.toLowerCase().includes(q)
-      const matchesLease = lease === "all" || t.lease === lease
-      const matchesPayment = payment === "all" || t.payment === payment
+        (t.email || '').toLowerCase().includes(q) ||
+        (t.companyName || t.company_name || '').toLowerCase().includes(q) ||
+        (t.roomNo || t.room_no || '').toLowerCase().includes(q)
+      const matchesLease = lease === "all" || (t.lease || '') === lease
+      const matchesPayment = payment === "all" || (t.payment || '') === payment
       return matchesSearch && matchesLease && matchesPayment
     })
-  }, [search, lease, payment])
+  }, [search, lease, payment, tenantsList])
+
+  if (propertiesLoading || tenantsLoading) {
+    return <div className="text-center text-slate-500">Loading tenant data...</div>
+  }
+
+  if (!selectedProperty) {
+    return <div className="text-center text-slate-500">No properties found. Create a property first.</div>
+  }
 
   return (
     <div className="flex flex-col">
