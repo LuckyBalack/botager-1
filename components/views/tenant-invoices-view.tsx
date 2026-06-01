@@ -154,8 +154,8 @@ export function TenantInvoicesView() {
     <div className="flex flex-col gap-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Invoices & Payments</h1>
-        <p className="mt-1 text-slate-500">View and pay your invoices</p>
+        <h1 className="text-3xl font-bold text-slate-900">Payment History</h1>
+        <p className="mt-1 text-slate-500">View and manage your rent payments</p>
       </div>
 
       <Tabs defaultValue="invoices" className="w-full">
