@@ -45,7 +45,7 @@ export function WorkspaceDetailView({
   const [activeImageIndex, setActiveImageIndex] = useState(0)
 
   const averageRating =
-    listing.reviews.length > 0
+    listing.reviews && listing.reviews.length > 0
       ? (
           listing.reviews.reduce((sum, r) => sum + r.rating, 0) /
           listing.reviews.length
@@ -53,14 +53,16 @@ export function WorkspaceDetailView({
       : "N/A"
 
   const nextImage = () => {
+    const imageCount = listing.images?.length || 0
     setActiveImageIndex((prev) =>
-      prev === listing.images.length - 1 ? 0 : prev + 1
+      prev === imageCount - 1 ? 0 : prev + 1
     )
   }
 
   const prevImage = () => {
+    const imageCount = listing.images?.length || 0
     setActiveImageIndex((prev) =>
-      prev === 0 ? listing.images.length - 1 : prev - 1
+      prev === 0 ? imageCount - 1 : prev - 1
     )
   }
 
