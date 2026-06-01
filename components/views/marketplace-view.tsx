@@ -492,6 +492,11 @@ export function MarketplaceView({
                           </Button>
                           <Button
                             className="flex-1 bg-orange-500 text-white hover:bg-orange-600"
+                            onClick={() => {
+                              const auctionListing = listing as AuctionListing
+                              setSelectedAuction(auctionListing)
+                              setShowBidModal(true)
+                            }}
                           >
                             Place Bid
                           </Button>
@@ -626,6 +631,20 @@ export function MarketplaceView({
           <p>&copy; 2024 Mamulka WRM. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Place Bid Modal */}
+      {selectedAuction && (
+        <PlaceBidModal
+          open={showBidModal}
+          onOpenChange={setShowBidModal}
+          auction={selectedAuction}
+          userInfo={{
+            name: "User",
+            email: "user@example.com",
+            phone: "555-0000",
+          }}
+        />
+      )}
 
       {/* Floating Back to Admin Button */}
       {showBackToAdmin && (
