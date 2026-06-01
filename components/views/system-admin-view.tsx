@@ -89,7 +89,12 @@ import {
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
+  Tooltip,
+  CartesianGrid,
+  Legend,
   Cell,
+  PieChart,
+  Pie,
 } from "recharts"
 import {
   workspaceSubmissions,
@@ -109,7 +114,7 @@ import {
 } from "@/lib/data"
 
 type SystemAdminViewProps = {
-  view: "moderation" | "credit-partners" | "settings" | "system-helpdesk"
+  view: "dashboard" | "moderation" | "subscriptions" | "credit-partners" | "settings" | "system-helpdesk"
 }
 
 function DocumentsModal({
