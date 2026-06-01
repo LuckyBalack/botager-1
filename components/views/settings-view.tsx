@@ -447,7 +447,7 @@ export function SettingsView({ onNavigate, onSystemSubscription }: SettingsViewP
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Add Tax Modal Dialog */}
       <Dialog open={addTaxModalOpen} onOpenChange={setAddTaxModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
