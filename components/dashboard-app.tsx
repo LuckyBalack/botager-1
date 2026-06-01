@@ -47,9 +47,10 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
   SheetDescription,
+  SheetTitle,
 } from "@/components/ui/sheet"
+import { toast } from "sonner"
 import type { TenantViewKey } from "@/components/tenant-sidebar"
 import { useResponsive } from "@/hooks/use-responsive"
 
@@ -439,8 +440,19 @@ export function DashboardApp() {
             {activeView === "tenants" && (
               <TenantsView onSelectTenant={openTenantDetail} />
             )}
-            {activeView === "billing" && <BillingView />}
-            {activeView === "maintenance" && <MaintenanceView />}
+            {activeView === "billing" && (
+              <BillingView onOpenInvoiceDetail={openInvoiceDetail} />
+            )}
+            {activeView === "maintenance" && (
+              <MaintenanceView 
+                onSelectTicket={openMaintenanceTicketDetail}
+                onNewRequest={() => {
+                  toast.success("New Request", {
+                    description: "Maintenance request form would open here",
+                  })
+                }}
+              />
+            )}
             {activeView === "accounting" && <AccountingView />}
             {activeView === "documents" && <DocumentsView />}
             {activeView === "messages" && <MessagesView />}
