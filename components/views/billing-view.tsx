@@ -170,7 +170,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   }
 
   const handleVoidInvoice = (invoiceId: string) => {
-    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    const invoice = invoicesList.find((inv) => inv.id === invoiceId)
     if (invoice) {
       toast.success("Invoice Voided", {
         description: `Invoice ${invoiceId} has been voided successfully`,
@@ -179,7 +179,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   }
 
   const getInvoiceTaxDetails = (invoiceId: string) => {
-    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    const invoice = invoicesList.find((inv) => inv.id === invoiceId)
     if (!invoice) return null
     const subtotal = parseFloat(invoice.amountDue.replace("ETB ", "").replace(",", ""))
     // Calculate backwards from total (assume total includes tax)
@@ -298,7 +298,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.map((invoice) => (
+                {invoicesList.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium text-slate-900">
                       {invoice.id}
@@ -644,7 +644,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
             </DialogDescription>
           </DialogHeader>
           {selectedInvoice && (() => {
-            const invoice = invoices.find((inv) => inv.id === selectedInvoice)
+            const invoice = invoicesList.find((inv) => inv.id === selectedInvoice)
             const taxDetails = getInvoiceTaxDetails(selectedInvoice)
             if (!invoice || !taxDetails) return null
             return (
