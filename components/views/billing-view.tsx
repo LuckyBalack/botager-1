@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { useInvoices, useProperties } from "@/hooks/use-database"
+import { receipts } from "@/lib/data"
 import { Zap } from "lucide-react"
 
 type BillingViewProps = {
@@ -121,6 +122,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   const { invoices: dbInvoices, loading: invoicesLoading } = useInvoices(selectedProperty?.id || null)
   
   const [invoicesList, setInvoicesList] = useState([])
+  const [receiptsList, setReceiptsList] = useState([])
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [invoiceDetailModalOpen, setInvoiceDetailModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
@@ -136,6 +138,11 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
       setInvoicesList(dbInvoices)
     }
   }, [dbInvoices])
+
+  // Initialize receipts from mock data
+  useEffect(() => {
+    setReceiptsList(receipts)
+  }, [])
 
   // Tax calculations (would normally come from settings)
   const vatRate = 15
@@ -170,7 +177,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   }
 
   const handleVoidInvoice = (invoiceId: string) => {
-    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    const invoice = invoicesList.find((inv) => inv.id === invoiceId)
     if (invoice) {
       toast.success("Invoice Voided", {
         description: `Invoice ${invoiceId} has been voided successfully`,
@@ -179,7 +186,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   }
 
   const getInvoiceTaxDetails = (invoiceId: string) => {
-    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    const invoice = invoicesList.find((inv) => inv.id === invoiceId)
     if (!invoice) return null
     const subtotal = parseFloat(invoice.amountDue.replace("ETB ", "").replace(",", ""))
     // Calculate backwards from total (assume total includes tax)
@@ -298,7 +305,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.map((invoice) => (
+                {invoicesList.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium text-slate-900">
                       {invoice.id}
@@ -392,7 +399,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {receipts.map((receipt) => (
+                {receiptsList.map((receipt) => (
                   <TableRow key={receipt.id}>
                     <TableCell className="font-medium text-slate-900">
                       {receipt.id}
@@ -644,7 +651,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
             </DialogDescription>
           </DialogHeader>
           {selectedInvoice && (() => {
-            const invoice = invoices.find((inv) => inv.id === selectedInvoice)
+            const invoice = invoicesList.find((inv) => inv.id === selectedInvoice)
             const taxDetails = getInvoiceTaxDetails(selectedInvoice)
             if (!invoice || !taxDetails) return null
             return (
