@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import { useInvoices, useProperties } from "@/hooks/use-database"
+import { receipts } from "@/lib/data"
 import { Zap } from "lucide-react"
 
 type BillingViewProps = {
@@ -121,6 +122,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   const { invoices: dbInvoices, loading: invoicesLoading } = useInvoices(selectedProperty?.id || null)
   
   const [invoicesList, setInvoicesList] = useState([])
+  const [receiptsList, setReceiptsList] = useState([])
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [invoiceDetailModalOpen, setInvoiceDetailModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
@@ -136,6 +138,11 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
       setInvoicesList(dbInvoices)
     }
   }, [dbInvoices])
+
+  // Initialize receipts from mock data
+  useEffect(() => {
+    setReceiptsList(receipts)
+  }, [])
 
   // Tax calculations (would normally come from settings)
   const vatRate = 15
@@ -392,7 +399,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {receipts.map((receipt) => (
+                {receiptsList.map((receipt) => (
                   <TableRow key={receipt.id}>
                     <TableCell className="font-medium text-slate-900">
                       {receipt.id}
