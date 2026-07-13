@@ -35,11 +35,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
-import { useInvoices, useProperties } from "@/hooks/use-database"
-import { receipts } from "@/lib/data"
+import { useInvoices } from "@/hooks/use-database"
 import { Zap } from "lucide-react"
 
 type BillingViewProps = {
+  buildingId: string | null
   onOpenInvoiceDetail?: (invoiceId: string) => void
   onNavigateToUtilities?: () => void
 }
@@ -116,10 +116,8 @@ function getDaysOverdue(dueDateStr: string): number {
   return diffDays > 0 ? diffDays : 0
 }
 
-export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: BillingViewProps) {
-  const { properties, loading: propertiesLoading } = useProperties()
-  const selectedProperty = properties?.[0]
-  const { invoices: dbInvoices, loading: invoicesLoading } = useInvoices(selectedProperty?.id || null)
+export function BillingView({ buildingId, onOpenInvoiceDetail, onNavigateToUtilities }: BillingViewProps) {
+  const { invoices: dbInvoices, loading: invoicesLoading } = useInvoices(buildingId)
   
   const [invoicesList, setInvoicesList] = useState([])
   const [receiptsList, setReceiptsList] = useState([])
@@ -135,13 +133,24 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   // Sync database invoices to local state
   useEffect(() => {
     if (dbInvoices && Array.isArray(dbInvoices) && dbInvoices.length > 0) {
-      setInvoicesList(dbInvoices)
+      const formattedInvoices = dbInvoices.map(inv => ({
+        id: inv.id,
+        invoiceNumber: inv.invoice_number || `INV-${inv.id.slice(0, 8)}`,
+        tenantName: inv.tenant?.full_name || 'Unknown Tenant',
+        roomNo: inv.tenant?.room_number || '-',
+        amount: inv.amount || 0,
+        amountDue: inv.amount || 0,
+        issueDate: inv.issue_date?.split('T')[0] || new Date().toISOString().split('T')[0],
+        dueDate: inv.due_date?.split('T')[0] || '',
+        paymentStatus: inv.payment_status === 'paid' ? 'Paid' : (inv.payment_status === 'pending' ? 'Pending' : 'Overdue'),
+      }))
+      setInvoicesList(formattedInvoices)
     }
   }, [dbInvoices])
 
-  // Initialize receipts from mock data
+  // Initialize receipts as empty (would fetch from payments table if needed)
   useEffect(() => {
-    setReceiptsList(receipts)
+    setReceiptsList([])
   }, [])
 
   // Tax calculations (would normally come from settings)
