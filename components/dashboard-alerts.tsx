@@ -1,7 +1,8 @@
 "use client"
 
 import { AlertCircle, AlertTriangle, Info, X } from "lucide-react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { useInvoices, useLeases, useMaintenanceRequests } from "@/hooks/use-database"
 
 type AlertType = "critical" | "warning" | "info"
 
@@ -12,32 +13,9 @@ type AlertItem = {
   description: string
 }
 
-const initialAlerts: AlertItem[] = [
-  {
-    id: "1",
-    type: "critical",
-    title: "Payment Overdue",
-    description: "Room 310: 15 days overdue (ETB 3,500)",
-  },
-  {
-    id: "2",
-    type: "warning",
-    title: "Lease Expiring",
-    description: "3 leases expiring in 30 days",
-  },
-  {
-    id: "3",
-    type: "warning",
-    title: "Maintenance Backlog",
-    description: "8 open tickets pending",
-  },
-  {
-    id: "4",
-    type: "info",
-    title: "System Update",
-    description: "New inspection features available",
-  },
-]
+type DashboardAlertsProps = {
+  buildingId: string | null
+}
 
 function AlertIcon({ type }: { type: AlertType }) {
   switch (type) {
@@ -85,11 +63,67 @@ function AlertBadge({ id, type, title, description, onDismiss }: AlertProps) {
   )
 }
 
-export function DashboardAlerts() {
-  const [alerts, setAlerts] = useState(initialAlerts)
+export function DashboardAlerts({ buildingId }: DashboardAlertsProps) {
+  const { invoices = [] } = useInvoices(buildingId)
+  const { leases = [] } = useLeases(buildingId)
+  const { requests = [] } = useMaintenanceRequests(buildingId)
+  const [dismissedIds, setDismissedIds] = useState<string[]>([])
+
+  // Generate alerts from real data
+  const alerts = useMemo(() => {
+    const generatedAlerts: AlertItem[] = []
+    
+    // Check for overdue invoices
+    const overdueInvoices = invoices.filter(inv => {
+      if (inv.payment_status === 'paid') return false
+      const dueDate = new Date(inv.due_date)
+      return dueDate < new Date()
+    })
+    
+    if (overdueInvoices.length > 0) {
+      const total = overdueInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0)
+      generatedAlerts.push({
+        id: 'overdue-payments',
+        type: 'critical',
+        title: 'Payment Overdue',
+        description: `${overdueInvoices.length} invoice(s) overdue (ETB ${total.toLocaleString()})`,
+      })
+    }
+
+    // Check for leases expiring soon
+    const expiringLeases = leases.filter(lease => {
+      const endDate = new Date(lease.end_date)
+      const thirtyDaysFromNow = new Date()
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
+      return endDate <= thirtyDaysFromNow && endDate >= new Date()
+    })
+
+    if (expiringLeases.length > 0) {
+      generatedAlerts.push({
+        id: 'expiring-leases',
+        type: 'warning',
+        title: 'Lease Expiring',
+        description: `${expiringLeases.length} lease(s) expiring in 30 days`,
+      })
+    }
+
+    // Check for open maintenance requests
+    const openTickets = requests.filter(req => req.status !== 'completed')
+
+    if (openTickets.length > 0) {
+      generatedAlerts.push({
+        id: 'maintenance-backlog',
+        type: 'warning',
+        title: 'Maintenance Backlog',
+        description: `${openTickets.length} open ticket(s) pending`,
+      })
+    }
+
+    return generatedAlerts.filter(alert => !dismissedIds.includes(alert.id))
+  }, [invoices, leases, requests, dismissedIds])
 
   const handleDismiss = (id: string) => {
-    setAlerts(alerts.filter((alert) => alert.id !== id))
+    setDismissedIds([...dismissedIds, id])
   }
 
   if (alerts.length === 0) {
