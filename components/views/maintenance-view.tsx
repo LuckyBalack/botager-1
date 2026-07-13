@@ -93,34 +93,46 @@ function KanbanColumn({ title, status, count, tickets, onSelectTicket }: KanbanC
   )
 }
 
-export function MaintenanceView({ onSelectTicket, onNewRequest }: { onSelectTicket?: (ticketId: string) => void; onNewRequest?: () => void }) {
-  const { properties, loading: propertiesLoading } = useProperties()
-  const selectedProperty = properties?.[0]
-  const { requests: dbRequests, loading: requestsLoading } = useMaintenanceRequests(selectedProperty?.id || null)
+type MaintenanceViewProps = {
+  buildingId: string | null
+  onSelectTicket?: (ticketId: string) => void
+  onNewRequest?: () => void
+}
+
+export function MaintenanceView({ buildingId, onSelectTicket, onNewRequest }: MaintenanceViewProps) {
+  const { requests: dbRequests, loading: requestsLoading } = useMaintenanceRequests(buildingId)
   
   const [ticketsList, setTicketsList] = useState([])
 
-  // Sync database requests to local state
+  // Sync database requests to local state and format them
   useEffect(() => {
     if (dbRequests && Array.isArray(dbRequests) && dbRequests.length > 0) {
-      setTicketsList(dbRequests)
+      const formattedRequests = dbRequests.map(req => ({
+        id: req.id,
+        unitNumber: req.property?.room_number || 'Unknown',
+        title: req.description || 'No description',
+        status: req.status || 'open',
+        priority: req.priority || 'Medium',
+        dateSubmitted: req.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        assignedTo: {
+          name: req.assigned_to_name || 'Unassigned',
+          avatar: '/placeholder.svg',
+        },
+      }))
+      setTicketsList(formattedRequests)
     }
   }, [dbRequests])
 
-  const openCount = ticketsList.filter((t: any) => (t.status || '') === "Open").length
+  const openCount = ticketsList.filter((t: any) => (t.status || '').toLowerCase() === "open").length
   const inProgressCount = ticketsList.filter(
-    (t: any) => (t.status || '') === "In Progress"
+    (t: any) => (t.status || '').toLowerCase() === "in progress"
   ).length
   const resolvedCount = ticketsList.filter(
-    (t: any) => (t.status || '') === "Resolved"
+    (t: any) => (t.status || '').toLowerCase() === "resolved"
   ).length
 
-  if (propertiesLoading || requestsLoading) {
+  if (requestsLoading) {
     return <div className="text-center text-slate-500">Loading maintenance requests...</div>
-  }
-
-  if (!selectedProperty) {
-    return <div className="text-center text-slate-500">No properties found. Create a property first.</div>
   }
 
   return (

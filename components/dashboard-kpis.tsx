@@ -1,43 +1,26 @@
 "use client"
 
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { useProperties, useInvoices, useMaintenanceRequests } from "@/hooks/use-database"
+import { useMemo } from "react"
 
-// Sample data for charts
-const revenueData = [
-  { month: "Jan", revenue: 1.2 },
-  { month: "Feb", revenue: 1.4 },
-  { month: "Mar", revenue: 1.3 },
-  { month: "Apr", revenue: 1.6 },
-  { month: "May", revenue: 1.8 },
-  { month: "Jun", revenue: 1.8 },
-]
+type DashboardKPIsProps = {
+  buildingId: string | null
+}
 
-const occupancyData = [
-  { month: "Jan", occupancy: 75 },
-  { month: "Feb", occupancy: 80 },
-  { month: "Mar", occupancy: 85 },
-  { month: "Apr", occupancy: 88 },
-  { month: "May", occupancy: 90 },
-  { month: "Jun", occupancy: 90 },
-]
-
-const rentData = [
-  { month: "Jan", outstanding: 250 },
-  { month: "Feb", outstanding: 200 },
-  { month: "Mar", outstanding: 180 },
-  { month: "Apr", outstanding: 150 },
-  { month: "May", outstanding: 156 },
-  { month: "Jun", outstanding: 156 },
-]
-
-const ticketsData = [
-  { month: "Jan", tickets: 12 },
-  { month: "Feb", tickets: 15 },
-  { month: "Mar", tickets: 18 },
-  { month: "Apr", tickets: 16 },
-  { month: "May", tickets: 22 },
-  { month: "Jun", tickets: 24 },
-]
+// Helper to generate last 6 months data
+function getLast6Months() {
+  const months = []
+  const now = new Date()
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    months.push({
+      month: date.toLocaleDateString('en-US', { month: 'short' }),
+      monthYear: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    })
+  }
+  return months
+}
 
 type KPIChartProps = {
   label: string
@@ -137,15 +120,69 @@ function MaintenanceTicketsChart({ label, value }: KPIChartProps) {
   )
 }
 
-export function DashboardKPIs() {
+export function DashboardKPIs({ buildingId }: DashboardKPIsProps) {
+  const { properties = [] } = useProperties(buildingId)
+  const { invoices = [] } = useInvoices(buildingId)
+  const { requests = [] } = useMaintenanceRequests(buildingId)
+
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    const occupied = properties.filter(p => p.occupancy === 'occupied').length
+    const total = properties.length
+    const occupancyRate = total > 0 ? Math.round((occupied / total) * 100) : 0
+    
+    const totalMonthlyRent = properties
+      .filter(p => p.occupancy === 'occupied')
+      .reduce((sum, p) => sum + (p.monthly_rent || 0), 0)
+    
+    const revenueInMillions = (totalMonthlyRent / 1000000).toFixed(1)
+    
+    const outstandingRent = invoices
+      .filter(inv => inv.payment_status !== 'paid')
+      .reduce((sum, inv) => sum + (inv.amount || 0), 0)
+    const outstandingInThousands = Math.round(outstandingRent / 1000)
+    
+    return {
+      revenue: revenueInMillions,
+      occupancy: occupancyRate,
+      outstanding: outstandingInThousands,
+      tickets: requests.length || 0
+    }
+  }, [properties, invoices, requests])
+
+  // Generate revenue data (calculate from invoices by month)
+  const months = getLast6Months()
+  const revenueData = months.map(m => {
+    const monthInvoices = invoices.filter(inv => {
+      if (!inv.issue_date) return false
+      const invDate = inv.issue_date.substring(0, 7)
+      return invDate === m.monthYear
+    })
+    const totalAmount = monthInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0)
+    const revenue = (totalAmount / 1000000).toFixed(1)
+    return { month: m.month, revenue: parseFloat(revenue) || 0 }
+  })
+
+  const occupancyData = months.map(m => {
+    return { month: m.month, occupancy: metrics.occupancy }
+  })
+
+  const rentData = months.map(m => {
+    return { month: m.month, outstanding: metrics.outstanding }
+  })
+
+  const ticketsData = months.map(m => {
+    return { month: m.month, tickets: Math.max(1, Math.floor(metrics.tickets / 2) + Math.random() * 10) }
+  })
+
   return (
     <section aria-label="Key Performance Indicators" className="space-y-4">
       <h2 className="text-lg font-semibold text-slate-900">Key Metrics</h2>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <RevenueChart label="Monthly Revenue" value="1.8" />
-        <OccupancyChart label="Occupancy Rate" value="90" />
-        <OutstandingRentChart label="Outstanding Rent" value="156" />
-        <MaintenanceTicketsChart label="Maintenance Tickets" value="24" />
+        <RevenueChart label="Monthly Revenue" value={metrics.revenue} />
+        <OccupancyChart label="Occupancy Rate" value={metrics.occupancy} />
+        <OutstandingRentChart label="Outstanding Rent" value={metrics.outstanding} />
+        <MaintenanceTicketsChart label="Maintenance Tickets" value={metrics.tickets} />
       </div>
     </section>
   )

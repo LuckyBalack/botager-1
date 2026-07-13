@@ -35,10 +35,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
-import { useInvoices, useProperties } from "@/hooks/use-database"
+import { useInvoices } from "@/hooks/use-database"
 import { Zap } from "lucide-react"
 
 type BillingViewProps = {
+  buildingId: string | null
   onOpenInvoiceDetail?: (invoiceId: string) => void
   onNavigateToUtilities?: () => void
 }
@@ -115,12 +116,11 @@ function getDaysOverdue(dueDateStr: string): number {
   return diffDays > 0 ? diffDays : 0
 }
 
-export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: BillingViewProps) {
-  const { properties, loading: propertiesLoading } = useProperties()
-  const selectedProperty = properties?.[0]
-  const { invoices: dbInvoices, loading: invoicesLoading } = useInvoices(selectedProperty?.id || null)
+export function BillingView({ buildingId, onOpenInvoiceDetail, onNavigateToUtilities }: BillingViewProps) {
+  const { invoices: dbInvoices, loading: invoicesLoading } = useInvoices(buildingId)
   
   const [invoicesList, setInvoicesList] = useState([])
+  const [receiptsList, setReceiptsList] = useState([])
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [invoiceDetailModalOpen, setInvoiceDetailModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
@@ -133,9 +133,25 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   // Sync database invoices to local state
   useEffect(() => {
     if (dbInvoices && Array.isArray(dbInvoices) && dbInvoices.length > 0) {
-      setInvoicesList(dbInvoices)
+      const formattedInvoices = dbInvoices.map(inv => ({
+        id: inv.id,
+        invoiceNumber: inv.invoice_number || `INV-${inv.id.slice(0, 8)}`,
+        tenantName: inv.tenant?.full_name || 'Unknown Tenant',
+        roomNo: inv.tenant?.room_number || '-',
+        amount: inv.amount || 0,
+        amountDue: inv.amount || 0,
+        issueDate: inv.issue_date?.split('T')[0] || new Date().toISOString().split('T')[0],
+        dueDate: inv.due_date?.split('T')[0] || '',
+        paymentStatus: inv.payment_status === 'paid' ? 'Paid' : (inv.payment_status === 'pending' ? 'Pending' : 'Overdue'),
+      }))
+      setInvoicesList(formattedInvoices)
     }
   }, [dbInvoices])
+
+  // Initialize receipts as empty (would fetch from payments table if needed)
+  useEffect(() => {
+    setReceiptsList([])
+  }, [])
 
   // Tax calculations (would normally come from settings)
   const vatRate = 15
@@ -170,7 +186,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   }
 
   const handleVoidInvoice = (invoiceId: string) => {
-    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    const invoice = invoicesList.find((inv) => inv.id === invoiceId)
     if (invoice) {
       toast.success("Invoice Voided", {
         description: `Invoice ${invoiceId} has been voided successfully`,
@@ -179,7 +195,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
   }
 
   const getInvoiceTaxDetails = (invoiceId: string) => {
-    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    const invoice = invoicesList.find((inv) => inv.id === invoiceId)
     if (!invoice) return null
     const subtotal = parseFloat(invoice.amountDue.replace("ETB ", "").replace(",", ""))
     // Calculate backwards from total (assume total includes tax)
@@ -298,7 +314,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.map((invoice) => (
+                {invoicesList.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium text-slate-900">
                       {invoice.id}
@@ -392,7 +408,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {receipts.map((receipt) => (
+                {receiptsList.map((receipt) => (
                   <TableRow key={receipt.id}>
                     <TableCell className="font-medium text-slate-900">
                       {receipt.id}
@@ -644,7 +660,7 @@ export function BillingView({ onOpenInvoiceDetail, onNavigateToUtilities }: Bill
             </DialogDescription>
           </DialogHeader>
           {selectedInvoice && (() => {
-            const invoice = invoices.find((inv) => inv.id === selectedInvoice)
+            const invoice = invoicesList.find((inv) => inv.id === selectedInvoice)
             const taxDetails = getInvoiceTaxDetails(selectedInvoice)
             if (!invoice || !taxDetails) return null
             return (
