@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { ListToolbar } from "@/components/list-toolbar"
 import { TablePagination } from "@/components/table-pagination"
 import { LeasePill } from "@/components/status-pills"
@@ -35,12 +35,13 @@ const leaseOptions = [
 ]
 
 type PropertiesViewProps = {
+  buildingId: string | null
   onSelectProperty?: (id: string) => void
   onNavigateToSpaceMap?: () => void
 }
 
-export function PropertiesView({ onSelectProperty, onNavigateToSpaceMap }: PropertiesViewProps) {
-  const { properties: dbProperties, loading } = useProperties()
+export function PropertiesView({ buildingId, onSelectProperty, onNavigateToSpaceMap }: PropertiesViewProps) {
+  const { properties: dbProperties, loading } = useProperties(buildingId)
   const [search, setSearch] = useState("")
   const [floor, setFloor] = useState("all")
   const [lease, setLease] = useState("all")
@@ -51,7 +52,7 @@ export function PropertiesView({ onSelectProperty, onNavigateToSpaceMap }: Prope
   const [propertiesList, setPropertiesList] = useState([])
   
   // Update local state when database properties load
-  useState(() => {
+  useEffect(() => {
     if (dbProperties?.length > 0) {
       setPropertiesList(dbProperties)
     }

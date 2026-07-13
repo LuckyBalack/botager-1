@@ -1,5 +1,6 @@
 "use client"
 
+import { useAuth } from "@/lib/auth-context"
 import { StatCards } from "@/components/stat-cards"
 import { RecentTenants } from "@/components/recent-tenants"
 import { DashboardKPIs } from "@/components/dashboard-kpis"
@@ -12,14 +13,16 @@ type DashboardViewProps = {
 }
 
 export function DashboardView({ onNavigate }: DashboardViewProps) {
+  const { buildingId } = useAuth()
+
   return (
     <div className="flex flex-col gap-8">
-      <StatCards />
-      <DashboardKPIs />
-      <DashboardAlerts />
+      <StatCards buildingId={buildingId} />
+      <DashboardKPIs buildingId={buildingId} />
+      <DashboardAlerts buildingId={buildingId} />
       <div className="flex flex-col gap-8">
         <ActivityFeed />
-        <RecentTenants onSeeAll={() => onNavigate("tenants")} />
+        <RecentTenants buildingId={buildingId} onSeeAll={() => onNavigate("tenants")} />
       </div>
     </div>
   )
