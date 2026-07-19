@@ -89,6 +89,8 @@ export function AddTenantView() {
   const [submitted, setSubmitted] = useState(false)
   const [tradeLicense, setTradeLicense] = useState<File | null>(null)
   const [prePaidMonths, setPrePaidMonths] = useState("1")
+  const [leaseStartDate, setLeaseStartDate] = useState("")
+  const [leaseEndDate, setLeaseEndDate] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-dismiss the temporary success banner.
@@ -257,6 +259,20 @@ export function AddTenantView() {
                   setTradeLicense(event.target.files?.[0] ?? null)
                 }
               />
+            </FieldRow>
+          </div>
+        </section>
+
+        {/* Lease Dates */}
+        <section className="flex flex-col gap-4 sm:gap-6">
+          <SectionHeader title="Lease Dates" description="Specify the lease start and end dates (both Gregorian and Ethiopian calendar)" />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-5 lg:grid-cols-2 lg:gap-x-8 lg:gap-y-6">
+            <FieldRow label="Lease Start Date (Gregorian)" htmlFor="lease-start">
+              <Input id="lease-start" type="date" value={leaseStartDate} onChange={(e) => setLeaseStartDate(e.target.value)} />
+            </FieldRow>
+            <FieldRow label="Lease End Date (Gregorian)" htmlFor="lease-end">
+              <Input id="lease-end" type="date" value={leaseEndDate} onChange={(e) => setLeaseEndDate(e.target.value)} />
             </FieldRow>
           </div>
         </section>

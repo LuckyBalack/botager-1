@@ -27,6 +27,7 @@ import {
   Languages,
   ClipboardList,
   Wrench,
+  User,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -60,8 +61,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ModerationBulkActions } from "@/components/moderation-bulk-actions"
+import { ModerationRiskScoring } from "@/components/moderation-risk-scoring"
+import { ModerationAdvancedFilters } from "@/components/moderation-advanced-filters"
+import { ModerationAuditTrail } from "@/components/moderation-audit-trail"
+import { CreditPartnerKPIs } from "@/components/credit-partner-kpis"
+import { CreditTransactionMonitoring } from "@/components/credit-transaction-monitoring"
+import { CreditPartnerSLA } from "@/components/credit-partner-sla"
+import { SystemUserManagement } from "@/components/system-user-management"
+import { SystemSecuritySettings } from "@/components/system-security-settings"
+import { SystemDashboardView } from "@/components/views/system-dashboard-view"
+import { HelpdeskTicketFilters } from "@/components/helpdesk-ticket-filters"
+import { HelpdeskEscalation } from "@/components/helpdesk-escalation"
+import { HelpdeskResponseTemplates } from "@/components/helpdesk-response-templates"
 import {
   Bar,
   BarChart,
@@ -69,7 +89,12 @@ import {
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
+  Tooltip,
+  CartesianGrid,
+  Legend,
   Cell,
+  PieChart,
+  Pie,
 } from "recharts"
 import {
   workspaceSubmissions,
@@ -89,7 +114,7 @@ import {
 } from "@/lib/data"
 
 type SystemAdminViewProps = {
-  view: "moderation" | "credit-partners" | "settings" | "system-helpdesk"
+  view: "dashboard" | "moderation" | "subscriptions" | "credit-partners" | "settings" | "system-helpdesk"
 }
 
 function DocumentsModal({
@@ -390,12 +415,15 @@ function CreditPartnersDeepView() {
       <Tabs defaultValue="partner-directory" className="w-full">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="partner-directory">Partner Directory</TabsTrigger>
+          <TabsTrigger value="performance">Performance KPIs</TabsTrigger>
+          <TabsTrigger value="transactions">Transaction Monitoring</TabsTrigger>
+          <TabsTrigger value="sla">SLA Tracking</TabsTrigger>
           <TabsTrigger value="api-health">API Health Logs</TabsTrigger>
           <TabsTrigger value="credit-utilization">Credit Utilization</TabsTrigger>
         </TabsList>
 
         {/* Partner Directory Tab */}
-        <TabsContent value="partner-directory" className="mt-6">
+        <TabsContent value="partner-directory" className="mt-6 space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
@@ -552,6 +580,21 @@ function CreditPartnersDeepView() {
           </Card>
         </TabsContent>
 
+        {/* Performance KPIs Tab */}
+        <TabsContent value="performance" className="mt-6">
+          <CreditPartnerKPIs partners={creditPartners} />
+        </TabsContent>
+
+        {/* Transaction Monitoring Tab */}
+        <TabsContent value="transactions" className="mt-6">
+          <CreditTransactionMonitoring />
+        </TabsContent>
+
+        {/* SLA Tracking Tab */}
+        <TabsContent value="sla" className="mt-6">
+          <CreditPartnerSLA />
+        </TabsContent>
+
         {/* Credit Utilization Tab */}
         <TabsContent value="credit-utilization" className="mt-6">
           <Card>
@@ -632,6 +675,13 @@ function CreditPartnersDeepView() {
 }
 
 // Support & Helpdesk View
+const supportStaff = [
+  { id: "staff-1", name: "Abebe Assefa", role: "Senior Support Lead", avatar: "AA", status: "Available" },
+  { id: "staff-2", name: "Marta Kebede", role: "Support Specialist", avatar: "MK", status: "Busy" },
+  { id: "staff-3", name: "Girma Tesfaye", role: "Support Agent", avatar: "GT", status: "Available" },
+  { id: "staff-4", name: "Selam Tewodros", role: "Technical Support", avatar: "ST", status: "Away" },
+]
+
 function SystemHelpdeskView() {
   const [tickets, setTickets] = useState(supportTickets)
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(tickets[0] || null)
@@ -644,6 +694,8 @@ function SystemHelpdeskView() {
   })
   const [broadcastSubject, setBroadcastSubject] = useState("")
   const [broadcastBody, setBroadcastBody] = useState("")
+  const [showAnalytics, setShowAnalytics] = useState(false)
+  const [assignedTickets, setAssignedTickets] = useState<Record<string, string>>({})
 
   const handleSendReply = () => {
     if (!selectedTicket || !replyText.trim()) return
@@ -705,6 +757,18 @@ function SystemHelpdeskView() {
     })
   }
 
+  const handleAssignTicket = (staffId: string) => {
+    if (!selectedTicket) return
+    setAssignedTickets({
+      ...assignedTickets,
+      [selectedTicket.id]: staffId,
+    })
+    const staffName = supportStaff.find((s) => s.id === staffId)?.name || "Support Staff"
+    toast.success("Ticket Assigned", {
+      description: `Ticket assigned to ${staffName}. They will be notified.`,
+    })
+  }
+
   const handleSendBroadcast = () => {
     if (!broadcastSubject.trim() || !broadcastBody.trim()) {
       toast.error("Missing Fields", {
@@ -740,11 +804,15 @@ function SystemHelpdeskView() {
       <Tabs defaultValue="owner-tickets" className="w-full">
         <TabsList className="w-full justify-start">
           <TabsTrigger value="owner-tickets">Owner Tickets</TabsTrigger>
+          <TabsTrigger value="escalation">Escalation Queue</TabsTrigger>
+          <TabsTrigger value="templates">Response Templates</TabsTrigger>
           <TabsTrigger value="system-broadcasts">System Broadcasts</TabsTrigger>
+          <TabsTrigger value="analytics">Performance Analytics</TabsTrigger>
         </TabsList>
 
         {/* Owner Tickets Tab */}
-        <TabsContent value="owner-tickets" className="mt-6">
+        <TabsContent value="owner-tickets" className="mt-6 space-y-6">
+          <HelpdeskTicketFilters onFilterChange={() => {}} />
           <Card>
             <CardContent className="p-0">
               <div className="flex h-[600px]">
@@ -798,33 +866,78 @@ function SystemHelpdeskView() {
                     <>
                       {/* Ticket Header */}
                       <div className="border-b border-slate-200 p-4">
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between mb-4">
                           <div>
                             <h3 className="font-semibold text-slate-900">{selectedTicket.subject}</h3>
                             <p className="text-sm text-slate-500">
                               From: {selectedTicket.ownerName} ({selectedTicket.ownerEmail})
                             </p>
+                            {assignedTickets[selectedTicket.id] && (
+                              <p className="text-xs text-slate-600 mt-2">
+                                Assigned to:{" "}
+                                <span className="font-medium">
+                                  {supportStaff.find((s) => s.id === assignedTickets[selectedTicket.id])?.name}
+                                </span>
+                              </p>
+                            )}
                           </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleEscalate}
-                              disabled={selectedTicket.status === "Escalated" || selectedTicket.status === "Resolved"}
-                            >
-                              <ArrowUpRight className="h-4 w-4 mr-1" />
-                              Escalate to Tech Team
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-emerald-500 hover:bg-emerald-600"
-                              onClick={handleMarkResolved}
-                              disabled={selectedTicket.status === "Resolved"}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Mark as Resolved
-                            </Button>
-                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <User className="h-4 w-4 mr-1" />
+                                {assignedTickets[selectedTicket.id] ? "Reassign" : "Assign To"}
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                              {supportStaff.map((staff) => (
+                                <DropdownMenuItem
+                                  key={staff.id}
+                                  onClick={() => handleAssignTicket(staff.id)}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium">
+                                      {staff.avatar}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-medium">{staff.name}</span>
+                                      <span className="text-xs text-slate-500">{staff.role}</span>
+                                    </div>
+                                    <Badge
+                                      className={`ml-2 text-xs border-none ${
+                                        staff.status === "Available"
+                                          ? "bg-emerald-100 text-emerald-700"
+                                          : staff.status === "Busy"
+                                            ? "bg-amber-100 text-amber-700"
+                                            : "bg-slate-100 text-slate-700"
+                                      }`}
+                                    >
+                                      {staff.status}
+                                    </Badge>
+                                  </div>
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleEscalate}
+                            disabled={selectedTicket.status === "Escalated" || selectedTicket.status === "Resolved"}
+                          >
+                            <ArrowUpRight className="h-4 w-4 mr-1" />
+                            Escalate
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="bg-emerald-500 hover:bg-emerald-600"
+                            onClick={handleMarkResolved}
+                            disabled={selectedTicket.status === "Resolved"}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Resolve
+                          </Button>
                         </div>
                       </div>
 
@@ -889,6 +1002,16 @@ function SystemHelpdeskView() {
               </div>
             </CardContent>
           </Card>
+          </TabsContent>
+
+        {/* Escalation Queue Tab */}
+        <TabsContent value="escalation" className="mt-6">
+          <HelpdeskEscalation />
+        </TabsContent>
+
+        {/* Response Templates Tab */}
+        <TabsContent value="templates" className="mt-6">
+          <HelpdeskResponseTemplates />
         </TabsContent>
 
         {/* System Broadcasts Tab */}
@@ -1051,6 +1174,148 @@ function SystemHelpdeskView() {
             </Card>
           </div>
         </TabsContent>
+
+        {/* Performance Analytics Tab */}
+        <TabsContent value="analytics" className="mt-6 space-y-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">Total Tickets (This Month)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-slate-900">{tickets.length}</div>
+                <p className="mt-2 text-sm text-slate-600">
+                  {tickets.filter((t) => t.status === "Resolved").length} resolved
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">Avg Resolution Time</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-slate-900">4.2 hrs</div>
+                <p className="mt-2 text-sm text-emerald-600">↓ 12% from last month</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">Customer Satisfaction</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-slate-900">4.8/5</div>
+                <p className="mt-2 text-sm text-slate-600">Based on 156 ratings</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">Active Escalations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-red-600">
+                  {tickets.filter((t) => t.status === "Escalated").length}
+                </div>
+                <p className="mt-2 text-sm text-red-600">Requiring immediate attention</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Support Staff Performance</CardTitle>
+              <CardDescription>Individual metrics for support team members</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="font-semibold text-slate-700">Staff Member</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Role</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Tickets Handled</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Avg Resolution Time</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Satisfaction Rating</TableHead>
+                    <TableHead className="font-semibold text-slate-700">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {supportStaff.map((staff) => (
+                    <TableRow key={staff.id} className="hover:bg-slate-50">
+                      <TableCell className="font-medium text-slate-900">{staff.name}</TableCell>
+                      <TableCell className="text-slate-700">{staff.role}</TableCell>
+                      <TableCell className="text-slate-700">
+                        {Math.floor(Math.random() * 15) + 8}
+                      </TableCell>
+                      <TableCell className="text-slate-700">
+                        {(Math.random() * 3 + 2).toFixed(1)} hrs
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium text-slate-900">
+                            {(Math.random() * 0.5 + 4.3).toFixed(1)}
+                          </span>
+                          <span className="text-xs text-slate-500">/5</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={`border-none text-xs ${
+                            staff.status === "Available"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : staff.status === "Busy"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-slate-100 text-slate-700"
+                          }`}
+                        >
+                          {staff.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Ticket Status Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-4">
+                {[
+                  { status: "New", count: tickets.filter((t) => t.status === "New").length, color: "bg-blue-500" },
+                  { status: "Open", count: tickets.filter((t) => t.status === "Open").length, color: "bg-amber-500" },
+                  {
+                    status: "Escalated",
+                    count: tickets.filter((t) => t.status === "Escalated").length,
+                    color: "bg-red-500",
+                  },
+                  {
+                    status: "Resolved",
+                    count: tickets.filter((t) => t.status === "Resolved").length,
+                    color: "bg-emerald-500",
+                  },
+                ].map((item) => (
+                  <div key={item.status}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-900">{item.status}</span>
+                      <span className="text-sm font-semibold text-slate-700">{item.count}</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-slate-200">
+                      <div
+                        className={`h-2 rounded-full ${item.color}`}
+                        style={{ width: `${(item.count / tickets.length) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   )
@@ -1060,6 +1325,8 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
   const [submissions, setSubmissions] = useState(workspaceSubmissions)
   const [documentsModalOpen, setDocumentsModalOpen] = useState(false)
   const [selectedSubmission, setSelectedSubmission] = useState<WorkspaceSubmission | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [filters, setFilters] = useState({ status: "all", riskLevel: "all", submittedAfter: "", documentCount: "all" })
 
   const handleViewDocuments = (submission: WorkspaceSubmission) => {
     setSelectedSubmission(submission)
@@ -1084,141 +1351,302 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
     })
   }
 
+  const handleBulkApprove = () => {
+    const newSubmissions = submissions.map((s) =>
+      selectedIds.has(s.id) ? { ...s, status: "Approved" as const } : s
+    )
+    setSubmissions(newSubmissions)
+    setSelectedIds(new Set())
+  }
+
+  const handleBulkReject = () => {
+    const newSubmissions = submissions.map((s) =>
+      selectedIds.has(s.id) ? { ...s, status: "Rejected" as const } : s
+    )
+    setSubmissions(newSubmissions)
+    setSelectedIds(new Set())
+  }
+
+  const handleBulkArchive = () => {
+    const newSubmissions = submissions.map((s) =>
+      selectedIds.has(s.id) ? { ...s, status: "Archived" as const } : s
+    )
+    setSubmissions(newSubmissions)
+    setSelectedIds(new Set())
+  }
+
+  const toggleSelection = (id: string) => {
+    const newIds = new Set(selectedIds)
+    if (newIds.has(id)) {
+      newIds.delete(id)
+    } else {
+      newIds.add(id)
+    }
+    setSelectedIds(newIds)
+  }
+
+  // Dashboard view
+  if (view === "dashboard") {
+    return <SystemDashboardView />
+  }
+
+  // Moderation view (includes reported listings)
   if (view === "moderation") {
     return (
       <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Pending Workspace Verifications</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Moderation</h1>
           <p className="mt-1 text-slate-500">
-            Review and approve new building submissions from workspace owners.
+            Review and manage building submissions and reported listings
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100">
-                  <Building2 className="h-6 w-6 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {submissions.filter((s) => s.status === "Pending").length}
-                  </p>
-                  <p className="text-sm text-slate-500">Pending Review</p>
-                </div>
-              </div>
+        <Tabs defaultValue="pending-buildings" className="w-full">
+          <TabsList className="mb-6 bg-slate-100">
+            <TabsTrigger value="pending-buildings" className="px-6">
+              Pending Buildings
+            </TabsTrigger>
+            <TabsTrigger value="reported-listings" className="px-6">
+              Reported Listings
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="pending-buildings" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Pending Building Submissions</CardTitle>
+                <CardDescription>Buildings awaiting verification with document check</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead>Building Name</TableHead>
+                      <TableHead>Owner</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Submitted</TableHead>
+                      <TableHead>Ethiopian Calendar</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {submissions.filter((s) => s.status === "Pending").map((submission) => (
+                      <TableRow key={submission.id} className="hover:bg-slate-50">
+                        <TableCell className="font-medium text-slate-900">{submission.buildingName}</TableCell>
+                        <TableCell className="text-slate-600">{submission.ownerName}</TableCell>
+                        <TableCell className="text-slate-600">{submission.location}</TableCell>
+                        <TableCell className="text-slate-600">{submission.submittedDate}</TableCell>
+                        <TableCell>
+                          <Badge className="bg-emerald-100 text-emerald-700 border-none">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Verified
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className="bg-amber-100 text-amber-700 border-none">Pending</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="reported-listings" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Reported Buildings</CardTitle>
+                <CardDescription>Listings reported by users for review</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead>Building</TableHead>
+                      <TableHead>Owner</TableHead>
+                      <TableHead>Reports</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date Reported</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[
+                      { id: 1, building: "Bole Residence Tower", owner: "Abebe M.", reports: 3, reason: "Inappropriate Content", status: "Under Review", date: "May 5, 2026" },
+                      { id: 2, building: "Nefas Silk Heights", owner: "Marta K.", reports: 2, reason: "False Information", status: "Pending", date: "May 4, 2026" },
+                      { id: 3, building: "Addis Plaza Complex", owner: "Girma T.", reports: 1, reason: "Pricing Issue", status: "Resolved", date: "May 3, 2026" },
+                    ].map((listing) => (
+                      <TableRow key={listing.id} className="hover:bg-slate-50">
+                        <TableCell className="font-medium text-slate-900">{listing.building}</TableCell>
+                        <TableCell className="text-slate-700">{listing.owner}</TableCell>
+                        <TableCell>
+                          <Badge className="bg-red-100 text-red-700 border-none">{listing.reports}</Badge>
+                        </TableCell>
+                        <TableCell className="text-slate-600">{listing.reason}</TableCell>
+                        <TableCell>
+                          <Badge className={`border-none text-xs ${
+                            listing.status === "Resolved" ? "bg-emerald-100 text-emerald-700" :
+                            listing.status === "Under Review" ? "bg-amber-100 text-amber-700" :
+                            "bg-slate-100 text-slate-700"
+                          }`}>
+                            {listing.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-slate-600">{listing.date}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    )
+  }
+
+  // Subscriptions view
+  if (view === "subscriptions") {
+    const mrrData = [
+      { month: "Jan", revenue: 142000 },
+      { month: "Feb", revenue: 156000 },
+      { month: "Mar", revenue: 165000 },
+      { month: "Apr", revenue: 178000 },
+      { month: "May", revenue: 185000 },
+      { month: "Jun", revenue: 192000 },
+    ]
+
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Building Owner Subscriptions</h1>
+          <p className="mt-1 text-slate-500">
+            Track and manage SaaS subscription plans, renewals, and revenue forecasts
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-4">
+          {[
+            { label: "Active Subscriptions", value: "142", change: "+8", color: "bg-blue-100 text-blue-700" },
+            { label: "Pending Renewals", value: "18", change: "-2", color: "bg-amber-100 text-amber-700" },
+            { label: "Churn Rate", value: "3.2%", change: "-0.5%", color: "bg-red-100 text-red-700" },
+            { label: "MRR", value: "ETB 185K", change: "+7K", color: "bg-emerald-100 text-emerald-700" },
+          ].map((stat, idx) => (
+            <Card key={idx}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-slate-600">{stat.label}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-3xl font-bold ${stat.color.split(" ").join(" ")}`}>{stat.value}</div>
+                <p className="mt-2 text-xs text-slate-500">{stat.change} from last month</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>MRR Growth Forecast</CardTitle>
+              <CardDescription>6-month revenue trend and projection</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={mrrData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => `ETB ${value.toLocaleString()}`} />
+                  <Bar dataKey="revenue" fill="#3b82f6" name="Monthly Recurring Revenue" />
+                </BarChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
+
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-100">
-                  <CheckCircle className="h-6 w-6 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {submissions.filter((s) => s.status === "Approved").length}
-                  </p>
-                  <p className="text-sm text-slate-500">Approved Today</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-100">
-                  <XCircle className="h-6 w-6 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {submissions.filter((s) => s.status === "Rejected").length}
-                  </p>
-                  <p className="text-sm text-slate-500">Rejected</p>
-                </div>
-              </div>
+            <CardHeader>
+              <CardTitle>Plan Distribution</CardTitle>
+              <CardDescription>Breakdown by subscription tier</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: "Basic", value: 45, color: "#94a3b8" },
+                      { name: "Professional", value: 72, color: "#3b82f6" },
+                      { name: "Enterprise", value: 25, color: "#10b981" },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    <Cell fill="#94a3b8" />
+                    <Cell fill="#3b82f6" />
+                    <Cell fill="#10b981" />
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </div>
 
-        {/* Submissions Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Verification Queue</CardTitle>
-            <CardDescription>Buildings submitted by new workspace owners</CardDescription>
+            <CardTitle>Active Subscriptions</CardTitle>
+            <CardDescription>Building owner subscription management and renewal tracking</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50">
-                  <TableHead className="font-semibold text-slate-700">Building Name</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Owner</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Location</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Submitted</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Documents</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                  <TableHead className="font-semibold text-slate-700">Actions</TableHead>
+                  <TableHead>Building Owner</TableHead>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Renewal Date</TableHead>
+                  <TableHead>Payment Status</TableHead>
+                  <TableHead>MRR</TableHead>
+                  <TableHead>Days Until Renewal</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {submissions.map((submission) => (
-                  <TableRow key={submission.id}>
-                    <TableCell className="font-medium text-slate-900">
-                      {submission.buildingName}
-                    </TableCell>
-                    <TableCell className="text-slate-600">{submission.ownerName}</TableCell>
-                    <TableCell className="text-slate-600">{submission.location}</TableCell>
-                    <TableCell className="text-slate-600">{submission.submittedDate}</TableCell>
+                {[
+                  { owner: "Abebe Properties Ltd", plan: "Professional", renewal: "Jun 5, 2026", payment: "Paid", mrr: "ETB 5,000", days: 4, status: "Active" },
+                  { owner: "Marta Constructions", plan: "Enterprise", renewal: "Jun 12, 2026", payment: "Paid", mrr: "ETB 12,000", days: 11, status: "Active" },
+                  { owner: "Girma Real Estate", plan: "Basic", renewal: "May 28, 2026", payment: "Pending", mrr: "ETB 2,000", days: -4, status: "At Risk" },
+                  { owner: "Addis Mixed Use", plan: "Professional", renewal: "Jul 1, 2026", payment: "Paid", mrr: "ETB 5,000", days: 30, status: "Active" },
+                  { owner: "Bole Office Complex", plan: "Basic", renewal: "Jun 18, 2026", payment: "Paid", mrr: "ETB 2,000", days: 17, status: "Active" },
+                  { owner: "Nifas Silk Tower", plan: "Professional", renewal: "Jun 22, 2026", payment: "Pending", mrr: "ETB 5,000", days: 21, status: "Active" },
+                ].map((sub, idx) => (
+                  <TableRow key={idx} className="hover:bg-slate-50">
+                    <TableCell className="font-medium text-slate-900">{sub.owner}</TableCell>
+                    <TableCell className="text-slate-700">{sub.plan}</TableCell>
+                    <TableCell className="text-slate-600">{sub.renewal}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewDocuments(submission)}
-                      >
-                        <FileText className="h-4 w-4 mr-1" />
-                        {submission.documentCount} Files
-                      </Button>
+                      <Badge className={`border-none text-xs ${sub.payment === "Paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                        {sub.payment}
+                      </Badge>
                     </TableCell>
+                    <TableCell className="font-medium text-slate-900">{sub.mrr}</TableCell>
                     <TableCell>
-                      <Badge
-                        className={`border-none ${
-                          submission.status === "Approved"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : submission.status === "Rejected"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-amber-100 text-amber-700"
-                        }`}
-                      >
-                        {submission.status}
+                      <Badge className={`border-none text-xs ${
+                        sub.days < 0 ? "bg-red-100 text-red-700" :
+                        sub.days < 7 ? "bg-orange-100 text-orange-700" :
+                        "bg-emerald-100 text-emerald-700"
+                      }`}>
+                        {sub.days < 0 ? `Overdue ${Math.abs(sub.days)}d` : `${sub.days}d`}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {submission.status === "Pending" && (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            className="bg-emerald-500 hover:bg-emerald-600"
-                            onClick={() => handleApprove(submission.id)}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-red-200 text-red-600 hover:bg-red-50"
-                            onClick={() => handleReject(submission.id)}
-                          >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </div>
-                      )}
-                      {submission.status !== "Pending" && (
-                        <span className="text-sm text-slate-400">Processed</span>
-                      )}
+                      <Badge className={`border-none text-xs ${sub.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                        {sub.status}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1227,499 +1655,154 @@ export function SystemAdminView({ view }: SystemAdminViewProps) {
           </CardContent>
         </Card>
 
-        <DocumentsModal
-          open={documentsModalOpen}
-          onOpenChange={setDocumentsModalOpen}
-          submission={selectedSubmission}
-        />
-      </div>
-    )
-  }
-
-  if (view === "credit-partners") {
-    return <CreditPartnersDeepView />
-  }
-
-  if (view === "system-helpdesk") {
-    return <SystemHelpdeskView />
-  }
-
-  // Settings view - Full System Configuration & Security
-  return <SystemSettingsView />
-}
-
-// System Settings View Component
-function SystemSettingsView() {
-  // Global Config State
-  const [vatRate, setVatRate] = useState("15")
-  const [whtRate, setWhtRate] = useState("2")
-  const [enforceVat, setEnforceVat] = useState(true)
-  const [gatewayFee, setGatewayFee] = useState("2.5")
-  const [serviceFee, setServiceFee] = useState("500")
-
-  // Localization State
-  const [translations, setTranslations] = useState<TranslationString[]>(translationStrings)
-  const [translationSearch, setTranslationSearch] = useState("")
-
-  // Audit Logs State
-  const [auditSearch, setAuditSearch] = useState("")
-  const [roleFilter, setRoleFilter] = useState<AuditLogRole | "All">("All")
-
-  // System Maintenance State
-  const [maintenanceMode, setMaintenanceMode] = useState(false)
-  const [backingUp, setBackingUp] = useState(false)
-  const [clearingCache, setClearingCache] = useState(false)
-
-  const handleSaveGlobalConfig = () => {
-    toast.success("Configuration Saved", {
-      description: "Global platform settings have been updated.",
-    })
-  }
-
-  const handleSaveTranslation = (id: string, newAmharic: string) => {
-    setTranslations(
-      translations.map((t) =>
-        t.id === id ? { ...t, amharicTranslation: newAmharic } : t
-      )
-    )
-    toast.success("Translation Saved", {
-      description: "The Amharic translation has been updated.",
-    })
-  }
-
-  const handleExportLogs = () => {
-    toast.success("Export Started", {
-      description: "Audit logs are being exported to CSV.",
-    })
-  }
-
-  const handleTriggerBackup = () => {
-    setBackingUp(true)
-    setTimeout(() => {
-      setBackingUp(false)
-      toast.success("Backup Complete", {
-        description: "Database backup has been created successfully.",
-      })
-    }, 3000)
-  }
-
-  const handleClearCache = () => {
-    setClearingCache(true)
-    setTimeout(() => {
-      setClearingCache(false)
-      toast.success("Cache Cleared", {
-        description: "Application cache has been cleared.",
-      })
-    }, 2000)
-  }
-
-  const handleMaintenanceToggle = (checked: boolean) => {
-    if (checked) {
-      // Show confirmation before enabling
-      toast.warning("Maintenance Mode", {
-        description: "This will lock out all Owners and Tenants. Are you sure?",
-        action: {
-          label: "Confirm",
-          onClick: () => {
-            setMaintenanceMode(true)
-            toast.info("Maintenance Mode Enabled", {
-              description: "All users except admins are now locked out.",
-            })
-          },
-        },
-      })
-    } else {
-      setMaintenanceMode(false)
-      toast.success("Maintenance Mode Disabled", {
-        description: "Platform is now accessible to all users.",
-      })
-    }
-  }
-
-  const filteredTranslations = translations.filter(
-    (t) =>
-      t.component.toLowerCase().includes(translationSearch.toLowerCase()) ||
-      t.englishString.toLowerCase().includes(translationSearch.toLowerCase())
-  )
-
-  const filteredAuditLogs = auditLogs.filter((log) => {
-    const matchesSearch =
-      log.userName.toLowerCase().includes(auditSearch.toLowerCase()) ||
-      log.action.toLowerCase().includes(auditSearch.toLowerCase()) ||
-      log.userEmail.toLowerCase().includes(auditSearch.toLowerCase())
-    const matchesRole = roleFilter === "All" || log.role === roleFilter
-    return matchesSearch && matchesRole
-  })
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">System Configuration & Security</h1>
-        <p className="mt-1 text-slate-500">
-          Manage platform settings, localization, audit logs, and system maintenance.
-        </p>
-      </div>
-
-      <Tabs defaultValue="global-config" className="w-full">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="global-config" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            Global Config
-          </TabsTrigger>
-          <TabsTrigger value="localization" className="flex items-center gap-2">
-            <Languages className="h-4 w-4" />
-            Localization
-          </TabsTrigger>
-          <TabsTrigger value="audit-logs" className="flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" />
-            Audit Logs
-          </TabsTrigger>
-          <TabsTrigger value="maintenance" className="flex items-center gap-2">
-            <Wrench className="h-4 w-4" />
-            System Maintenance
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Global Config Tab */}
-        <TabsContent value="global-config" className="mt-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Tax Settings Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-slate-600" />
-                  Tax Settings
-                </CardTitle>
-                <CardDescription>
-                  Configure Ethiopian VAT and Withholding Tax rates
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="vat-rate">Default VAT Rate (%)</Label>
-                    <Input
-                      id="vat-rate"
-                      type="number"
-                      value={vatRate}
-                      onChange={(e) => setVatRate(e.target.value)}
-                      placeholder="15"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="wht-rate">Default WHT Rate (%)</Label>
-                    <Input
-                      id="wht-rate"
-                      type="number"
-                      value={whtRate}
-                      onChange={(e) => setWhtRate(e.target.value)}
-                      placeholder="2"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-                  <div>
-                    <p className="font-medium text-slate-900">Enforce VAT on all commercial leases</p>
-                    <p className="text-sm text-slate-500">Apply VAT platform-wide for commercial properties</p>
-                  </div>
-                  <Switch checked={enforceVat} onCheckedChange={setEnforceVat} />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Platform Monetization Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5 text-slate-600" />
-                  Platform Monetization
-                </CardTitle>
-                <CardDescription>
-                  Configure platform fees and service charges
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gateway-fee">Standard Gateway Transaction Fee (%)</Label>
-                  <Input
-                    id="gateway-fee"
-                    type="number"
-                    step="0.1"
-                    value={gatewayFee}
-                    onChange={(e) => setGatewayFee(e.target.value)}
-                    placeholder="2.5"
-                  />
-                  <p className="text-xs text-slate-500">Applied to all payment gateway transactions</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="service-fee">Nicomas Digital Service Fee (ETB/Month)</Label>
-                  <Input
-                    id="service-fee"
-                    type="number"
-                    value={serviceFee}
-                    onChange={(e) => setServiceFee(e.target.value)}
-                    placeholder="500"
-                  />
-                  <p className="text-xs text-slate-500">Monthly platform subscription fee per workspace</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="mt-6 flex justify-end">
-            <Button className="bg-orange-500 hover:bg-orange-600" onClick={handleSaveGlobalConfig}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Global Configurations
-            </Button>
-          </div>
-        </TabsContent>
-
-        {/* Localization Tab */}
-        <TabsContent value="localization" className="mt-6">
+        <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle>UI String Translations</CardTitle>
-                  <CardDescription>Manage English to Amharic translations</CardDescription>
-                </div>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    placeholder="Search translations..."
-                    value={translationSearch}
-                    onChange={(e) => setTranslationSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
+              <CardTitle>Upcoming Renewals (Next 30 Days)</CardTitle>
+              <CardDescription>Building owners with renewals due soon</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="font-semibold text-slate-700">Interface Component</TableHead>
-                    <TableHead className="font-semibold text-slate-700">English String</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Amharic Translation</TableHead>
-                    <TableHead className="font-semibold text-slate-700 w-[80px]">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTranslations.map((item) => (
-                    <TranslationRow
-                      key={item.id}
-                      item={item}
-                      onSave={handleSaveTranslation}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="space-y-4">
+                {[
+                  { owner: "Abebe Properties Ltd", date: "Jun 5", plan: "Professional", mrr: "ETB 5,000" },
+                  { owner: "Marta Constructions", date: "Jun 12", plan: "Enterprise", mrr: "ETB 12,000" },
+                  { owner: "Bole Office Complex", date: "Jun 18", plan: "Basic", mrr: "ETB 2,000" },
+                ].map((renewal, idx) => (
+                  <div key={idx} className="flex items-center justify-between border-b pb-3 last:border-0">
+                    <div>
+                      <p className="font-medium text-slate-900">{renewal.owner}</p>
+                      <p className="text-sm text-slate-500">{renewal.plan} • {renewal.mrr}</p>
+                    </div>
+                    <Badge className="bg-amber-100 text-amber-700 border-none">{renewal.date}</Badge>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Audit Logs Tab */}
-        <TabsContent value="audit-logs" className="mt-6">
           <Card>
             <CardHeader>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <CardTitle>Security Audit Logs</CardTitle>
-                  <CardDescription>Track all major platform actions for compliance</CardDescription>
-                </div>
-                <Button variant="outline" onClick={handleExportLogs}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Logs to CSV
-                </Button>
-              </div>
+              <CardTitle>Revenue Metrics</CardTitle>
+              <CardDescription>Key subscription health indicators</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    placeholder="Search by user, action..."
-                    value={auditSearch}
-                    onChange={(e) => setAuditSearch(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <Select
-                  value={roleFilter}
-                  onValueChange={(v) => setRoleFilter(v as AuditLogRole | "All")}
-                >
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="Filter by Role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">All Roles</SelectItem>
-                    <SelectItem value="System Admin">System Admin</SelectItem>
-                    <SelectItem value="Building Owner">Building Owner</SelectItem>
-                    <SelectItem value="Tenant">Tenant</SelectItem>
-                  </SelectContent>
-                </Select>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-600">Expansion Revenue (New Features)</span>
+                <span className="font-semibold text-emerald-700">+ETB 23K</span>
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-600">Contraction Revenue (Downgrades)</span>
+                <span className="font-semibold text-red-700">-ETB 8K</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-slate-600">Net Revenue Retention</span>
+                <span className="font-semibold text-slate-900">124%</span>
+              </div>
+              <div className="flex items-center justify-between border-t pt-4">
+                <span className="text-sm font-medium text-slate-600">Projected Annual Revenue</span>
+                <span className="text-lg font-bold text-blue-700">ETB 2.3M</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="font-semibold text-slate-700">Timestamp</TableHead>
-                    <TableHead className="font-semibold text-slate-700">User</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Role</TableHead>
-                    <TableHead className="font-semibold text-slate-700">IP Address</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Action Taken</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAuditLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="text-slate-600 font-mono text-sm whitespace-nowrap">
-                        {log.timestamp}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-slate-900">{log.userName}</p>
-                          <p className="text-xs text-slate-500">{log.userEmail}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`border-none ${
-                            log.role === "System Admin"
-                              ? "bg-purple-100 text-purple-700"
-                              : log.role === "Building Owner"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {log.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <code className="rounded bg-slate-100 px-2 py-1 text-xs font-mono text-slate-600">
-                          {log.ipAddress}
-                        </code>
-                      </TableCell>
-                      <TableCell className="text-slate-600 max-w-[300px]">
-                        {log.action}
-                      </TableCell>
+  // Settings view (Global Settings)
+  if (view === "settings") {
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Global Settings</h1>
+          <p className="mt-1 text-slate-500">
+            Configure taxes, fees, and localization settings
+          </p>
+        </div>
+
+        <Tabs defaultValue="taxes-fees" className="w-full">
+          <TabsList className="mb-6 bg-slate-100">
+            <TabsTrigger value="taxes-fees" className="px-6">Taxes & Fees</TabsTrigger>
+            <TabsTrigger value="localization" className="px-6">Localization</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="taxes-fees" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tax Configuration</CardTitle>
+                <CardDescription>Manage VAT and withholding tax settings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="vat-rate">VAT Rate (%)</Label>
+                    <Input id="vat-rate" type="number" placeholder="15" defaultValue="15" className="mt-2" />
+                  </div>
+                  <div>
+                    <Label htmlFor="withholding-rate">Withholding Tax Rate (%)</Label>
+                    <Input id="withholding-rate" type="number" placeholder="5" defaultValue="5" className="mt-2" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <span className="text-sm font-medium text-slate-700">Enforce tax compliance checks</span>
+                  <Switch defaultChecked />
+                </div>
+                <Button className="bg-blue-600 hover:bg-blue-700">Save Changes</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="localization" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Translation Management</CardTitle>
+                <CardDescription>Manage Amharic translations for platform strings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead>Component</TableHead>
+                      <TableHead>English String</TableHead>
+                      <TableHead>Amharic Translation</TableHead>
+                      <TableHead>Action</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* System Maintenance Tab */}
-        <TabsContent value="maintenance" className="mt-6">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Database Backup Card */}
-            <Card className="border-amber-200 bg-amber-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-800">
-                  <Database className="h-5 w-5" />
-                  Database Backup
-                </CardTitle>
-                <CardDescription className="text-amber-700">
-                  Manage database backups
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="rounded-lg bg-white p-3 border border-amber-200">
-                  <p className="text-sm text-slate-600">Last Backup</p>
-                  <p className="font-semibold text-slate-900">Today, 03:00 AM</p>
-                </div>
-                <Button
-                  className="w-full bg-slate-800 hover:bg-slate-900"
-                  onClick={handleTriggerBackup}
-                  disabled={backingUp}
-                >
-                  {backingUp ? (
-                    <>
-                      <Activity className="h-4 w-4 mr-2 animate-pulse" />
-                      Backing Up...
-                    </>
-                  ) : (
-                    <>
-                      <Database className="h-4 w-4 mr-2" />
-                      Trigger Manual DB Backup
-                    </>
-                  )}
-                </Button>
+                  </TableHeader>
+                  <TableBody>
+                    {[
+                      { id: "1", component: "Dashboard", englishString: "Pending Approvals", amharicTranslation: "ፍቃድ በመጠባበቅ ላይ" },
+                      { id: "2", component: "Moderation", englishString: "Verify Building", amharicTranslation: "ህንፃ ያረጋግጡ" },
+                      { id: "3", component: "Subscriptions", englishString: "Active Plan", amharicTranslation: "ንቁ ፕላን" },
+                    ].map((item) => (
+                      <TableRow key={item.id} className="hover:bg-slate-50">
+                        <TableCell className="text-slate-600">{item.component}</TableCell>
+                        <TableCell className="font-medium text-slate-900">{item.englishString}</TableCell>
+                        <TableCell>
+                          <Input
+                            value={item.amharicTranslation}
+                            className="font-medium"
+                            style={{ fontFamily: "Nyala, Abyssinica SIL, sans-serif" }}
+                            readOnly
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-orange-600">
+                            <Save className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    )
+  }
 
-            {/* Cache Management Card */}
-            <Card className="border-amber-200 bg-amber-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-800">
-                  <Trash2 className="h-5 w-5" />
-                  Cache Management
-                </CardTitle>
-                <CardDescription className="text-amber-700">
-                  Clear application cache
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="rounded-lg bg-white p-3 border border-amber-200">
-                  <p className="text-sm text-slate-600">Cache Status</p>
-                  <p className="font-semibold text-slate-900">256 MB in use</p>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full border-slate-300"
-                  onClick={handleClearCache}
-                  disabled={clearingCache}
-                >
-                  {clearingCache ? (
-                    <>
-                      <Activity className="h-4 w-4 mr-2 animate-pulse" />
-                      Clearing...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Clear Application Cache
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
 
-            {/* Maintenance Mode Card */}
-            <Card className="border-red-200 bg-red-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-800">
-                  <ShieldAlert className="h-5 w-5" />
-                  Maintenance Mode
-                </CardTitle>
-                <CardDescription className="text-red-700">
-                  Lock platform access
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="flex items-center justify-between rounded-lg bg-white p-3 border border-red-200">
-                  <div>
-                    <p className="font-medium text-slate-900">Enable Maintenance Mode</p>
-                  </div>
-                  <Switch
-                    checked={maintenanceMode}
-                    onCheckedChange={handleMaintenanceToggle}
-                    className="data-[state=checked]:bg-red-500"
-                  />
-                </div>
-                <p className="text-xs text-red-700">
-                  This will lock out all Owners and Tenants and display a maintenance screen. 
-                  Use only during major upgrades.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  )
 }
 
 // Translation Row Component with inline editing

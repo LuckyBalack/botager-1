@@ -16,6 +16,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { AvatarDropdown } from "./avatar-dropdown"
 
 export type UserRole = "admin" | "tenant" | "system-admin"
 
@@ -190,26 +191,6 @@ export function AppHeader({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Role Toggle - Hidden on mobile, shown from tablet up */}
-        {onRoleToggle && (
-          <button
-            type="button"
-            onClick={onRoleToggle}
-            className="hidden rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 md:block md:px-4 md:py-2 md:text-sm"
-          >
-            <span className="hidden lg:inline">
-              {userRole === "admin" && "Switch to Tenant View"}
-              {userRole === "tenant" && "Switch to System Admin"}
-              {userRole === "system-admin" && "Switch to Admin View"}
-            </span>
-            <span className="lg:hidden">
-              {userRole === "admin" && "Tenant"}
-              {userRole === "tenant" && "Sys Admin"}
-              {userRole === "system-admin" && "Admin"}
-            </span>
-          </button>
-        )}
-
         {/* Add Tenant Button */}
         {showAddTenant && (
           <button
@@ -279,22 +260,7 @@ export function AppHeader({
         </Popover>
 
         {/* User Profile - Simplified on mobile */}
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-md p-1 transition-colors hover:bg-slate-50 sm:gap-3"
-          aria-label="Open user menu"
-        >
-          <img
-            src="/professional-headshot.png"
-            alt=""
-            className="h-8 w-8 rounded-full object-cover sm:h-10 sm:w-10"
-          />
-          <div className="hidden flex-col items-start text-left leading-tight md:flex">
-            <span className="text-sm font-semibold text-slate-900">Alemu Getachew</span>
-            <span className="text-xs text-slate-500">Admin</span>
-          </div>
-          <ChevronDown className="hidden h-4 w-4 text-slate-500 sm:block" aria-hidden="true" />
-        </button>
+        <AvatarDropdown />
       </div>
     </header>
   )

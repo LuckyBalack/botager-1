@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Send, Paperclip, AlertCircle, CheckCircle, Clock, Phone, Mail, FileText } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -16,6 +17,32 @@ type MaintenanceTicketDetailViewProps = {
 
 export function MaintenanceTicketDetailView({ ticket }: MaintenanceTicketDetailViewProps) {
   const [messageText, setMessageText] = useState("")
+
+  const handleSendMessage = () => {
+    if (!messageText.trim()) return
+    toast.success("Message Sent", {
+      description: `Your message has been sent to ${ticket.vendor.name}`,
+    })
+    setMessageText("")
+  }
+
+  const handleReassignVendor = () => {
+    toast.info("Reassign Vendor", {
+      description: "Vendor reassignment dialog would open here",
+    })
+  }
+
+  const handleOrderParts = () => {
+    toast.info("Order Parts", {
+      description: "Parts ordering form would open here",
+    })
+  }
+
+  const handleMarkResolved = () => {
+    toast.success("Ticket Resolved", {
+      description: `Maintenance ticket #${ticket.ticketNumber} has been marked as resolved`,
+    })
+  }
 
   const statusIcon = {
     "Open": <AlertCircle className="h-5 w-5 text-orange-500" aria-hidden="true" />,
@@ -182,10 +209,8 @@ export function MaintenanceTicketDetailView({ ticket }: MaintenanceTicketDetailV
               </Button>
               <Button
                 size="sm"
-                onClick={() => {
-                  console.log("Send message:", messageText)
-                  setMessageText("")
-                }}
+                onClick={handleSendMessage}
+                disabled={!messageText.trim()}
               >
                 <Send className="h-4 w-4 mr-2" aria-hidden="true" />
                 Send
@@ -197,9 +222,9 @@ export function MaintenanceTicketDetailView({ ticket }: MaintenanceTicketDetailV
 
       {/* Action Bar */}
       <div className="flex gap-3 pt-4">
-        <Button variant="outline">Reassign Vendor</Button>
-        <Button variant="outline">Order Parts</Button>
-        <Button className="ml-auto">Mark as Resolved</Button>
+        <Button variant="outline" onClick={handleReassignVendor}>Reassign Vendor</Button>
+        <Button variant="outline" onClick={handleOrderParts}>Order Parts</Button>
+        <Button className="ml-auto" onClick={handleMarkResolved}>Mark as Resolved</Button>
       </div>
     </div>
   )

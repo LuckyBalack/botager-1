@@ -4,9 +4,12 @@ import { HeroPreviewCards } from "@/components/landing/preview-cards"
 
 type HeroSectionProps = {
   onGetStarted: () => void
+  onPostListing?: () => void
+  currentPath?: string
+  onNavigate?: (path: any) => void
 }
 
-export function HeroSection({ onGetStarted }: HeroSectionProps) {
+export function HeroSection({ onGetStarted, onPostListing, currentPath, onNavigate }: HeroSectionProps) {
   return (
     <section
       id="home"

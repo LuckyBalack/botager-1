@@ -1,13 +1,15 @@
 "use client"
 
 import { Plus, GripVertical } from "lucide-react"
+import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import {
-  maintenanceTickets,
-  type MaintenancePriority,
-  type MaintenanceStatus,
-} from "@/lib/data"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MaintenanceServiceHistory } from "@/components/maintenance-service-history"
+import { MaintenanceCostTracking } from "@/components/maintenance-cost-tracking"
+import { MaintenanceSLA } from "@/components/maintenance-sla"
+import { useMaintenanceRequests, useProperties } from "@/hooks/use-database"
+import type { MaintenancePriority, MaintenanceStatus } from "@/lib/data"
 
 function PriorityBadge({ priority }: { priority: MaintenancePriority }) {
   const variants: Record<MaintenancePriority, string> = {
@@ -27,10 +29,12 @@ type KanbanColumnProps = {
   title: string
   status: MaintenanceStatus
   count: number
+  tickets: any[]
+  onSelectTicket?: (ticketId: string) => void
 }
 
-function KanbanColumn({ title, status, count }: KanbanColumnProps) {
-  const tickets = maintenanceTickets.filter((t) => t.status === status)
+function KanbanColumn({ title, status, count, tickets, onSelectTicket }: KanbanColumnProps) {
+  const columnTickets = tickets.filter((t) => (t.status || '') === status)
 
   return (
     <div className="flex flex-1 flex-col rounded-lg bg-slate-100 p-4">
@@ -44,10 +48,11 @@ function KanbanColumn({ title, status, count }: KanbanColumnProps) {
       </div>
 
       <div className="flex flex-col gap-3">
-        {tickets.map((ticket) => (
+        {columnTickets.map((ticket: any) => (
           <div
             key={ticket.id}
-            className="group cursor-grab rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing"
+            onClick={() => onSelectTicket?.(ticket.id)}
+            className="group cursor-pointer rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-slate-300 active:scale-95"
           >
             {/* Drag handle indicator */}
             <div className="mb-3 flex items-center justify-between">
@@ -88,14 +93,47 @@ function KanbanColumn({ title, status, count }: KanbanColumnProps) {
   )
 }
 
-export function MaintenanceView() {
-  const openCount = maintenanceTickets.filter((t) => t.status === "Open").length
-  const inProgressCount = maintenanceTickets.filter(
-    (t) => t.status === "In Progress"
+type MaintenanceViewProps = {
+  buildingId: string | null
+  onSelectTicket?: (ticketId: string) => void
+  onNewRequest?: () => void
+}
+
+export function MaintenanceView({ buildingId, onSelectTicket, onNewRequest }: MaintenanceViewProps) {
+  const { requests: dbRequests, loading: requestsLoading } = useMaintenanceRequests(buildingId)
+  
+  const [ticketsList, setTicketsList] = useState([])
+
+  // Sync database requests to local state and format them
+  useEffect(() => {
+    if (dbRequests && Array.isArray(dbRequests) && dbRequests.length > 0) {
+      const formattedRequests = dbRequests.map(req => ({
+        id: req.id,
+        unitNumber: req.property?.room_number || 'Unknown',
+        title: req.description || 'No description',
+        status: req.status || 'open',
+        priority: req.priority || 'Medium',
+        dateSubmitted: req.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        assignedTo: {
+          name: req.assigned_to_name || 'Unassigned',
+          avatar: '/placeholder.svg',
+        },
+      }))
+      setTicketsList(formattedRequests)
+    }
+  }, [dbRequests])
+
+  const openCount = ticketsList.filter((t: any) => (t.status || '').toLowerCase() === "open").length
+  const inProgressCount = ticketsList.filter(
+    (t: any) => (t.status || '').toLowerCase() === "in progress"
   ).length
-  const resolvedCount = maintenanceTickets.filter(
-    (t) => t.status === "Resolved"
+  const resolvedCount = ticketsList.filter(
+    (t: any) => (t.status || '').toLowerCase() === "resolved"
   ).length
+
+  if (requestsLoading) {
+    return <div className="text-center text-slate-500">Loading maintenance requests...</div>
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -111,6 +149,7 @@ export function MaintenanceView() {
         </div>
         <button
           type="button"
+          onClick={onNewRequest}
           className="inline-flex items-center gap-2 rounded-md bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
@@ -118,16 +157,49 @@ export function MaintenanceView() {
         </button>
       </div>
 
-      {/* Kanban Board */}
-      <div className="flex gap-6">
-        <KanbanColumn title="Open" status="Open" count={openCount} />
-        <KanbanColumn
-          title="In Progress"
-          status="In Progress"
-          count={inProgressCount}
-        />
-        <KanbanColumn title="Resolved" status="Resolved" count={resolvedCount} />
-      </div>
+      <Tabs defaultValue="board" className="w-full">
+        <TabsList className="mb-6 bg-slate-100">
+          <TabsTrigger value="board" className="px-6">
+            Work Board
+          </TabsTrigger>
+          <TabsTrigger value="history" className="px-6">
+            Service History
+          </TabsTrigger>
+          <TabsTrigger value="costs" className="px-6">
+            Cost Tracking
+          </TabsTrigger>
+          <TabsTrigger value="sla" className="px-6">
+            SLA Tracking
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="board">
+          {/* Kanban Board */}
+          <div className="flex gap-6">
+            <KanbanColumn title="Open" status="Open" count={openCount} tickets={ticketsList} onSelectTicket={onSelectTicket} />
+            <KanbanColumn
+              title="In Progress"
+              status="In Progress"
+              count={inProgressCount}
+              tickets={ticketsList}
+              onSelectTicket={onSelectTicket}
+            />
+            <KanbanColumn title="Resolved" status="Resolved" count={resolvedCount} tickets={ticketsList} onSelectTicket={onSelectTicket} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <MaintenanceServiceHistory />
+        </TabsContent>
+
+        <TabsContent value="costs">
+          <MaintenanceCostTracking />
+        </TabsContent>
+
+        <TabsContent value="sla">
+          <MaintenanceSLA />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

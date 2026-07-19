@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/auth-context"
 
 import { AppSidebar, AppSidebarMobile, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
 import { AppHeader, type UserRole } from "@/components/app-header"
@@ -20,28 +21,17 @@ import { AddTenantView } from "@/components/views/add-tenant-view"
 import { PublicListingDetailView } from "@/components/views/public-listing-detail-view"
 import { MaintenanceTicketDetailView } from "@/components/views/maintenance-ticket-detail-view"
 import { DigitalInvoiceDetailView } from "@/components/views/digital-invoice-detail-view"
-import { LeadDetailView } from "@/components/views/lead-detail-view"
-import { BrokerDetailView } from "@/components/views/broker-detail-view"
-import { VendorDetailView } from "@/components/views/vendor-detail-view"
 import { BuildingVerificationView } from "@/components/views/building-verification-view"
 import { PortfolioDashboardView } from "@/components/views/portfolio-dashboard-view"
 import { BillingView } from "@/components/views/billing-view"
 import { MaintenanceView } from "@/components/views/maintenance-view"
 import { MarketplaceView } from "@/components/views/marketplace-view"
-import { AccountingView } from "@/components/views/accounting-view"
-import { DocumentsView } from "@/components/views/documents-view"
-import { MessagesView } from "@/components/views/messages-view"
-import { TeamSettingsView } from "@/components/views/team-settings-view"
-import { AutomationsView } from "@/components/views/automations-view"
-import { HelpCenterView, LiveChatWidget } from "@/components/views/help-center-view"
-import { DataImportView } from "@/components/views/data-import-view"
-import { InspectionsView } from "@/components/views/inspections-view"
-import { VendorsView } from "@/components/views/vendors-view"
 import { SettingsView } from "@/components/views/settings-view"
-import { UtilityTrackingView } from "@/components/views/utility-tracking-view"
 import { LeaseSettlementView } from "@/components/views/lease-settlement-view"
+import { UtilityTrackingView } from "@/components/views/utility-tracking-view"
+import { LeaseSettlementDetailView } from "@/components/views/lease-settlement-detail-view"
+import { SpaceMapView } from "@/components/views/space-map-view"
 import { WaitlistView } from "@/components/views/waitlist-view"
-import { BrokersView } from "@/components/views/brokers-view"
 import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
 import { SystemAdminView } from "@/components/views/system-admin-view"
 import { PlatformFinancialsView } from "@/components/views/platform-financials-view"
@@ -61,9 +51,10 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
   SheetDescription,
+  SheetTitle,
 } from "@/components/ui/sheet"
+import { toast } from "sonner"
 import type { TenantViewKey } from "@/components/tenant-sidebar"
 import { useResponsive } from "@/hooks/use-responsive"
 
@@ -73,51 +64,67 @@ type ActiveView =
   | "add-tenant"
   | "system-subscription"
   | "lease-settlement"
+  | "lease-settlement-detail"
+  | "utility-tracking"
+  | "space-map"
+  | "waitlist"
   | "listing-detail"
   | "maintenance-ticket-detail"
   | "invoice-detail"
-  | "lead-detail"
-  | "broker-detail"
-  | "vendor-detail"
   | "building-verification"
-type DetailKind = "tenant" | "property" | "listing" | "maintenance-ticket" | "invoice" | "lead" | "broker" | "vendor" | "building"
+type DetailKind = "tenant" | "property" | "listing" | "maintenance-ticket" | "invoice" | "building"
 type Selected = { kind: DetailKind; id: string } | null
 
-const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", string> = {
+const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement" | "lease-settlement-detail" | "utility-tracking" | "space-map" | "waitlist", string> = {
   dashboard: "Dashboard",
   properties: "Properties",
   tenants: "Tenants",
   billing: "Financials & Billing",
   maintenance: "Work Orders & Maintenance",
-  accounting: "Accounting & Reports",
-  documents: "Documents",
-  messages: "Messages",
   marketplace: "Marketplace",
   settings: "Settings",
-  "portfolio-dashboard": "Portfolio Overview",
-  "team-settings": "Staff & Branch Management",
-  automations: "Automated Workflows",
-  "help-center": "Help Center & Support",
-  "data-import": "Data Migration & Import",
-  inspections: "Property Inspections",
-  vendors: "External Vendors & Contacts",
   "system-subscription": "System Subscription",
-  "utility-tracking": "Utility Meter Readings",
-  "waitlist": "Prospective Tenants & Waitlist",
   "lease-settlement": "Final Lease Settlement",
-  "brokers": "Brokers & Commissions",
+  "lease-settlement-detail": "Lease Settlement Details",
+  "utility-tracking": "Utility Meter Readings",
+  "space-map": "Floor Plan & Space Map",
+  "waitlist": "Prospective Tenants & Waitlist",
 }
 
 export function DashboardApp() {
   const { isTablet } = useResponsive()
+  const { user, setBuildingId: setAuthBuildingId } = useAuth()
   
-  const [userRole, setUserRole] = useState<UserRole>("admin")
+  // Get role from authenticated user
+  const [userRole, setUserRole] = useState<UserRole>("landlord")
+  
+  // Set role from authenticated user on mount
+  useEffect(() => {
+    if (user?.role) {
+      setUserRole(user.role as UserRole)
+    }
+  }, [user?.role])
   const [activeView, setActiveView] = useState<ActiveView>("dashboard")
   const [tenantView, setTenantView] = useState<TenantViewKey>("my-lease")
   const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")
   const [selected, setSelected] = useState<Selected>(null)
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingSelection>("abuki")
+  const [buildingId, setBuildingId] = useState<string | null>(null)
   const [cameFromAdmin, setCameFromAdmin] = useState(false)
+  
+  // Map building selection to buildingId (In real app, this would come from building config)
+  useEffect(() => {
+    const buildingIdMap: Record<BuildingSelection, string> = {
+      "abuki": "abuki-building-001",
+      "tower": "tower-building-001",
+      "plaza": "plaza-building-001",
+    }
+    const id = buildingIdMap[selectedBuilding] || null
+    setBuildingId(id)
+    if (id) {
+      setAuthBuildingId(id)
+    }
+  }, [selectedBuilding, setAuthBuildingId])
   
   // Mobile navigation state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -170,7 +177,7 @@ export function DashboardApp() {
 
   const openLeaseSettlement = (tenantId: string) => {
     setSelected({ kind: "tenant", id: tenantId })
-    setActiveView("lease-settlement")
+    setActiveView("lease-settlement-detail")
   }
 
   const openListingDetail = (id: string) => {
@@ -186,21 +193,6 @@ export function DashboardApp() {
   const openInvoiceDetail = (id: string) => {
     setSelected({ kind: "invoice", id })
     setActiveView("invoice-detail")
-  }
-
-  const openLeadDetail = (id: string) => {
-    setSelected({ kind: "lead", id })
-    setActiveView("lead-detail")
-  }
-
-  const openBrokerDetail = (id: string) => {
-    setSelected({ kind: "broker", id })
-    setActiveView("broker-detail")
-  }
-
-  const openVendorDetail = (id: string) => {
-    setSelected({ kind: "vendor", id })
-    setActiveView("vendor-detail")
   }
 
   const openBuildingVerification = (id: string) => {
@@ -221,15 +213,9 @@ export function DashboardApp() {
             ? "maintenance"
             : activeView === "invoice-detail"
               ? "billing"
-              : activeView === "lead-detail"
-                ? "waitlist"
-                : activeView === "broker-detail"
-                  ? "brokers"
-                  : activeView === "vendor-detail"
-                    ? "vendors"
-                    : activeView === "building-verification"
-                      ? "dashboard"
-                      : activeView as ViewKey
+              : activeView === "building-verification"
+                ? "dashboard"
+                : activeView as ViewKey
 
   const headerTitle =
     activeView === "detail"
@@ -280,18 +266,6 @@ export function DashboardApp() {
   const selectedInvoice =
     activeView === "invoice-detail" && selected?.kind === "invoice"
       ? getInvoiceDetail(selected.id)
-      : undefined
-  const selectedLead =
-    activeView === "lead-detail" && selected?.kind === "lead"
-      ? getLeadDetail(selected.id)
-      : undefined
-  const selectedBroker =
-    activeView === "broker-detail" && selected?.kind === "broker"
-      ? getBrokerDetail(selected.id)
-      : undefined
-  const selectedVendor =
-    activeView === "vendor-detail" && selected?.kind === "vendor"
-      ? getVendorDetail(selected.id)
       : undefined
   const selectedBuildingVerification =
     activeView === "building-verification" && selected?.kind === "building"
@@ -347,7 +321,6 @@ export function DashboardApp() {
           <AppHeader
             title={systemAdminTitleMap[systemAdminView]}
             userRole={userRole}
-            onRoleToggle={handleRoleToggle}
             onMenuToggle={() => setMobileMenuOpen(true)}
             sidebarCollapsed={effectiveCollapsed}
             onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -358,7 +331,7 @@ export function DashboardApp() {
             <div className="mx-auto max-w-[1800px]">
               {systemAdminView === "moderation" && <AdvancedModerationView />}
               {systemAdminView === "sys-financials" && <PlatformFinancialsView />}
-              {(systemAdminView === "credit-partners" || systemAdminView === "system-helpdesk" || systemAdminView === "settings") && (
+              {(systemAdminView === "dashboard" || systemAdminView === "subscriptions" || systemAdminView === "credit-partners" || systemAdminView === "system-helpdesk" || systemAdminView === "settings") && (
                 <SystemAdminView view={systemAdminView} />
               )}
             </div>
@@ -383,7 +356,6 @@ export function DashboardApp() {
           <AppHeader
             title={tenantTitleMap[tenantView]}
             userRole={userRole}
-            onRoleToggle={handleRoleToggle}
             showMenuButton={false}
             sidebarCollapsed={effectiveCollapsed}
             onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -477,7 +449,6 @@ export function DashboardApp() {
           showAddTenant={showAddTenant}
           onAddTenant={openAddTenant}
           userRole={userRole}
-          onRoleToggle={handleRoleToggle}
           onMenuToggle={() => setMobileMenuOpen(true)}
           sidebarCollapsed={effectiveCollapsed}
           onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -491,13 +462,36 @@ export function DashboardApp() {
               <DashboardView onNavigate={handleNavigate} />
             )}
             {activeView === "properties" && (
-              <PropertiesView onSelectProperty={openPropertyDetail} />
+              <PropertiesView 
+                buildingId={buildingId}
+                onSelectProperty={openPropertyDetail}
+                onNavigateToSpaceMap={() => setActiveView("space-map")}
+              />
             )}
             {activeView === "tenants" && (
-              <TenantsView onSelectTenant={openTenantDetail} />
+              <TenantsView 
+                onSelectTenant={openTenantDetail}
+                onNavigateToWaitlist={() => setActiveView("waitlist")}
+              />
             )}
-            {activeView === "billing" && <BillingView />}
-            {activeView === "maintenance" && <MaintenanceView />}
+            {activeView === "billing" && (
+              <BillingView 
+                buildingId={buildingId}
+                onOpenInvoiceDetail={openInvoiceDetail}
+                onNavigateToUtilities={() => setActiveView("utility-tracking")}
+              />
+            )}
+            {activeView === "maintenance" && (
+              <MaintenanceView 
+                buildingId={buildingId}
+                onSelectTicket={openMaintenanceTicketDetail}
+                onNewRequest={() => {
+                  toast.success("New Request", {
+                    description: "Maintenance request form would open here",
+                  })
+                }}
+              />
+            )}
             {activeView === "accounting" && <AccountingView />}
             {activeView === "documents" && <DocumentsView />}
             {activeView === "messages" && <MessagesView />}
@@ -517,22 +511,7 @@ export function DashboardApp() {
                 onSystemSubscription={() => setActiveView("system-subscription")}
               />
             )}
-            {activeView === "team-settings" && <TeamSettingsView />}
-            {activeView === "automations" && <AutomationsView />}
-            {activeView === "help-center" && <HelpCenterView />}
-            {activeView === "data-import" && <DataImportView />}
-            {activeView === "inspections" && <InspectionsView />}
-            {activeView === "vendors" && <VendorsView />}
-            {activeView === "brokers" && <BrokersView />}
             {activeView === "system-subscription" && <SystemSubscriptionView />}
-            {activeView === "utility-tracking" && <UtilityTrackingView />}
-            {activeView === "waitlist" && (
-              <WaitlistView
-                onInviteToLease={(leadData) => {
-                  openAddTenant()
-                }}
-              />
-            )}
             {activeView === "lease-settlement" && selectedTenant && (
               <LeaseSettlementView
                 tenant={selectedTenant}
@@ -551,36 +530,24 @@ export function DashboardApp() {
             {activeView === "invoice-detail" && selectedInvoice && (
               <DigitalInvoiceDetailView invoice={selectedInvoice} />
             )}
-            {activeView === "lead-detail" && selectedLead && (
-              <LeadDetailView
-                lead={selectedLead}
-                onConvert={() => openAddTenant()}
-              />
-            )}
-            {activeView === "broker-detail" && selectedBroker && (
-              <BrokerDetailView
-                broker={selectedBroker}
-                onBack={() => navigate("brokers")}
-              />
-            )}
-            {activeView === "vendor-detail" && selectedVendor && (
-              <VendorDetailView
-                vendor={selectedVendor}
-                onBack={() => navigate("vendors")}
-              />
-            )}
             {activeView === "building-verification" && selectedBuildingVerification && (
               <BuildingVerificationView
                 building={selectedBuildingVerification}
                 onBack={() => navigate("dashboard")}
               />
             )}
+            {activeView === "utility-tracking" && <UtilityTrackingView />}
+            {activeView === "lease-settlement-detail" && (
+              <LeaseSettlementDetailView
+                onClose={() => navigate("tenants")}
+                onFinalize={() => navigate("tenants")}
+              />
+            )}
+            {activeView === "space-map" && <SpaceMapView />}
+            {activeView === "waitlist" && <WaitlistView />}
           </div>
         </main>
       </div>
-
-      {/* Live Chat Widget - Always visible */}
-      <LiveChatWidget />
     </div>
   )
 }

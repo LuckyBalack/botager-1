@@ -1,6 +1,7 @@
 "use client"
 
-import { LayoutGrid, Building2, Users, Settings, LogOut, Receipt, Wrench, BarChart3, FolderOpen, MessageSquare, Store, Zap, HelpCircle, ClipboardCheck, Truck, Upload, Plug, UserPlus, Handshake } from "lucide-react"
+import { LayoutGrid, Building2, Users, Settings, LogOut, Receipt, Wrench, Store } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
 import { cn } from "@/lib/utils"
 import {
   Select,
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/tooltip"
 import { buildings } from "@/lib/data"
 
-export type ViewKey = "dashboard" | "properties" | "tenants" | "billing" | "maintenance" | "accounting" | "documents" | "messages" | "marketplace" | "settings" | "portfolio-dashboard" | "team-settings" | "automations" | "help-center" | "data-import" | "inspections" | "vendors" | "utility-tracking" | "waitlist" | "brokers"
+export type ViewKey = "dashboard" | "properties" | "tenants" | "billing" | "maintenance" | "marketplace" | "settings"
 export type BuildingSelection = string // building id or "all"
 
 type NavItem = {
@@ -29,20 +30,10 @@ type NavItem = {
 export const primaryNav: NavItem[] = [
   { key: "dashboard", label: "Dashboard", icon: LayoutGrid },
   { key: "properties", label: "Properties", icon: Building2 },
-  { key: "inspections", label: "Inspections", icon: ClipboardCheck },
   { key: "tenants", label: "Tenants", icon: Users },
-  { key: "waitlist", label: "Waitlist", icon: UserPlus },
   { key: "billing", label: "Billing", icon: Receipt },
-  { key: "utility-tracking", label: "Utilities", icon: Plug },
   { key: "maintenance", label: "Maintenance", icon: Wrench },
-  { key: "vendors", label: "Vendors", icon: Truck },
-  { key: "brokers", label: "Brokers", icon: Handshake },
-  { key: "accounting", label: "Accounting", icon: BarChart3 },
-  { key: "documents", label: "Documents", icon: FolderOpen },
-  { key: "messages", label: "Messages", icon: MessageSquare },
-  { key: "automations", label: "Automations", icon: Zap },
   { key: "marketplace", label: "Marketplace", icon: Store },
-  { key: "help-center", label: "Help Center", icon: HelpCircle },
 ]
 
 type AppSidebarProps = {
@@ -62,6 +53,12 @@ export function AppSidebar({
   onBuildingChange,
   collapsed = false,
 }: AppSidebarProps) {
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = "/"
+  }
   const currentBuilding = buildings.find((b) => b.id === selectedBuilding)
   const displayName = selectedBuilding === "all" ? "All Properties" : currentBuilding?.name ?? "Select Building"
 
@@ -193,7 +190,7 @@ export function AppSidebar({
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    onClick={onLogout}
+                    onClick={handleLogout}
                     className="flex h-10 w-10 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                   >
                     <LogOut className="h-5 w-5" aria-hidden="true" />
@@ -222,7 +219,7 @@ export function AppSidebar({
               </button>
               <button
                 type="button"
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
               >
                 <LogOut className="h-5 w-5" aria-hidden="true" />
@@ -246,6 +243,13 @@ export function AppSidebarMobile({
   onBuildingChange,
   onClose,
 }: AppSidebarProps & { onClose?: () => void }) {
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = "/"
+  }
+
   const currentBuilding = buildings.find((b) => b.id === selectedBuilding)
   const displayName = selectedBuilding === "all" ? "All Properties" : currentBuilding?.name ?? "Select Building"
 
@@ -316,7 +320,7 @@ export function AppSidebarMobile({
         </button>
         <button
           type="button"
-          onClick={onLogout}
+          onClick={handleLogout}
           className="flex items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
         >
           <LogOut className="h-5 w-5" aria-hidden="true" />
