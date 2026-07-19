@@ -18,22 +18,6 @@ export async function getPropertiesByBuilding(buildingId: string) {
   }
 }
 
-export async function getPropertyById(propertyId: string) {
-  try {
-    const { data, error } = await supabase
-      .from("properties")
-      .select("*")
-      .eq("id", propertyId)
-      .single()
-
-    if (error) throw error
-    return data || null
-  } catch (error) {
-    console.error("Error fetching property:", error)
-    return null
-  }
-}
-
 // TENANTS QUERIES
 export async function getTenantsByBuilding(buildingId: string) {
   try {
@@ -130,31 +114,6 @@ export async function getInvoicesByTenant(tenantId: string) {
   } catch (error) {
     console.error("Error fetching invoices:", error)
     return []
-  }
-}
-
-export async function getInvoiceById(invoiceId: string) {
-  try {
-    const { data: invoice, error: invoiceError } = await supabase
-      .from("invoices")
-      .select("*")
-      .eq("id", invoiceId)
-      .single()
-
-    if (invoiceError) throw invoiceError
-
-    // Fetch line items for the invoice
-    const { data: lineItems, error: itemsError } = await supabase
-      .from("invoice_line_items")
-      .select("*")
-      .eq("invoice_id", invoiceId)
-
-    if (itemsError) throw itemsError
-
-    return { ...invoice, line_items: lineItems || [] }
-  } catch (error) {
-    console.error("Error fetching invoice:", error)
-    return null
   }
 }
 
