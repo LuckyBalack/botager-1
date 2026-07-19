@@ -16,7 +16,19 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import type { Property } from "@/lib/data"
+import { supabase } from "@/lib/supabase"
+
+type PropertyData = {
+  id?: string
+  building_id: string
+  room_number: string
+  floor: string
+  square_meters: number
+  monthly_rent: number
+  occupancy: string
+  listing_type: string
+  [key: string]: any
+}
 
 const FLOORS = ["2nd", "3rd", "4th", "5th"]
 const OCCUPANCY_OPTIONS = ["Occupied", "Vacant"]
@@ -86,12 +98,15 @@ function SuccessBanner({
 }
 
 type AddPropertyViewProps = {
-  onSubmit?: (property: Property) => void
+  buildingId: string | null
+  onSubmit?: (property: PropertyData) => void
   onCancel?: () => void
 }
 
-export function AddPropertyView({ onSubmit, onCancel }: AddPropertyViewProps) {
+export function AddPropertyView({ buildingId, onSubmit, onCancel }: AddPropertyViewProps) {
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Basic Info
@@ -161,66 +176,81 @@ export function AddPropertyView({ onSubmit, onCancel }: AddPropertyViewProps) {
     return Object.keys(newErrors).length === 0
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setError(null)
 
     if (!validateForm()) {
       return
     }
 
-    // Create the new property
-    const newProperty: Property = {
-      id: `p-${room}`,
-      room,
-      floor,
-      squareFootage: `${squareFootage} sq.m`,
-      rentNumber: isDimensionBased ? autoCalculatedTotal : fixedRate,
-      occupancy,
-      lease,
-      payment,
-      leaseStartDate,
-      leaseExpirationDate,
-      lastPayDay: new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-      outstandingBalance,
-      leaseDuration,
-      rentAmount: displayRent,
-      outstandingBalanceSecondary: outstandingBalance,
-      companyName,
-      tenantId: tenantId || null,
-      leaseAgreementFile: "",
+    if (!buildingId) {
+      setError("Building ID is required")
+      return
     }
 
-    if (onSubmit) {
-      onSubmit(newProperty)
+    setLoading(true)
+
+    try {
+      // Create the new property
+      const newProperty: PropertyData = {
+        building_id: buildingId,
+        room_number: room,
+        floor,
+        square_meters: parseFloat(squareFootage),
+        monthly_rent: isDimensionBased ? parseFloat(autoCalculatedTotal) : parseFloat(fixedRate),
+        occupancy: occupancy.toLowerCase(),
+        listing_type: listingType,
+        lease_status: lease.toLowerCase(),
+        payment_status: payment.toLowerCase(),
+        lease_start_date: leaseStartDate,
+        lease_end_date: leaseExpirationDate,
+        lease_duration: leaseDuration,
+        company_name: companyName || null,
+        tenant_id: tenantId || null,
+      }
+
+      // Save to Supabase
+      const { data, error: insertError } = await supabase
+        .from("properties")
+        .insert([newProperty])
+        .select()
+        .single()
+
+      if (insertError) throw insertError
+
+      if (onSubmit) {
+        onSubmit(data)
+      }
+
+      setSubmitted(true)
+
+      // Reset form
+      setRoom("")
+      setFloor("2nd")
+      setSquareFootage("")
+      setOccupancy("Vacant")
+      setLease("Upcoming")
+      setLeaseStartDate("")
+      setLeaseExpirationDate("")
+      setLeaseDuration("12 Month")
+      setIsDimensionBased(false)
+      setFixedRate("15000")
+      setPricePerSqMeter("500")
+      setRoomSize("")
+      setListingType("standard")
+      setAuctionStartingPrice("")
+      setAuctionDuration("7")
+      setPayment("Paid")
+      setTenantId("")
+      setCompanyName("")
+      setOutstandingBalance("ETB 0")
+      setErrors({})
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add property")
+    } finally {
+      setLoading(false)
     }
-
-    setSubmitted(true)
-
-    // Reset form
-    setRoom("")
-    setFloor("2nd")
-    setSquareFootage("")
-    setOccupancy("Vacant")
-    setLease("Upcoming")
-    setLeaseStartDate("")
-    setLeaseExpirationDate("")
-    setLeaseDuration("12 Month")
-    setIsDimensionBased(false)
-    setFixedRate("15000")
-    setPricePerSqMeter("500")
-    setRoomSize("")
-    setListingType("standard")
-    setAuctionStartingPrice("")
-    setAuctionDuration("7")
-    setPayment("Paid")
-    setTenantId("")
-    setCompanyName("")
-    setOutstandingBalance("ETB 0")
-    setErrors({})
   }
 
   return (
@@ -230,6 +260,11 @@ export function AddPropertyView({ onSubmit, onCancel }: AddPropertyViewProps) {
           title="Property Added Successfully"
           description={`Room ${room} has been added to the properties list.`}
         />
+      )}
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
       )}
 
       <div className="flex items-center gap-4">
@@ -547,9 +582,10 @@ export function AddPropertyView({ onSubmit, onCancel }: AddPropertyViewProps) {
         <div className="flex gap-4 pt-6 sm:pt-8">
           <Button
             type="submit"
-            className="flex-1 bg-slate-900 px-6 py-3 font-semibold text-white hover:bg-slate-800"
+            disabled={loading}
+            className="flex-1 bg-slate-900 px-6 py-3 font-semibold text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Add Property
+            {loading ? "Adding..." : "Add Property"}
           </Button>
           <Button
             type="button"

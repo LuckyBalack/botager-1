@@ -504,7 +504,12 @@ export function DashboardApp() {
             {activeView === "detail" && selectedProperty && (
               <PropertyDetailView property={selectedProperty} />
             )}
-            {activeView === "add-tenant" && <AddTenantView />}
+            {activeView === "add-tenant" && (
+              <AddTenantView 
+                buildingId={buildingId}
+                onSuccess={() => navigate("tenants")}
+              />
+            )}
             {activeView === "settings" && (
               <SettingsView
                 onNavigate={handleNavigate}

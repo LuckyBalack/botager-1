@@ -21,7 +21,7 @@ export function DashboardView({ onNavigate }: DashboardViewProps) {
       <DashboardKPIs buildingId={buildingId} />
       <DashboardAlerts buildingId={buildingId} />
       <div className="flex flex-col gap-8">
-        <ActivityFeed />
+        <ActivityFeed buildingId={buildingId} />
         <RecentTenants buildingId={buildingId} onSeeAll={() => onNavigate("tenants")} />
       </div>
     </div>
