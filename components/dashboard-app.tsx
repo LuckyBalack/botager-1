@@ -112,18 +112,12 @@ export function DashboardApp() {
   const [buildingId, setBuildingId] = useState<string | null>(null)
   const [cameFromAdmin, setCameFromAdmin] = useState(false)
   
-  // Map building selection to buildingId (In real app, this would come from building config)
+  // Map building selection to buildingId
+  // Note: buildingId should be a valid UUID from the database
+  // For now, using null to allow app to function without database setup
+  // In production, these would be fetched from the buildings table
   useEffect(() => {
-    const buildingIdMap: Record<BuildingSelection, string> = {
-      "abuki": "abuki-building-001",
-      "tower": "tower-building-001",
-      "plaza": "plaza-building-001",
-    }
-    const id = buildingIdMap[selectedBuilding] || null
-    setBuildingId(id)
-    if (id) {
-      setAuthBuildingId(id)
-    }
+    setBuildingId(null)
   }, [selectedBuilding, setAuthBuildingId])
   
   // Mobile navigation state
