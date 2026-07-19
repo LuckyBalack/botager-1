@@ -13,7 +13,7 @@ const SOCIALS = [
 export function LandingFooter() {
   return (
     <footer className="bg-slate-100/70">
-      <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 px-6 py-14 lg:px-10">
+      <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 px-6 py-14 lg:px-10 2xl:max-w-[1800px] 2xl:px-12">
         <BrandMark />
 
         <nav aria-label="Footer" className="flex flex-wrap items-center gap-10">

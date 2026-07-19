@@ -88,6 +88,9 @@ function SuccessBanner({
 export function AddTenantView() {
   const [submitted, setSubmitted] = useState(false)
   const [tradeLicense, setTradeLicense] = useState<File | null>(null)
+  const [prePaidMonths, setPrePaidMonths] = useState("1")
+  const [leaseStartDate, setLeaseStartDate] = useState("")
+  const [leaseEndDate, setLeaseEndDate] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-dismiss the temporary success banner.
@@ -103,7 +106,7 @@ export function AddTenantView() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {submitted && (
         <SuccessBanner
           title="Successfully Added"
@@ -111,14 +114,14 @@ export function AddTenantView() {
         />
       )}
 
-      <h2 className="text-2xl font-semibold text-slate-900">New Tenant Form</h2>
+      <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl 2xl:text-3xl">New Tenant Form</h2>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-10">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6 sm:gap-8 lg:gap-10">
         {/* Representative Info */}
-        <section className="flex flex-col gap-6">
+        <section className="flex flex-col gap-4 sm:gap-6">
           <SectionHeader title="Representative Info" />
 
-          <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-5 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-6">
             <FieldRow label="Firstname" htmlFor="firstname">
               <Input id="firstname" name="firstname" placeholder="Firstname" />
             </FieldRow>
@@ -186,10 +189,10 @@ export function AddTenantView() {
         </section>
 
         {/* Company Info */}
-        <section className="flex flex-col gap-6">
+        <section className="flex flex-col gap-4 sm:gap-6">
           <SectionHeader title="Company Info" />
 
-          <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-5 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-6">
             <FieldRow label="Company Name" htmlFor="companyName">
               <Input
                 id="companyName"
@@ -206,6 +209,20 @@ export function AddTenantView() {
                   {BUSINESS_TYPES.map((b) => (
                     <SelectItem key={b} value={b}>
                       {b}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FieldRow>
+            <FieldRow label="Pre-paid Months" htmlFor="prepaid-months">
+              <Select value={prePaidMonths} onValueChange={setPrePaidMonths}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select prepaid months" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 6, 12].map((m) => (
+                    <SelectItem key={m} value={m.toString()}>
+                      {m} {m === 1 ? "Month" : "Months"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -246,10 +263,24 @@ export function AddTenantView() {
           </div>
         </section>
 
+        {/* Lease Dates */}
+        <section className="flex flex-col gap-4 sm:gap-6">
+          <SectionHeader title="Lease Dates" description="Specify the lease start and end dates (both Gregorian and Ethiopian calendar)" />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-5 lg:grid-cols-2 lg:gap-x-8 lg:gap-y-6">
+            <FieldRow label="Lease Start Date (Gregorian)" htmlFor="lease-start">
+              <Input id="lease-start" type="date" value={leaseStartDate} onChange={(e) => setLeaseStartDate(e.target.value)} />
+            </FieldRow>
+            <FieldRow label="Lease End Date (Gregorian)" htmlFor="lease-end">
+              <Input id="lease-end" type="date" value={leaseEndDate} onChange={(e) => setLeaseEndDate(e.target.value)} />
+            </FieldRow>
+          </div>
+        </section>
+
         <div>
           <button
             type="submit"
-            className="inline-flex items-center justify-center rounded-md bg-slate-900 px-10 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+            className="inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-8 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 sm:w-auto sm:px-10 sm:py-3 sm:text-base"
           >
             Submit
           </button>

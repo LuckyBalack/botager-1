@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Search,
   MapPin,
@@ -13,6 +13,8 @@ import {
   Zap,
   SlidersHorizontal,
   X,
+  Clock,
+  Flame,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -38,9 +40,12 @@ import {
 } from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { marketplaceListings, type MarketplaceListing } from "@/lib/data"
+import { useMarketplaceListings, useProperties } from "@/hooks/use-database"
+import { MarketplaceSegmentedControl, type MarketplaceMode } from "@/components/marketplace-segmented-control"
 import { WorkspaceDetailView } from "./workspace-detail-view"
 import { PreoccupyFormView } from "./preoccupy-form-view"
+import { AuctionDetailView } from "./auction-detail-view"
+import { PlaceBidModal } from "@/components/place-bid-modal"
 
 type MarketplaceViewProps = {
   onSignIn?: () => void
@@ -48,15 +53,22 @@ type MarketplaceViewProps = {
   onBackToAdmin?: () => void
 }
 
-type MarketplaceSubView = "listings" | "detail" | "preoccupy"
+type MarketplaceSubView = "listings" | "detail" | "preoccupy" | "auction-detail"
 
 export function MarketplaceView({
   onSignIn,
   showBackToAdmin,
   onBackToAdmin,
 }: MarketplaceViewProps) {
+  const { properties, loading: propertiesLoading } = useProperties()
+  const selectedProperty = properties?.[0]
+  const { listings: dbListings, loading: listingsLoading } = useMarketplaceListings(selectedProperty?.id || null)
+  
   const [subView, setSubView] = useState<MarketplaceSubView>("listings")
-  const [selectedListing, setSelectedListing] = useState<MarketplaceListing | null>(null)
+  const [listingsList, setListingsList] = useState<any[]>([])
+  const [selectedListing, setSelectedListing] = useState<any>(null)
+  const [selectedAuction, setSelectedAuction] = useState<any>(null)
+  const [showBidModal, setShowBidModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [spaceType, setSpaceType] = useState<string>("all")
   const [priceRange, setPriceRange] = useState<string>("all")
@@ -66,8 +78,19 @@ export function MarketplaceView({
   const [showAlertForm, setShowAlertForm] = useState(false)
   const [alertEmail, setAlertEmail] = useState("")
   const [alertPhone, setAlertPhone] = useState("")
+  const [marketplaceMode, setMarketplaceMode] = useState<MarketplaceMode>("standard")
+
+  // Sync database listings to local state
+  useEffect(() => {
+    if (dbListings && Array.isArray(dbListings) && dbListings.length > 0) {
+      setListingsList(dbListings)
+    }
+  }, [dbListings])
 
   const amenitiesList = ["WiFi", "Elevator", "Generator", "Parking"]
+
+  // Combine standard and auction listings based on mode
+  const allListings = listingsList
 
   const toggleAmenity = (amenity: string) => {
     setSelectedAmenities((prev) =>
@@ -77,22 +100,26 @@ export function MarketplaceView({
     )
   }
 
-  const filteredListings = marketplaceListings.filter((listing) => {
+  const filteredListings = allListings.filter((listing: any) => {
     const matchesSearch =
       searchQuery === "" ||
-      listing.buildingName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      listing.subcity.toLowerCase().includes(searchQuery.toLowerCase())
+      (listing.buildingName || listing.building_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (listing.location || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (listing.subcity || '').toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesSpaceType =
-      spaceType === "all" || listing.spaceType.toLowerCase() === spaceType
+      spaceType === "all" || (listing.spaceType || listing.space_type || '').toLowerCase() === spaceType
+
+    const priceNumber = marketplaceMode === "standard" 
+      ? (listing as MarketplaceListing).monthlyRentNumber 
+      : (listing as any).currentBid
 
     const matchesPrice =
       priceRange === "all" ||
       (priceRange === "5k-20k" &&
-        listing.monthlyRentNumber >= 5000 &&
-        listing.monthlyRentNumber <= 20000) ||
-      (priceRange === "20k+" && listing.monthlyRentNumber > 20000)
+        priceNumber >= 5000 &&
+        priceNumber <= 20000) ||
+      (priceRange === "20k+" && priceNumber > 20000)
 
     const matchesSize =
       sizeRange === "all" ||
@@ -106,19 +133,34 @@ export function MarketplaceView({
       selectedAmenities.length === 0 ||
       selectedAmenities.every((amenity) => listing.amenities.includes(amenity))
 
+    if (marketplaceMode === "standard") {
+      return (
+        matchesSearch &&
+        matchesSpaceType &&
+        matchesPrice &&
+        matchesSize &&
+        matchesAmenities &&
+        (listing as MarketplaceListing).listedOnMarketplace
+      )
+    }
+
     return (
       matchesSearch &&
       matchesSpaceType &&
       matchesPrice &&
       matchesSize &&
-      matchesAmenities &&
-      listing.listedOnMarketplace
+      matchesAmenities
     )
   })
 
-  const handleViewDetails = (listing: MarketplaceListing) => {
-    setSelectedListing(listing)
-    setSubView("detail")
+  const handleViewDetails = (listing: MarketplaceListing | AuctionListing) => {
+    if (marketplaceMode === "auction") {
+      setSelectedAuction(listing as AuctionListing)
+      setSubView("auction-detail")
+    } else {
+      setSelectedListing(listing as MarketplaceListing)
+      setSubView("detail")
+    }
   }
 
   const handlePreoccupy = (listing: MarketplaceListing) => {
@@ -129,6 +171,38 @@ export function MarketplaceView({
   const handleBackToListings = () => {
     setSubView("listings")
     setSelectedListing(null)
+    setSelectedAuction(null)
+    setShowBidModal(false)
+  }
+
+  const handlePlaceBid = () => {
+    setShowBidModal(true)
+  }
+
+  // Auction Detail View
+  if (subView === "auction-detail" && selectedAuction) {
+    return (
+      <>
+        <AuctionDetailView
+          auction={selectedAuction}
+          onBack={handleBackToListings}
+          onPlaceBid={handlePlaceBid}
+          onSignIn={onSignIn}
+          showBackToAdmin={showBackToAdmin}
+          onBackToAdmin={onBackToAdmin}
+        />
+        <PlaceBidModal
+          open={showBidModal}
+          onOpenChange={setShowBidModal}
+          auction={selectedAuction}
+          userInfo={{
+            name: "User",
+            email: "user@example.com",
+            phone: "555-0000",
+          }}
+        />
+      </>
+    )
   }
 
   // Workspace Detail View
@@ -158,26 +232,30 @@ export function MarketplaceView({
     )
   }
 
+  if (propertiesLoading || listingsLoading) {
+    return <div className="text-center text-slate-500 p-8">Loading marketplace listings...</div>
+  }
+
   // Main Marketplace Listings View
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Public Header */}
-      <header className="border-b border-slate-200 bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
+      <header className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 2xl:max-w-[1800px]">
           <div className="flex items-center gap-2">
-            <Building2 className="h-8 w-8 text-orange-500" />
+            <Building2 className="h-6 w-6 text-orange-500 sm:h-8 sm:w-8" />
             <div>
-              <span className="text-xl font-bold text-slate-900">Mamulka</span>
-              <span className="ml-1 text-sm text-slate-500">/ WRM</span>
+              <span className="text-lg font-bold text-slate-900 sm:text-xl">Mamulka</span>
+              <span className="ml-1 hidden text-sm text-slate-500 sm:inline">/ WRM</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Language Switcher */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Globe className="h-4 w-4" />
-                  {language === "en" ? "EN" : "AM"}
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 px-2 sm:h-9 sm:gap-2 sm:px-3">
+                  <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">{language === "en" ? "EN" : "AM"}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -190,10 +268,10 @@ export function MarketplaceView({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" onClick={onSignIn}>
+            <Button variant="outline" onClick={onSignIn} size="sm" className="h-8 px-2 text-xs sm:h-9 sm:px-4 sm:text-sm">
               {language === "en" ? "Sign In" : "ግባ"}
             </Button>
-            <Button className="bg-orange-500 text-white hover:bg-orange-600">
+            <Button className="hidden bg-orange-500 text-white hover:bg-orange-600 sm:inline-flex" size="sm">
               {language === "en" ? "Post a Listing" : "ዝርዝር ያስቀምጡ"}
             </Button>
           </div>
@@ -201,28 +279,33 @@ export function MarketplaceView({
       </header>
 
       {/* Hero Search Section */}
-      <section className="bg-gradient-to-b from-slate-100 to-slate-50 px-6 py-16">
+      <section className="bg-gradient-to-b from-slate-100 to-slate-50 px-4 py-8 sm:px-6 sm:py-12 lg:py-16">
         <div className="mx-auto max-w-4xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900 text-balance">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 text-balance sm:text-3xl lg:text-4xl 2xl:text-5xl">
             Find Your Perfect Workspace in Addis Ababa
           </h1>
-          <p className="mt-3 text-lg text-slate-600">
+          <p className="mt-2 text-sm text-slate-600 sm:mt-3 sm:text-base lg:text-lg">
             Browse affordable offices, shops, and commercial spaces across the city
           </p>
 
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+          {/* Segmented Control */}
+          <div className="mt-6 flex justify-center">
+            <MarketplaceSegmentedControl value={marketplaceMode} onChange={setMarketplaceMode} />
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 sm:left-4 sm:h-5 sm:w-5" />
               <Input
                 type="text"
                 placeholder="Search by location or building name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-14 pl-12 text-base"
+                className="h-11 pl-10 text-sm sm:h-14 sm:pl-12 sm:text-base"
               />
             </div>
             <Select value={spaceType} onValueChange={setSpaceType}>
-              <SelectTrigger className="h-14 w-full sm:w-[180px]">
+              <SelectTrigger className="h-11 w-full sm:h-14 sm:w-[180px]">
                 <SelectValue placeholder="Business Type" />
               </SelectTrigger>
               <SelectContent>
@@ -233,8 +316,8 @@ export function MarketplaceView({
                 <SelectItem value="event space">Event Space</SelectItem>
               </SelectContent>
             </Select>
-            <Button className="h-14 bg-orange-500 px-8 text-base font-semibold text-white hover:bg-orange-600">
-              <Search className="mr-2 h-5 w-5" />
+            <Button className="h-11 bg-orange-500 px-6 text-sm font-semibold text-white hover:bg-orange-600 sm:h-14 sm:px-8 sm:text-base">
+              <Search className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
               Search
             </Button>
           </div>
@@ -242,19 +325,19 @@ export function MarketplaceView({
       </section>
 
       {/* Advanced Filters Bar */}
-      <section className="border-b border-slate-200 bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters:
+      <section className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 sm:gap-4 2xl:max-w-[1800px]">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 sm:gap-2 sm:text-sm">
+            <SlidersHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Filters:</span>
           </div>
 
           <Select value={priceRange} onValueChange={setPriceRange}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Price Range" />
+              <SelectValue placeholder={marketplaceMode === "auction" ? "Current Bid" : "Price Range"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Prices</SelectItem>
+              <SelectItem value="all">All {marketplaceMode === "auction" ? "Bids" : "Prices"}</SelectItem>
               <SelectItem value="5k-20k">ETB 5,000 - 20,000</SelectItem>
               <SelectItem value="20k+">ETB 20,000+</SelectItem>
             </SelectContent>
@@ -319,92 +402,154 @@ export function MarketplaceView({
       </section>
 
       {/* Listings Grid */}
-      <section className="px-6 py-10">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredListings.map((listing) => (
-              <Card
-                key={listing.id}
-                className="overflow-hidden transition-shadow hover:shadow-lg"
-              >
-                <div className="relative aspect-[16/10] bg-slate-200">
-                  <div className="flex h-full items-center justify-center">
-                    <Building2 className="h-16 w-16 text-slate-300" />
-                  </div>
-                  <Badge className="absolute left-3 top-3 bg-green-500 text-white hover:bg-green-600">
-                    Available
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className="absolute right-3 top-3 bg-white/90"
-                  >
-                    {listing.spaceType}
-                  </Badge>
-                </div>
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-slate-900">
-                        {listing.buildingName} - Room {listing.roomNo}
-                      </h3>
-                      <p className="mt-0.5 flex items-center gap-1 text-sm text-slate-500">
-                        <MapPin className="h-3.5 w-3.5" />
-                        {listing.subcity}, Addis Ababa
-                      </p>
+      <section className="px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
+        <div className="mx-auto max-w-[1800px]">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {filteredListings.map((listing) => {
+              const isAuction = marketplaceMode === "auction"
+              const auctionListing = isAuction ? (listing as any) : null
+              
+              return (
+                <Card
+                  key={listing.id}
+                  className="overflow-hidden transition-shadow hover:shadow-lg"
+                >
+                  <div className="relative aspect-[16/10] bg-slate-200">
+                    <div className="flex h-full items-center justify-center">
+                      <Building2 className="h-16 w-16 text-slate-300" />
                     </div>
-                  </div>
-
-                  <div className="mt-3 flex items-center gap-4 text-sm text-slate-600">
-                    <span>{listing.officeSize}</span>
-                    <span className="text-slate-300">|</span>
-                    <span>{listing.floor}</span>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {listing.amenities.slice(0, 3).map((amenity) => (
-                      <span
-                        key={amenity}
-                        className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
-                      >
-                        {amenity === "WiFi" && <Wifi className="h-3 w-3" />}
-                        {amenity === "Parking" && <Car className="h-3 w-3" />}
-                        {amenity}
-                      </span>
-                    ))}
-                    {listing.amenities.length > 3 && (
-                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
-                        +{listing.amenities.length - 3} more
-                      </span>
+                    {isAuction ? (
+                      <>
+                        <Badge className="absolute left-3 top-3 bg-orange-500 text-white hover:bg-orange-600 gap-1">
+                          <Flame className="h-3 w-3" />
+                          Live Auction
+                        </Badge>
+                      </>
+                    ) : (
+                      <>
+                        <Badge className="absolute left-3 top-3 bg-green-500 text-white hover:bg-green-600">
+                          Available
+                        </Badge>
+                      </>
                     )}
+                    <Badge
+                      variant="secondary"
+                      className="absolute right-3 top-3 bg-white/90"
+                    >
+                      {listing.spaceType}
+                    </Badge>
                   </div>
-
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-                    <div>
-                      <span className="text-lg font-bold text-slate-900">
-                        {listing.monthlyRent}
-                      </span>
-                      <span className="text-sm text-slate-500">/month</span>
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-semibold text-slate-900">
+                          {listing.buildingName} - Room {listing.roomNo}
+                        </h3>
+                        <p className="mt-0.5 flex items-center gap-1 text-sm text-slate-500">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {listing.subcity}, Addis Ababa
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mt-4 flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => handleViewDetails(listing)}
-                    >
-                      View Details
-                    </Button>
-                    <Button
-                      className="flex-1 bg-orange-500 text-white hover:bg-orange-600"
-                      onClick={() => handlePreoccupy(listing)}
-                    >
-                      Pre-occupy
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="mt-3 flex items-center gap-4 text-sm text-slate-600">
+                      <span>{listing.officeSize}</span>
+                      <span className="text-slate-300">|</span>
+                      <span>{listing.floor}</span>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {listing.amenities.slice(0, 3).map((amenity) => (
+                        <span
+                          key={amenity}
+                          className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
+                        >
+                          {amenity === "WiFi" && <Wifi className="h-3 w-3" />}
+                          {amenity === "Parking" && <Car className="h-3 w-3" />}
+                          {amenity}
+                        </span>
+                      ))}
+                      {listing.amenities.length > 3 && (
+                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                          +{listing.amenities.length - 3} more
+                        </span>
+                      )}
+                    </div>
+
+                    {isAuction && auctionListing ? (
+                      <>
+                        <div className="mt-4 border-t border-slate-100 pt-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="text-xs text-slate-500">Current Bid</span>
+                              <p className="text-lg font-bold text-slate-900">
+                                ETB {auctionListing.currentBid.toLocaleString()}
+                              </p>
+                              <p className="text-xs text-slate-500 mt-1">
+                                {auctionListing.totalBids} bid{auctionListing.totalBids !== 1 ? "s" : ""}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-700">
+                                <Clock className="h-3 w-3" />
+                                Ending soon
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => handleViewDetails(listing as any)}
+                          >
+                            View Details
+                          </Button>
+                          <Button
+                            className="flex-1 bg-orange-500 text-white hover:bg-orange-600"
+                            onClick={() => {
+                              const auctionListing = listing as AuctionListing
+                              setSelectedAuction(auctionListing)
+                              setShowBidModal(true)
+                            }}
+                          >
+                            Place Bid
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+                          <div>
+                            <span className="text-lg font-bold text-slate-900">
+                              {(listing as MarketplaceListing).monthlyRent}
+                            </span>
+                            <span className="text-sm text-slate-500">/month</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => handleViewDetails(listing as any)}
+                          >
+                            View Details
+                          </Button>
+                          <Button
+                            className="flex-1 bg-orange-500 text-white hover:bg-orange-600"
+                            onClick={() => handlePreoccupy(listing as any)}
+                          >
+                            Pre-occupy
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
 
           {filteredListings.length === 0 && (
@@ -498,10 +643,24 @@ export function MarketplaceView({
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white px-6 py-8">
-        <div className="mx-auto max-w-7xl text-center text-sm text-slate-500">
+        <div className="mx-auto max-w-7xl text-center text-sm text-slate-500 2xl:max-w-[1800px]">
           <p>&copy; 2024 Mamulka WRM. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Place Bid Modal */}
+      {selectedAuction && (
+        <PlaceBidModal
+          open={showBidModal}
+          onOpenChange={setShowBidModal}
+          auction={selectedAuction}
+          userInfo={{
+            name: "User",
+            email: "user@example.com",
+            phone: "555-0000",
+          }}
+        />
+      )}
 
       {/* Floating Back to Admin Button */}
       {showBackToAdmin && (

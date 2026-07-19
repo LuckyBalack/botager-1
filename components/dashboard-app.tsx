@@ -1,10 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/auth-context"
 
-import { AppSidebar, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
+import { AppSidebar, AppSidebarMobile, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
 import { AppHeader, type UserRole } from "@/components/app-header"
-import { TenantSidebar, type TenantViewKey } from "@/components/tenant-sidebar"
+import { TenantSidebar } from "@/components/tenant-sidebar"
+import { TenantBottomNav } from "@/components/tenant-bottom-nav"
+import { SystemAdminSidebar, SystemAdminSidebarMobile, type SystemAdminViewKey } from "@/components/system-admin-sidebar"
 import { TenantDashboardView } from "@/components/views/tenant-dashboard-view"
 import { TenantInvoicesView } from "@/components/views/tenant-invoices-view"
 import { TenantMaintenanceView } from "@/components/views/tenant-maintenance-view"
@@ -15,68 +18,122 @@ import { TenantsView } from "@/components/views/tenants-view"
 import { TenantDetailView } from "@/components/views/tenant-detail-view"
 import { PropertyDetailView } from "@/components/views/property-detail-view"
 import { AddTenantView } from "@/components/views/add-tenant-view"
-
+import { PublicListingDetailView } from "@/components/views/public-listing-detail-view"
+import { MaintenanceTicketDetailView } from "@/components/views/maintenance-ticket-detail-view"
+import { DigitalInvoiceDetailView } from "@/components/views/digital-invoice-detail-view"
+import { BuildingVerificationView } from "@/components/views/building-verification-view"
 import { PortfolioDashboardView } from "@/components/views/portfolio-dashboard-view"
 import { BillingView } from "@/components/views/billing-view"
 import { MaintenanceView } from "@/components/views/maintenance-view"
 import { MarketplaceView } from "@/components/views/marketplace-view"
-import { AccountingView } from "@/components/views/accounting-view"
-import { DocumentsView } from "@/components/views/documents-view"
-import { MessagesView } from "@/components/views/messages-view"
-import { TeamSettingsView } from "@/components/views/team-settings-view"
-import { AutomationsView } from "@/components/views/automations-view"
-import { HelpCenterView, LiveChatWidget } from "@/components/views/help-center-view"
-import { DataImportView } from "@/components/views/data-import-view"
-import { InspectionsView } from "@/components/views/inspections-view"
-import { VendorsView } from "@/components/views/vendors-view"
 import { SettingsView } from "@/components/views/settings-view"
-import { UtilityTrackingView } from "@/components/views/utility-tracking-view"
 import { LeaseSettlementView } from "@/components/views/lease-settlement-view"
+import { UtilityTrackingView } from "@/components/views/utility-tracking-view"
+import { LeaseSettlementDetailView } from "@/components/views/lease-settlement-detail-view"
+import { SpaceMapView } from "@/components/views/space-map-view"
 import { WaitlistView } from "@/components/views/waitlist-view"
-import { BrokersView } from "@/components/views/brokers-view"
 import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
-import { SystemAdminSidebar, type SystemAdminViewKey } from "@/components/system-admin-sidebar"
 import { SystemAdminView } from "@/components/views/system-admin-view"
-import { getPropertyById, getTenantById } from "@/lib/data"
+import { PlatformFinancialsView } from "@/components/views/platform-financials-view"
+import { AdvancedModerationView } from "@/components/views/advanced-moderation-view"
+import {
+  getPropertyById,
+  getTenantById,
+  getMaintenanceTicketDetail,
+  getInvoiceDetail,
+  getLeadDetail,
+  getPublicListingDetail,
+  getBrokerDetail,
+  getVendorDetail,
+  getBuildingVerification,
+} from "@/lib/data"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetDescription,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { toast } from "sonner"
+import type { TenantViewKey } from "@/components/tenant-sidebar"
+import { useResponsive } from "@/hooks/use-responsive"
 
-type ActiveView = ViewKey | "detail" | "add-tenant" | "system-subscription" | "lease-settlement"
-type DetailKind = "tenant" | "property"
+type ActiveView =
+  | ViewKey
+  | "detail"
+  | "add-tenant"
+  | "system-subscription"
+  | "lease-settlement"
+  | "lease-settlement-detail"
+  | "utility-tracking"
+  | "space-map"
+  | "waitlist"
+  | "listing-detail"
+  | "maintenance-ticket-detail"
+  | "invoice-detail"
+  | "building-verification"
+type DetailKind = "tenant" | "property" | "listing" | "maintenance-ticket" | "invoice" | "building"
 type Selected = { kind: DetailKind; id: string } | null
 
-const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", string> = {
+const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement" | "lease-settlement-detail" | "utility-tracking" | "space-map" | "waitlist", string> = {
   dashboard: "Dashboard",
   properties: "Properties",
   tenants: "Tenants",
   billing: "Financials & Billing",
   maintenance: "Work Orders & Maintenance",
-  accounting: "Accounting & Reports",
-  documents: "Documents",
-  messages: "Messages",
   marketplace: "Marketplace",
   settings: "Settings",
-  "portfolio-dashboard": "Portfolio Overview",
-  "team-settings": "Staff & Branch Management",
-  automations: "Automated Workflows",
-  "help-center": "Help Center & Support",
-  "data-import": "Data Migration & Import",
-  inspections: "Property Inspections",
-  vendors: "External Vendors & Contacts",
   "system-subscription": "System Subscription",
-  "utility-tracking": "Utility Meter Readings",
-  "waitlist": "Prospective Tenants & Waitlist",
   "lease-settlement": "Final Lease Settlement",
-  "brokers": "Brokers & Commissions",
+  "lease-settlement-detail": "Lease Settlement Details",
+  "utility-tracking": "Utility Meter Readings",
+  "space-map": "Floor Plan & Space Map",
+  "waitlist": "Prospective Tenants & Waitlist",
 }
 
 export function DashboardApp() {
-  const [userRole, setUserRole] = useState<UserRole>("admin")
+  const { isTablet } = useResponsive()
+  const { user, setBuildingId: setAuthBuildingId } = useAuth()
+  
+  // Get role from authenticated user
+  const [userRole, setUserRole] = useState<UserRole>("landlord")
+  
+  // Set role from authenticated user on mount
+  useEffect(() => {
+    if (user?.role) {
+      setUserRole(user.role as UserRole)
+    }
+  }, [user?.role])
   const [activeView, setActiveView] = useState<ActiveView>("dashboard")
   const [tenantView, setTenantView] = useState<TenantViewKey>("my-lease")
   const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")
   const [selected, setSelected] = useState<Selected>(null)
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingSelection>("abuki")
-  // Track if user came from admin side (to show "Back to Admin" button in marketplace)
+  const [buildingId, setBuildingId] = useState<string | null>(null)
   const [cameFromAdmin, setCameFromAdmin] = useState(false)
+  
+  // Map building selection to buildingId (In real app, this would come from building config)
+  useEffect(() => {
+    const buildingIdMap: Record<BuildingSelection, string> = {
+      "abuki": "abuki-building-001",
+      "tower": "tower-building-001",
+      "plaza": "plaza-building-001",
+    }
+    const id = buildingIdMap[selectedBuilding] || null
+    setBuildingId(id)
+    if (id) {
+      setAuthBuildingId(id)
+    }
+  }, [selectedBuilding, setAuthBuildingId])
+  
+  // Mobile navigation state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  
+  // Sidebar collapse state (for tablet view)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Auto-collapse sidebar on tablet
+  const effectiveCollapsed = isTablet ? true : sidebarCollapsed
 
   const handleRoleToggle = () => {
     setUserRole((prev) => {
@@ -84,6 +141,7 @@ export function DashboardApp() {
       if (prev === "tenant") return "system-admin"
       return "admin"
     })
+    setMobileMenuOpen(false)
   }
 
   const handleBuildingChange = (building: BuildingSelection) => {
@@ -99,6 +157,7 @@ export function DashboardApp() {
   const navigate = (view: ViewKey) => {
     setSelected(null)
     setActiveView(view)
+    setMobileMenuOpen(false)
   }
 
   const openTenantDetail = (id: string) => {
@@ -118,7 +177,27 @@ export function DashboardApp() {
 
   const openLeaseSettlement = (tenantId: string) => {
     setSelected({ kind: "tenant", id: tenantId })
-    setActiveView("lease-settlement")
+    setActiveView("lease-settlement-detail")
+  }
+
+  const openListingDetail = (id: string) => {
+    setSelected({ kind: "listing", id })
+    setActiveView("listing-detail")
+  }
+
+  const openMaintenanceTicketDetail = (id: string) => {
+    setSelected({ kind: "maintenance-ticket", id })
+    setActiveView("maintenance-ticket-detail")
+  }
+
+  const openInvoiceDetail = (id: string) => {
+    setSelected({ kind: "invoice", id })
+    setActiveView("invoice-detail")
+  }
+
+  const openBuildingVerification = (id: string) => {
+    setSelected({ kind: "building", id })
+    setActiveView("building-verification")
   }
 
   const sidebarActive: ViewKey =
@@ -128,7 +207,15 @@ export function DashboardApp() {
         : "properties"
       : activeView === "add-tenant" || activeView === "lease-settlement"
         ? "tenants"
-        : activeView as ViewKey
+        : activeView === "listing-detail"
+          ? "marketplace"
+          : activeView === "maintenance-ticket-detail"
+            ? "maintenance"
+            : activeView === "invoice-detail"
+              ? "billing"
+              : activeView === "building-verification"
+                ? "dashboard"
+                : activeView as ViewKey
 
   const headerTitle =
     activeView === "detail"
@@ -139,7 +226,21 @@ export function DashboardApp() {
         ? "Add Tenants"
         : activeView === "lease-settlement"
           ? "Final Lease Settlement"
-          : titleMap[activeView as keyof typeof titleMap]
+          : activeView === "listing-detail"
+            ? "Listing Details"
+            : activeView === "maintenance-ticket-detail"
+              ? "Maintenance Ticket"
+              : activeView === "invoice-detail"
+                ? "Invoice Details"
+                : activeView === "lead-detail"
+                  ? "Lead Details"
+                  : activeView === "broker-detail"
+                    ? "Broker Profile"
+                    : activeView === "vendor-detail"
+                      ? "Vendor Profile"
+                      : activeView === "building-verification"
+                        ? "Building Verification"
+                        : titleMap[activeView as keyof typeof titleMap]
 
   const showAddTenant =
     activeView === "dashboard" ||
@@ -154,6 +255,22 @@ export function DashboardApp() {
     activeView === "detail" && selected?.kind === "property"
       ? getPropertyById(selected.id)
       : undefined
+  const selectedListing =
+    activeView === "listing-detail" && selected?.kind === "listing"
+      ? getPublicListingDetail(selected.id)
+      : undefined
+  const selectedMaintenanceTicket =
+    activeView === "maintenance-ticket-detail" && selected?.kind === "maintenance-ticket"
+      ? getMaintenanceTicketDetail(selected.id)
+      : undefined
+  const selectedInvoice =
+    activeView === "invoice-detail" && selected?.kind === "invoice"
+      ? getInvoiceDetail(selected.id)
+      : undefined
+  const selectedBuildingVerification =
+    activeView === "building-verification" && selected?.kind === "building"
+      ? getBuildingVerification(selected.id)
+      : undefined
 
   // Tenant view titles
   const tenantTitleMap: Record<TenantViewKey, string> = {
@@ -165,8 +282,10 @@ export function DashboardApp() {
 
   // System Admin View Titles
   const systemAdminTitleMap: Record<SystemAdminViewKey, string> = {
-    moderation: "Workspace Verifications",
+    moderation: "Advanced Moderation & Compliance",
+    "sys-financials": "Platform Financials & Billing",
     "credit-partners": "Credit Service Partners",
+    "system-helpdesk": "Global Support & Communication",
     settings: "System Settings",
   }
 
@@ -174,21 +293,48 @@ export function DashboardApp() {
   if (userRole === "system-admin") {
     return (
       <div className="flex min-h-screen bg-slate-50 text-slate-900">
+        {/* Desktop Sidebar */}
         <SystemAdminSidebar
           activeView={systemAdminView}
           onNavigate={setSystemAdminView}
           onLogout={() => setUserRole("admin")}
+          collapsed={effectiveCollapsed}
         />
+
+        {/* Mobile Navigation Sheet */}
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetContent side="left" className="w-[280px] p-0">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Navigation Menu</SheetTitle>
+              <SheetDescription>System admin navigation menu</SheetDescription>
+            </SheetHeader>
+            <SystemAdminSidebarMobile
+              activeView={systemAdminView}
+              onNavigate={setSystemAdminView}
+              onLogout={() => setUserRole("admin")}
+              onClose={() => setMobileMenuOpen(false)}
+            />
+          </SheetContent>
+        </Sheet>
 
         <div className="flex min-w-0 flex-1 flex-col">
           <AppHeader
             title={systemAdminTitleMap[systemAdminView]}
             userRole={userRole}
-            onRoleToggle={handleRoleToggle}
+            onMenuToggle={() => setMobileMenuOpen(true)}
+            sidebarCollapsed={effectiveCollapsed}
+            onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
 
-          <main className="flex-1 px-10 py-8">
-            <SystemAdminView view={systemAdminView} />
+          {/* TV max-width container */}
+          <main className="flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 2xl:px-12 2xl:py-10">
+            <div className="mx-auto max-w-[1800px]">
+              {systemAdminView === "moderation" && <AdvancedModerationView />}
+              {systemAdminView === "sys-financials" && <PlatformFinancialsView />}
+              {(systemAdminView === "dashboard" || systemAdminView === "subscriptions" || systemAdminView === "credit-partners" || systemAdminView === "system-helpdesk" || systemAdminView === "settings") && (
+                <SystemAdminView view={systemAdminView} />
+              )}
+            </div>
           </main>
         </div>
       </div>
@@ -199,22 +345,35 @@ export function DashboardApp() {
   if (userRole === "tenant") {
     return (
       <div className="flex min-h-screen bg-slate-50 text-slate-900">
-        <TenantSidebar activeView={tenantView} onNavigate={setTenantView} />
+        {/* Desktop Sidebar - hidden on mobile */}
+        <TenantSidebar
+          activeView={tenantView}
+          onNavigate={setTenantView}
+          collapsed={effectiveCollapsed}
+        />
 
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col pb-16 md:pb-0">
           <AppHeader
             title={tenantTitleMap[tenantView]}
             userRole={userRole}
-            onRoleToggle={handleRoleToggle}
+            showMenuButton={false}
+            sidebarCollapsed={effectiveCollapsed}
+            onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
 
-          <main className="flex-1 px-10 py-8">
-            {tenantView === "my-lease" && <TenantDashboardView onNavigate={setTenantView} />}
-            {tenantView === "invoices" && <TenantInvoicesView />}
-            {tenantView === "maintenance" && <TenantMaintenanceView />}
-            {tenantView === "messages" && <TenantMessagesView />}
+          {/* TV max-width container */}
+          <main className="flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 2xl:px-12 2xl:py-10">
+            <div className="mx-auto max-w-[1800px]">
+              {tenantView === "my-lease" && <TenantDashboardView onNavigate={setTenantView} />}
+              {tenantView === "invoices" && <TenantInvoicesView />}
+              {tenantView === "maintenance" && <TenantMaintenanceView />}
+              {tenantView === "messages" && <TenantMessagesView />}
+            </div>
           </main>
         </div>
+
+        {/* Mobile Bottom Navigation */}
+        <TenantBottomNav activeView={tenantView} onNavigate={setTenantView} />
       </div>
     )
   }
@@ -258,12 +417,31 @@ export function DashboardApp() {
   // Admin View Render
   return (
     <div className="flex min-h-screen bg-slate-50 text-slate-900">
+      {/* Desktop Sidebar */}
       <AppSidebar
         activeView={sidebarActive}
         onNavigate={handleNavigate}
         selectedBuilding={selectedBuilding}
         onBuildingChange={handleBuildingChange}
+        collapsed={effectiveCollapsed}
       />
+
+      {/* Mobile Navigation Sheet */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="w-[280px] p-0">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigation Menu</SheetTitle>
+            <SheetDescription>Main navigation menu</SheetDescription>
+          </SheetHeader>
+          <AppSidebarMobile
+            activeView={sidebarActive}
+            onNavigate={handleNavigate}
+            selectedBuilding={selectedBuilding}
+            onBuildingChange={handleBuildingChange}
+            onClose={() => setMobileMenuOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <AppHeader
@@ -271,69 +449,105 @@ export function DashboardApp() {
           showAddTenant={showAddTenant}
           onAddTenant={openAddTenant}
           userRole={userRole}
-          onRoleToggle={handleRoleToggle}
+          onMenuToggle={() => setMobileMenuOpen(true)}
+          sidebarCollapsed={effectiveCollapsed}
+          onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
 
-        <main className="flex-1 px-10 py-8">
-          {activeView === "portfolio-dashboard" && <PortfolioDashboardView />}
-          {activeView === "dashboard" && (
-            <DashboardView onNavigate={handleNavigate} />
-          )}
-          {activeView === "properties" && (
-            <PropertiesView onSelectProperty={openPropertyDetail} />
-          )}
-          {activeView === "tenants" && (
-            <TenantsView onSelectTenant={openTenantDetail} />
-          )}
-          {activeView === "billing" && <BillingView />}
-          {activeView === "maintenance" && <MaintenanceView />}
-          {activeView === "accounting" && <AccountingView />}
-          {activeView === "documents" && <DocumentsView />}
-          {activeView === "messages" && <MessagesView />}
-          {activeView === "detail" && selectedTenant && (
-            <TenantDetailView
-              tenant={selectedTenant}
-              onTerminateLease={openLeaseSettlement}
-            />
-          )}
-          {activeView === "detail" && selectedProperty && (
-            <PropertyDetailView property={selectedProperty} />
-          )}
-          {activeView === "add-tenant" && <AddTenantView />}
-          {activeView === "settings" && (
-            <SettingsView
-              onNavigate={handleNavigate}
-              onSystemSubscription={() => setActiveView("system-subscription")}
-            />
-          )}
-          {activeView === "team-settings" && <TeamSettingsView />}
-          {activeView === "automations" && <AutomationsView />}
-          {activeView === "help-center" && <HelpCenterView />}
-          {activeView === "data-import" && <DataImportView />}
-          {activeView === "inspections" && <InspectionsView />}
-          {activeView === "vendors" && <VendorsView />}
-          {activeView === "brokers" && <BrokersView />}
-          {activeView === "system-subscription" && <SystemSubscriptionView />}
-          {activeView === "utility-tracking" && <UtilityTrackingView />}
-          {activeView === "waitlist" && (
-            <WaitlistView
-              onInviteToLease={(leadData) => {
-                // Here we would typically pass the lead data to the add tenant form
-                openAddTenant()
-              }}
-            />
-          )}
-          {activeView === "lease-settlement" && selectedTenant && (
-            <LeaseSettlementView
-              tenant={selectedTenant}
-              onClose={() => navigate("tenants")}
-            />
-          )}
+        {/* TV max-width container with responsive padding */}
+        <main className="flex-1 px-4 py-4 md:px-6 md:py-6 lg:px-10 lg:py-8 2xl:px-12 2xl:py-10">
+          <div className="mx-auto max-w-[1800px]">
+            {activeView === "portfolio-dashboard" && <PortfolioDashboardView />}
+            {activeView === "dashboard" && (
+              <DashboardView onNavigate={handleNavigate} />
+            )}
+            {activeView === "properties" && (
+              <PropertiesView 
+                buildingId={buildingId}
+                onSelectProperty={openPropertyDetail}
+                onNavigateToSpaceMap={() => setActiveView("space-map")}
+              />
+            )}
+            {activeView === "tenants" && (
+              <TenantsView 
+                onSelectTenant={openTenantDetail}
+                onNavigateToWaitlist={() => setActiveView("waitlist")}
+              />
+            )}
+            {activeView === "billing" && (
+              <BillingView 
+                buildingId={buildingId}
+                onOpenInvoiceDetail={openInvoiceDetail}
+                onNavigateToUtilities={() => setActiveView("utility-tracking")}
+              />
+            )}
+            {activeView === "maintenance" && (
+              <MaintenanceView 
+                buildingId={buildingId}
+                onSelectTicket={openMaintenanceTicketDetail}
+                onNewRequest={() => {
+                  toast.success("New Request", {
+                    description: "Maintenance request form would open here",
+                  })
+                }}
+              />
+            )}
+            {activeView === "accounting" && <AccountingView />}
+            {activeView === "documents" && <DocumentsView />}
+            {activeView === "messages" && <MessagesView />}
+            {activeView === "detail" && selectedTenant && (
+              <TenantDetailView
+                tenant={selectedTenant}
+                onTerminateLease={openLeaseSettlement}
+              />
+            )}
+            {activeView === "detail" && selectedProperty && (
+              <PropertyDetailView property={selectedProperty} />
+            )}
+            {activeView === "add-tenant" && <AddTenantView />}
+            {activeView === "settings" && (
+              <SettingsView
+                onNavigate={handleNavigate}
+                onSystemSubscription={() => setActiveView("system-subscription")}
+              />
+            )}
+            {activeView === "system-subscription" && <SystemSubscriptionView />}
+            {activeView === "lease-settlement" && selectedTenant && (
+              <LeaseSettlementView
+                tenant={selectedTenant}
+                onClose={() => navigate("tenants")}
+              />
+            )}
+            {activeView === "listing-detail" && selectedListing && (
+              <PublicListingDetailView
+                listing={selectedListing}
+                onBack={() => navigate("marketplace")}
+              />
+            )}
+            {activeView === "maintenance-ticket-detail" && selectedMaintenanceTicket && (
+              <MaintenanceTicketDetailView ticket={selectedMaintenanceTicket} />
+            )}
+            {activeView === "invoice-detail" && selectedInvoice && (
+              <DigitalInvoiceDetailView invoice={selectedInvoice} />
+            )}
+            {activeView === "building-verification" && selectedBuildingVerification && (
+              <BuildingVerificationView
+                building={selectedBuildingVerification}
+                onBack={() => navigate("dashboard")}
+              />
+            )}
+            {activeView === "utility-tracking" && <UtilityTrackingView />}
+            {activeView === "lease-settlement-detail" && (
+              <LeaseSettlementDetailView
+                onClose={() => navigate("tenants")}
+                onFinalize={() => navigate("tenants")}
+              />
+            )}
+            {activeView === "space-map" && <SpaceMapView />}
+            {activeView === "waitlist" && <WaitlistView />}
+          </div>
         </main>
       </div>
-
-      {/* Live Chat Widget - Always visible */}
-      <LiveChatWidget />
     </div>
   )
 }
