@@ -93,7 +93,7 @@ const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement" | "l
 
 export function DashboardApp() {
   const { isTablet } = useResponsive()
-  const { user } = useAuth()
+  const { user, setBuildingId: setAuthBuildingId } = useAuth()
   
   // Get role from authenticated user
   const [userRole, setUserRole] = useState<UserRole>("landlord")
@@ -109,7 +109,22 @@ export function DashboardApp() {
   const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")
   const [selected, setSelected] = useState<Selected>(null)
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingSelection>("abuki")
+  const [buildingId, setBuildingId] = useState<string | null>(null)
   const [cameFromAdmin, setCameFromAdmin] = useState(false)
+  
+  // Map building selection to buildingId (In real app, this would come from building config)
+  useEffect(() => {
+    const buildingIdMap: Record<BuildingSelection, string> = {
+      "abuki": "abuki-building-001",
+      "tower": "tower-building-001",
+      "plaza": "plaza-building-001",
+    }
+    const id = buildingIdMap[selectedBuilding] || null
+    setBuildingId(id)
+    if (id) {
+      setAuthBuildingId(id)
+    }
+  }, [selectedBuilding, setAuthBuildingId])
   
   // Mobile navigation state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -448,6 +463,7 @@ export function DashboardApp() {
             )}
             {activeView === "properties" && (
               <PropertiesView 
+                buildingId={buildingId}
                 onSelectProperty={openPropertyDetail}
                 onNavigateToSpaceMap={() => setActiveView("space-map")}
               />
@@ -460,12 +476,14 @@ export function DashboardApp() {
             )}
             {activeView === "billing" && (
               <BillingView 
+                buildingId={buildingId}
                 onOpenInvoiceDetail={openInvoiceDetail}
                 onNavigateToUtilities={() => setActiveView("utility-tracking")}
               />
             )}
             {activeView === "maintenance" && (
               <MaintenanceView 
+                buildingId={buildingId}
                 onSelectTicket={openMaintenanceTicketDetail}
                 onNewRequest={() => {
                   toast.success("New Request", {

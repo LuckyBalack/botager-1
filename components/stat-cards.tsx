@@ -1,4 +1,8 @@
+"use client"
+
 import { Users, Building, Wallet } from "lucide-react"
+import { useProperties } from "@/hooks/use-database"
+import { useMemo } from "react"
 
 type OccupancyCardProps = {
   label: string
@@ -72,30 +76,75 @@ function RevenueCard() {
   )
 }
 
-export function StatCards() {
+type StatCardsProps = {
+  buildingId: string | null
+}
+
+export function StatCards({ buildingId }: StatCardsProps) {
+  const { properties = [], loading } = useProperties(buildingId)
+
+  // Calculate metrics from properties data
+  const metrics = useMemo(() => {
+    const occupied = properties.filter(p => p.occupancy === 'occupied').length
+    const vacant = properties.filter(p => p.occupancy === 'available').length
+    const total = properties.length
+    const occupiedPercent = total > 0 ? Math.round((occupied / total) * 100) : 0
+    const vacantPercent = total > 0 ? Math.round((vacant / total) * 100) : 0
+    
+    // Calculate total rent from occupied properties
+    const totalRent = properties
+      .filter(p => p.occupancy === 'occupied')
+      .reduce((sum, p) => sum + (p.monthly_rent || 0), 0)
+
+    return { occupied, vacant, total, occupiedPercent, vacantPercent, totalRent }
+  }, [properties])
+
+  if (loading) {
+    return (
+      <section aria-label="Overview" className="flex flex-col gap-4">
+        <div className="h-6 w-32 bg-slate-200 rounded animate-pulse"></div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 sm:gap-6">
+          {[1, 2, 3].map(i => <div key={i} className="h-40 bg-slate-200 rounded-xl animate-pulse"></div>)}
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section aria-label="Overview" className="flex flex-col gap-4">
       <div className="flex items-baseline gap-3">
         <span className="text-xs text-slate-500 sm:text-sm">Total Offices</span>
-        <span className="text-sm font-semibold text-slate-900 sm:text-base">310</span>
+        <span className="text-sm font-semibold text-slate-900 sm:text-base">{metrics.total}</span>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 sm:gap-6">
         <OccupancyCard
           label="Occupied Offices"
-          count={280}
-          percent={80}
+          count={metrics.occupied}
+          percent={metrics.occupiedPercent}
           variant="occupied"
           icon={Users}
         />
         <OccupancyCard
           label="Vacant Offices"
-          count={30}
-          percent={20}
+          count={metrics.vacant}
+          percent={metrics.vacantPercent}
           variant="vacant"
           icon={Building}
         />
-        <RevenueCard />
+        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 lg:p-6 2xl:p-7">
+          <div className="flex items-start justify-between gap-3 sm:gap-4">
+            <Wallet className="h-8 w-8 text-slate-700 sm:h-10 sm:w-10" strokeWidth={1.5} aria-hidden="true" />
+            <div className="flex flex-col items-end">
+              <span className="text-xs text-slate-500 sm:text-sm">Total Rent Collected</span>
+              <span className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl 2xl:text-4xl">{metrics.totalRent.toLocaleString()}</span>
+            </div>
+          </div>
+          <div className="mt-3 sm:mt-4">
+            <Sparkline />
+            <p className="mt-1 text-right text-[10px] text-slate-500 sm:text-xs">Up 5% from last month</p>
+          </div>
+        </div>
       </div>
     </section>
   )
