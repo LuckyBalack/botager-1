@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Send, Paperclip, AlertCircle, CheckCircle, Clock, Phone, Mail, FileText } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -9,21 +9,75 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import type { MaintenanceTicketDetail } from "@/lib/data"
+import { getMaintenanceTicketById, getTicketMessages, addTicketMessage, updateMaintenanceTicketStatus } from "@/lib/db"
 
-type MaintenanceTicketDetailViewProps = {
-  ticket: MaintenanceTicketDetail
+type MaintenanceTicket = {
+  id: string
+  ticket_number: string
+  title: string
+  status: "Open" | "In Progress" | "Resolved"
+  room_number: string
+  tenant_name: string
+  priority: "High" | "Medium" | "Low"
+  vendor: { id: string; name: string; phone: string }
+  description: string
+  damage_photos: string[]
+  tenant_phone: string
+  messages: Array<{ id: string; sender: string; message: string; avatar?: string; timestamp: string; attachments?: Array<{ name: string }> }>
 }
 
-export function MaintenanceTicketDetailView({ ticket }: MaintenanceTicketDetailViewProps) {
-  const [messageText, setMessageText] = useState("")
+type MaintenanceTicketDetailViewProps = {
+  ticketId: string
+}
 
-  const handleSendMessage = () => {
-    if (!messageText.trim()) return
-    toast.success("Message Sent", {
-      description: `Your message has been sent to ${ticket.vendor.name}`,
-    })
-    setMessageText("")
+export function MaintenanceTicketDetailView({ ticketId }: MaintenanceTicketDetailViewProps) {
+  const [ticket, setTicket] = useState<MaintenanceTicket | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [messageText, setMessageText] = useState("")
+  const [messages, setMessages] = useState<MaintenanceTicket['messages']>([])
+
+  // Load ticket and messages
+  useEffect(() => {
+    if (!ticketId) return
+
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const [ticketData, ticketMessages] = await Promise.all([
+          getMaintenanceTicketById(ticketId),
+          getTicketMessages(ticketId),
+        ])
+        setTicket(ticketData)
+        setMessages(ticketMessages || [])
+      } catch (error) {
+        console.error("Error loading ticket:", error)
+        toast.error("Error loading ticket details")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [ticketId])
+
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !ticket) return
+    try {
+      await addTicketMessage(ticket.id, {
+        sender: "You",
+        message: messageText,
+        timestamp: new Date().toISOString(),
+      })
+      toast.success("Message Sent", {
+        description: `Your message has been sent to ${ticket.vendor.name}`,
+      })
+      setMessageText("")
+      // Reload messages
+      const updated = await getTicketMessages(ticket.id)
+      setMessages(updated || [])
+    } catch (error) {
+      toast.error("Error sending message")
+    }
   }
 
   const handleReassignVendor = () => {
@@ -38,10 +92,25 @@ export function MaintenanceTicketDetailView({ ticket }: MaintenanceTicketDetailV
     })
   }
 
-  const handleMarkResolved = () => {
-    toast.success("Ticket Resolved", {
-      description: `Maintenance ticket #${ticket.ticketNumber} has been marked as resolved`,
-    })
+  const handleMarkResolved = async () => {
+    if (!ticket) return
+    try {
+      await updateMaintenanceTicketStatus(ticket.id, "Resolved")
+      setTicket({ ...ticket, status: "Resolved" })
+      toast.success("Ticket Resolved", {
+        description: `Maintenance ticket #${ticket.ticket_number} has been marked as resolved`,
+      })
+    } catch (error) {
+      toast.error("Error updating ticket status")
+    }
+  }
+
+  if (loading) {
+    return <div className="text-center p-8">Loading ticket details...</div>
+  }
+
+  if (!ticket) {
+    return <div className="text-center p-8 text-red-600">Ticket not found</div>
   }
 
   const statusIcon = {
@@ -63,7 +132,7 @@ export function MaintenanceTicketDetailView({ ticket }: MaintenanceTicketDetailV
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Ticket #{ticket.ticketNumber}
+              Ticket #{ticket.ticket_number}
             </h1>
             <p className="text-lg text-foreground font-semibold">{ticket.title}</p>
           </div>
@@ -80,13 +149,13 @@ export function MaintenanceTicketDetailView({ ticket }: MaintenanceTicketDetailV
           <Card>
             <CardContent className="pt-4">
               <p className="text-xs text-muted-foreground mb-1">Room Number</p>
-              <p className="font-semibold text-foreground">{ticket.roomNumber}</p>
+              <p className="font-semibold text-foreground">{ticket.room_number}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4">
               <p className="text-xs text-muted-foreground mb-1">Tenant</p>
-              <p className="font-semibold text-foreground text-sm">{ticket.tenantName}</p>
+              <p className="font-semibold text-foreground text-sm">{ticket.tenant_name}</p>
             </CardContent>
           </Card>
           <Card>
@@ -120,7 +189,7 @@ export function MaintenanceTicketDetailView({ ticket }: MaintenanceTicketDetailV
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-3">Damage Photos</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {ticket.damagePhotos.map((photo, idx) => (
+              {ticket.damage_photos?.map((photo, idx) => (
                 <div
                   key={idx}
                   className="aspect-square rounded-lg bg-slate-200 border border-border flex items-center justify-center"
@@ -136,7 +205,7 @@ export function MaintenanceTicketDetailView({ ticket }: MaintenanceTicketDetailV
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <span className="text-sm text-foreground">{ticket.tenantPhone}</span>
+                <span className="text-sm text-foreground">{ticket.tenant_phone}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -155,7 +224,7 @@ export function MaintenanceTicketDetailView({ ticket }: MaintenanceTicketDetailV
         <CardContent className="space-y-4">
           {/* Messages */}
           <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
-            {ticket.messages.map((msg) => (
+            {messages.map((msg) => (
               <div key={msg.id} className="flex gap-3">
                 <Avatar className="h-8 w-8 shrink-0">
                   <AvatarImage src={msg.avatar} alt={msg.sender} />

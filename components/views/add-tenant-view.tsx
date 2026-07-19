@@ -12,7 +12,19 @@ import {
 } from "@/components/ui/select"
 import { SectionHeader } from "@/components/section-header"
 import { cn } from "@/lib/utils"
-import { brokers } from "@/lib/data"
+import { supabase } from "@/lib/supabase"
+
+type AddTenantViewProps = {
+  buildingId: string | null
+  onSuccess?: () => void
+}
+
+// Mock brokers list - in production would fetch from database
+const MOCK_BROKERS = [
+  { id: "broker-1", name: "Addis Realty", licenseNo: "REL-001" },
+  { id: "broker-2", name: "Capital Properties", licenseNo: "REL-002" },
+  { id: "broker-3", name: "Skyline Rentals", licenseNo: "REL-003" },
+]
 
 const REGIONS = ["Addis Ababa", "Oromia", "Amhara", "Tigray", "Sidama"]
 const SUBCITIES = [
@@ -85,13 +97,22 @@ function SuccessBanner({
   )
 }
 
-export function AddTenantView() {
+export function AddTenantView({ buildingId, onSuccess }: AddTenantViewProps) {
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [tradeLicense, setTradeLicense] = useState<File | null>(null)
   const [prePaidMonths, setPrePaidMonths] = useState("1")
   const [leaseStartDate, setLeaseStartDate] = useState("")
   const [leaseEndDate, setLeaseEndDate] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Form fields
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
+  const [companyName, setCompanyName] = useState("")
 
   // Auto-dismiss the temporary success banner.
   useEffect(() => {
@@ -100,9 +121,54 @@ export function AddTenantView() {
     return () => window.clearTimeout(timer)
   }, [submitted])
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setSubmitted(true)
+    setError(null)
+    setLoading(true)
+
+    try {
+      if (!buildingId) {
+        throw new Error("Building ID is required")
+      }
+
+      // Create tenant record in Supabase
+      const { data, error: insertError } = await supabase
+        .from("tenants")
+        .insert([
+          {
+            building_id: buildingId,
+            full_name: `${firstName} ${lastName}`,
+            phone,
+            email,
+            company_name: companyName,
+            status: "active",
+            created_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single()
+
+      if (insertError) throw insertError
+
+      setSubmitted(true)
+      
+      // Reset form
+      setFirstName("")
+      setLastName("")
+      setPhone("")
+      setEmail("")
+      setCompanyName("")
+      setLeaseStartDate("")
+      setLeaseEndDate("")
+      setPrePaidMonths("1")
+      setTradeLicense(null)
+
+      if (onSuccess) onSuccess()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add tenant")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -110,8 +176,13 @@ export function AddTenantView() {
       {submitted && (
         <SuccessBanner
           title="Successfully Added"
-          description="You can always update office information from properties page."
+          description="Tenant has been added to the system."
         />
+      )}
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
       )}
 
       <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl 2xl:text-3xl">New Tenant Form</h2>
@@ -123,17 +194,47 @@ export function AddTenantView() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-5 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-6">
             <FieldRow label="Firstname" htmlFor="firstname">
-              <Input id="firstname" name="firstname" placeholder="Firstname" />
+              <Input 
+                id="firstname" 
+                name="firstname" 
+                placeholder="Firstname" 
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
             </FieldRow>
             <FieldRow label="Lastname" htmlFor="lastname">
-              <Input id="lastname" name="lastname" placeholder="Lastname" />
+              <Input 
+                id="lastname" 
+                name="lastname" 
+                placeholder="Lastname" 
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
             </FieldRow>
             <FieldRow label="Phone" htmlFor="phone">
-              <Input id="phone" name="phone" type="tel" placeholder="Phone" />
+              <Input 
+                id="phone" 
+                name="phone" 
+                type="tel" 
+                placeholder="Phone" 
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+              />
             </FieldRow>
 
             <FieldRow label="Email" htmlFor="email">
-              <Input id="email" name="email" type="email" placeholder="Email" />
+              <Input 
+                id="email" 
+                name="email" 
+                type="email" 
+                placeholder="Email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </FieldRow>
             <FieldRow label="Region">
               <Select defaultValue="Addis Ababa">
@@ -177,7 +278,7 @@ export function AddTenantView() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No Broker / Walk-in</SelectItem>
-                  {brokers.map((broker) => (
+                  {MOCK_BROKERS.map((broker) => (
                     <SelectItem key={broker.id} value={broker.id}>
                       {broker.name} ({broker.licenseNo})
                     </SelectItem>
@@ -198,6 +299,8 @@ export function AddTenantView() {
                 id="companyName"
                 name="companyName"
                 placeholder="Company Name"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
               />
             </FieldRow>
             <FieldRow label="Business Type">
@@ -280,9 +383,10 @@ export function AddTenantView() {
         <div>
           <button
             type="submit"
-            className="inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-8 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 sm:w-auto sm:px-10 sm:py-3 sm:text-base"
+            disabled={loading}
+            className="inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-8 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 sm:w-auto sm:px-10 sm:py-3 sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Submit
+            {loading ? "Adding..." : "Submit"}
           </button>
         </div>
       </form>

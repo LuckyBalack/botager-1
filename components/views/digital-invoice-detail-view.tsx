@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Download, Mail, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,13 +14,60 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { toast } from "sonner"
-import type { InvoiceDetail } from "@/lib/data"
+import { getInvoiceById, getInvoiceLineItems, updateInvoiceStatus, emailInvoice } from "@/lib/db"
 
-type DigitalInvoiceDetailViewProps = {
-  invoice: InvoiceDetail
+type Invoice = {
+  id: string
+  invoice_number: string
+  issue_date: string
+  due_date: string
+  status: "Paid" | "Pending" | "Overdue"
+  tenant_name: string
+  tenant_email: string
+  room_number: string
+  building_name: string
+  subtotal: string
+  vat: string
+  withholding: string
+  grand_total: string
+  payment_method?: string
+  transaction_ref?: string
+  line_items?: Array<{ id: string; description: string; quantity: number; unit_price: string; total: string }>
 }
 
-export function DigitalInvoiceDetailView({ invoice }: DigitalInvoiceDetailViewProps) {
+type DigitalInvoiceDetailViewProps = {
+  invoiceId: string
+}
+
+export function DigitalInvoiceDetailView({ invoiceId }: DigitalInvoiceDetailViewProps) {
+  const [invoice, setInvoice] = useState<Invoice | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [lineItems, setLineItems] = useState<Invoice['line_items']>([])
+
+  // Load invoice and line items
+  useEffect(() => {
+    if (!invoiceId) return
+
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const [invoiceData, items] = await Promise.all([
+          getInvoiceById(invoiceId),
+          getInvoiceLineItems(invoiceId),
+        ])
+        setInvoice(invoiceData)
+        setLineItems(items || [])
+      } catch (error) {
+        console.error("Error loading invoice:", error)
+        toast.error("Error loading invoice details")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [invoiceId])
+
   const statusStyles = {
     "Paid": "bg-green-100 text-green-700",
     "Pending": "bg-amber-100 text-amber-700",
@@ -36,13 +84,27 @@ export function DigitalInvoiceDetailView({ invoice }: DigitalInvoiceDetailViewPr
     toast.success("Invoice PDF downloaded successfully")
   }
 
-  const handleEmailTenant = () => {
-    toast.success(`Invoice emailed to ${invoice.tenantEmail}`)
+  const handleEmailTenant = async () => {
+    if (!invoice) return
+    try {
+      await emailInvoice(invoice.id, invoice.tenant_email)
+      toast.success(`Invoice emailed to ${invoice.tenant_email}`)
+    } catch (error) {
+      toast.error("Error sending email")
+    }
   }
 
   const handlePrint = () => {
     window.print()
     toast.success("Invoice sent to printer")
+  }
+
+  if (loading) {
+    return <div className="text-center p-8">Loading invoice...</div>
+  }
+
+  if (!invoice) {
+    return <div className="text-center p-8 text-red-600">Invoice not found</div>
   }
 
   return (
@@ -110,19 +172,19 @@ export function DigitalInvoiceDetailView({ invoice }: DigitalInvoiceDetailViewPr
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                 Invoice Number
               </p>
-              <p className="font-semibold text-foreground">{invoice.invoiceNumber}</p>
+              <p className="font-semibold text-foreground">{invoice.invoice_number}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                 Issue Date
               </p>
-              <p className="font-semibold text-foreground">{invoice.issueDate}</p>
+              <p className="font-semibold text-foreground">{invoice.issue_date}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                 Due Date
               </p>
-              <p className="font-semibold text-foreground">{invoice.dueDate}</p>
+              <p className="font-semibold text-foreground">{invoice.due_date}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
@@ -140,15 +202,15 @@ export function DigitalInvoiceDetailView({ invoice }: DigitalInvoiceDetailViewPr
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
                 Bill To
               </p>
-              <p className="font-semibold text-foreground">{invoice.tenantName}</p>
-              <p className="text-sm text-muted-foreground">Room {invoice.roomNumber}</p>
-              <p className="text-sm text-muted-foreground">{invoice.tenantEmail}</p>
+              <p className="font-semibold text-foreground">{invoice.tenant_name}</p>
+              <p className="text-sm text-muted-foreground">Room {invoice.room_number}</p>
+              <p className="text-sm text-muted-foreground">{invoice.tenant_email}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
                 Building
               </p>
-              <p className="font-semibold text-foreground">{invoice.buildingName}</p>
+              <p className="font-semibold text-foreground">{invoice.building_name}</p>
             </div>
           </div>
 
@@ -172,7 +234,7 @@ export function DigitalInvoiceDetailView({ invoice }: DigitalInvoiceDetailViewPr
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoice.lineItems.map((item, idx) => (
+                {(lineItems || []).map((item, idx) => (
                   <TableRow key={idx} className="border-b border-border">
                     <TableCell className="py-3 text-foreground">
                       {item.description}
@@ -181,7 +243,7 @@ export function DigitalInvoiceDetailView({ invoice }: DigitalInvoiceDetailViewPr
                       {item.quantity}
                     </TableCell>
                     <TableCell className="text-right py-3 text-foreground">
-                      {item.unitPrice}
+                      {item.unit_price}
                     </TableCell>
                     <TableCell className="text-right py-3 text-foreground font-medium">
                       {item.total}
@@ -210,14 +272,14 @@ export function DigitalInvoiceDetailView({ invoice }: DigitalInvoiceDetailViewPr
               <div className="flex justify-between items-center pt-3 border-t border-border">
                 <span className="font-semibold text-foreground">Grand Total:</span>
                 <span className="text-2xl font-bold text-foreground">
-                  {invoice.grandTotal}
+                  {invoice.grand_total}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Payment Information */}
-          {invoice.paymentMethod && (
+          {invoice.payment_method && (
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-semibold text-foreground mb-3">
@@ -228,14 +290,14 @@ export function DigitalInvoiceDetailView({ invoice }: DigitalInvoiceDetailViewPr
                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                       Payment Method
                     </p>
-                    <p className="font-semibold text-foreground">{invoice.paymentMethod}</p>
+                    <p className="font-semibold text-foreground">{invoice.payment_method}</p>
                   </div>
                   <div className="bg-slate-50 p-4 rounded-lg border border-border">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                       Transaction Reference
                     </p>
                     <p className="font-semibold text-foreground text-sm">
-                      {invoice.transactionRef}
+                      {invoice.transaction_ref}
                     </p>
                   </div>
                 </div>
@@ -246,7 +308,7 @@ export function DigitalInvoiceDetailView({ invoice }: DigitalInvoiceDetailViewPr
           {/* Footer */}
           <div className="mt-12 pt-8 border-t border-border text-center text-xs text-muted-foreground">
             <p>This is a digital invoice. For inquiries, please contact the property management office.</p>
-            <p className="mt-2">Generated on {invoice.issueDate} | Invoice #{invoice.invoiceNumber}</p>
+            <p className="mt-2">Generated on {invoice.issue_date} | Invoice #{invoice.invoice_number}</p>
           </div>
         </CardContent>
       </Card>

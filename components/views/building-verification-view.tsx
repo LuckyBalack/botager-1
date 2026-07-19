@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { MapPin, Phone, Mail, ArrowLeft, CheckCircle, AlertCircle, Clock, FileText, Download, Eye, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,18 +18,83 @@ import {
   AlertDescription,
 } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
-import type { BuildingVerification } from "@/lib/data"
+import { supabase } from "@/lib/supabase"
+
+type ComplianceDocument = {
+  name: string
+  status: "Uploaded" | "Verified" | "Missing"
+  uploadedDate?: string
+  fileUrl?: string
+}
+
+type Building = {
+  id: string
+  name: string
+  address: string
+  owner_name: string
+  owner_phone: string
+  owner_email: string
+  verification_status: "Under Review" | "Verified" | "Rejected"
+  is_public_on_marketplace: boolean
+  platform_subscription_status: "Active" | "Pending" | "Inactive"
+  compliance_documents?: ComplianceDocument[]
+}
 
 type BuildingVerificationViewProps = {
-  building: BuildingVerification
+  buildingId: string | null
   onBack?: () => void
 }
 
-export function BuildingVerificationView({ building, onBack }: BuildingVerificationViewProps) {
-  const [verificationStatus, setVerificationStatus] = useState(building.verificationStatus)
-  const [isPublic, setIsPublic] = useState(building.isPublicOnMarketplace)
+export function BuildingVerificationView({ buildingId, onBack }: BuildingVerificationViewProps) {
+  const [building, setBuilding] = useState<Building | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [verificationStatus, setVerificationStatus] = useState<"Under Review" | "Verified" | "Rejected">("Under Review")
+  const [isPublic, setIsPublic] = useState(false)
   const [documentPreviewOpen, setDocumentPreviewOpen] = useState(false)
   const [selectedDocName, setSelectedDocName] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!buildingId) return
+
+    const loadBuildingData = async () => {
+      try {
+        setLoading(true)
+        const { data, error } = await supabase
+          .from("buildings")
+          .select("*")
+          .eq("id", buildingId)
+          .single()
+
+        if (error) throw error
+
+        setBuilding(data)
+        setVerificationStatus(data.verification_status || "Under Review")
+        setIsPublic(data.is_public_on_marketplace || false)
+      } catch (error) {
+        console.error("Error loading building:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadBuildingData()
+  }, [buildingId])
+
+  if (loading) {
+    return <div className="text-center p-8">Loading building data...</div>
+  }
+
+  if (!building) {
+    return <div className="text-center p-8 text-red-600">Building not found</div>
+  }
+
+  // Mock compliance documents for display
+  const complianceDocuments: ComplianceDocument[] = [
+    { name: "Building Registration Certificate", status: "Verified", uploadedDate: "2024-01-15" },
+    { name: "Tax Identification Number", status: "Verified", uploadedDate: "2024-01-16" },
+    { name: "Business License", status: "Uploaded", uploadedDate: "2024-01-17" },
+    { name: "Insurance Certificate", status: "Missing" },
+  ]
 
   const statusColors = {
     "Under Review": "bg-amber-100 text-amber-700",
@@ -65,25 +130,25 @@ export function BuildingVerificationView({ building, onBack }: BuildingVerificat
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">{building.buildingName}</h1>
+                <h1 className="text-3xl font-bold text-foreground mb-2">{building.name}</h1>
                 <p className="flex items-center gap-2 text-muted-foreground mb-4">
                   <MapPin className="h-4 w-4" aria-hidden="true" />
-                  {building.location}
+                  {building.address}
                 </p>
                 <div className="space-y-2">
                   <p className="text-sm">
-                    <span className="font-semibold text-foreground">Owner:</span> {building.ownerName}
+                    <span className="font-semibold text-foreground">Owner:</span> {building.owner_name}
                   </p>
                   <p className="flex items-center gap-2 text-sm">
                     <Phone className="h-4 w-4" aria-hidden="true" />
-                    <a href={`tel:${building.ownerPhone}`} className="text-blue-600 hover:underline">
-                      {building.ownerPhone}
+                    <a href={`tel:${building.owner_phone}`} className="text-blue-600 hover:underline">
+                      {building.owner_phone}
                     </a>
                   </p>
                   <p className="flex items-center gap-2 text-sm">
                     <Mail className="h-4 w-4" aria-hidden="true" />
-                    <a href={`mailto:${building.ownerEmail}`} className="text-blue-600 hover:underline">
-                      {building.ownerEmail}
+                    <a href={`mailto:${building.owner_email}`} className="text-blue-600 hover:underline">
+                      {building.owner_email}
                     </a>
                   </p>
                 </div>
@@ -112,13 +177,13 @@ export function BuildingVerificationView({ building, onBack }: BuildingVerificat
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">Platform Subscription</p>
                   <Badge className={`${
-                    building.platformSubscriptionStatus === "Active"
+                    building.platform_subscription_status === "Active"
                       ? "bg-emerald-100 text-emerald-700"
-                      : building.platformSubscriptionStatus === "Pending"
+                      : building.platform_subscription_status === "Pending"
                         ? "bg-amber-100 text-amber-700"
                         : "bg-slate-100 text-slate-700"
                   } border-none`}>
-                    {building.platformSubscriptionStatus}
+                    {building.platform_subscription_status}
                   </Badge>
                 </div>
 
@@ -143,7 +208,7 @@ export function BuildingVerificationView({ building, onBack }: BuildingVerificat
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {building.complianceDocuments.map((doc, idx) => (
+              {complianceDocuments.map((doc, idx) => (
                 <div key={idx} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-slate-50 transition-colors">
                   <div className="flex items-center gap-4 flex-1">
                     <div className="flex-shrink-0">
@@ -193,11 +258,11 @@ export function BuildingVerificationView({ building, onBack }: BuildingVerificat
             </div>
 
             {/* Missing Documents Alert */}
-            {building.complianceDocuments.some(doc => doc.status === "Missing") && (
+            {complianceDocuments.some(doc => doc.status === "Missing") && (
               <Alert className="mt-6 border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4 text-red-600" aria-hidden="true" />
                 <AlertDescription className="text-red-800">
-                  {building.complianceDocuments.filter(doc => doc.status === "Missing").length} required document(s) are missing. Please contact the owner to upload them.
+                  {complianceDocuments.filter(doc => doc.status === "Missing").length} required document(s) are missing. Please contact the owner to upload them.
                 </AlertDescription>
               </Alert>
             )}
@@ -210,7 +275,7 @@ export function BuildingVerificationView({ building, onBack }: BuildingVerificat
             <MessageSquare className="h-4 w-4" aria-hidden="true" />
             Message Owner for Missing Docs
           </Button>
-          {verificationStatus === "Verified" && building.platformSubscriptionStatus === "Pending" && (
+          {verificationStatus === "Verified" && building.platform_subscription_status === "Pending" && (
             <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white">
               Activate Platform Subscription
             </Button>
