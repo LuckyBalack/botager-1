@@ -1,8 +1,9 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import { Building2, Users, TrendingUp, Wallet, Wrench, MapPin } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
-import { buildings, getPortfolioStats } from "@/lib/data"
+import { getAllBuildings, getPropertiesByBuilding, getTenantsByBuilding, getMaintenanceTicketsByBuilding } from "@/lib/db"
 
 type StatCardProps = {
   label: string
@@ -76,7 +77,80 @@ function BuildingCard({ name, location, occupancyPercent, openTickets }: Buildin
 }
 
 export function PortfolioDashboardView() {
-  const stats = getPortfolioStats()
+  const [buildingsData, setBuildingsData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadPortfolioData = async () => {
+      try {
+        setLoading(true)
+        const allBuildings = await getAllBuildings()
+        
+        // Fetch detailed metrics for each building
+        const buildingsWithStats = await Promise.all(
+          (allBuildings || []).map(async (building) => {
+            const [properties, tenants, tickets] = await Promise.all([
+              getPropertiesByBuilding(building.id),
+              getTenantsByBuilding(building.id),
+              getMaintenanceTicketsByBuilding(building.id),
+            ])
+            
+            const occupied = (properties || []).filter(p => p.occupancy === 'occupied').length
+            const total = (properties || []).length
+            const occupancyPercent = total > 0 ? Math.round((occupied / total) * 100) : 0
+            const openTickets = (tickets || []).filter(t => t.status !== 'completed').length
+            
+            return {
+              ...building,
+              occupancyPercent,
+              openTickets,
+              totalTenants: (tenants || []).length,
+              totalProperties: total,
+              monthlyRevenue: (properties || [])
+                .filter(p => p.occupancy === 'occupied')
+                .reduce((sum, p) => sum + (p.monthly_rent || 0), 0),
+            }
+          })
+        )
+        
+        setBuildingsData(buildingsWithStats)
+      } catch (error) {
+        console.error("Error loading portfolio data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadPortfolioData()
+  }, [])
+
+  // Calculate portfolio stats
+  const stats = useMemo(() => {
+    const totalBuildings = buildingsData.length
+    const totalTenants = buildingsData.reduce((sum, b) => sum + b.totalTenants, 0)
+    const totalProperties = buildingsData.reduce((sum, b) => sum + b.totalProperties, 0)
+    const occupiedProperties = buildingsData.reduce((sum, b) => sum + Math.round((b.occupancyPercent * b.totalProperties) / 100), 0)
+    const occupancyRate = totalProperties > 0 ? Math.round((occupiedProperties / totalProperties) * 100) : 0
+    const totalRevenue = buildingsData.reduce((sum, b) => sum + b.monthlyRevenue, 0)
+
+    return {
+      totalBuildings,
+      totalTenants,
+      occupancyRate,
+      totalRevenue: `ETB ${totalRevenue.toLocaleString()}`,
+    }
+  }, [buildingsData])
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-8">
+        <div className="h-20 bg-slate-200 rounded animate-pulse"></div>
+        <div className="grid grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-slate-200 rounded animate-pulse"></div>)}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -123,22 +197,23 @@ export function PortfolioDashboardView() {
       {/* Building Cards */}
       <section aria-label="Buildings">
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Your Buildings</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {buildings.map((building) => {
-            const occupancyPercent = Math.round(
-              (building.occupiedUnits / building.totalUnits) * 100
-            )
-            return (
+        {buildingsData.length === 0 ? (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-8 text-center">
+            <p className="text-sm text-slate-500">No buildings found</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {buildingsData.map((building) => (
               <BuildingCard
                 key={building.id}
                 name={building.name}
-                location={building.location}
-                occupancyPercent={occupancyPercent}
-                openTickets={building.openMaintenanceTickets}
+                location={building.address}
+                occupancyPercent={building.occupancyPercent}
+                openTickets={building.openTickets}
               />
-            )
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   )

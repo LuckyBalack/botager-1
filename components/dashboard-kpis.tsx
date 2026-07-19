@@ -26,9 +26,11 @@ type KPIChartProps = {
   label: string
   value: string | number
   unit?: string
+  data?: any[]
 }
 
-function RevenueChart({ label, value }: KPIChartProps) {
+function RevenueChart({ label, value, data }: KPIChartProps) {
+  const chartData = data || []
   return (
     <div className="rounded-lg border border-border bg-card p-6">
       <div className="mb-4">
@@ -36,7 +38,7 @@ function RevenueChart({ label, value }: KPIChartProps) {
         <p className="mt-1 text-2xl font-bold text-foreground">ETB {value}M</p>
       </div>
       <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={revenueData}>
+        <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" style={{ fontSize: "12px" }} />
           <YAxis stroke="hsl(var(--muted-foreground))" style={{ fontSize: "12px" }} />
@@ -179,7 +181,7 @@ export function DashboardKPIs({ buildingId }: DashboardKPIsProps) {
     <section aria-label="Key Performance Indicators" className="space-y-4">
       <h2 className="text-lg font-semibold text-slate-900">Key Metrics</h2>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <RevenueChart label="Monthly Revenue" value={metrics.revenue} />
+        <RevenueChart label="Monthly Revenue" value={metrics.revenue} data={revenueData} />
         <OccupancyChart label="Occupancy Rate" value={metrics.occupancy} />
         <OutstandingRentChart label="Outstanding Rent" value={metrics.outstanding} />
         <MaintenanceTicketsChart label="Maintenance Tickets" value={metrics.tickets} />

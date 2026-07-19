@@ -390,4 +390,105 @@ export async function getTaxRulesByBuilding(buildingId: string) {
   }
 }
 
+export async function createOrUpdateTaxRule(buildingId: string, rule: any) {
+  try {
+    const { data, error } = await supabase
+      .from("tax_rules")
+      .upsert([
+        {
+          building_id: buildingId,
+          ...rule,
+          updated_at: new Date().toISOString(),
+        },
+      ])
+      .select()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error saving tax rule:", error)
+    throw error
+  }
+}
+
+export async function deleteTaxRule(ruleId: string) {
+  try {
+    const { error } = await supabase
+      .from("tax_rules")
+      .delete()
+      .eq("id", ruleId)
+
+    if (error) throw error
+  } catch (error) {
+    console.error("Error deleting tax rule:", error)
+    throw error
+  }
+}
+
+// BUILDINGS QUERIES
+export async function getAllBuildings() {
+  try {
+    const { data, error } = await supabase
+      .from("buildings")
+      .select("*, properties(id)")
+      .order("created_at", { ascending: false })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("Error fetching buildings:", error)
+    return []
+  }
+}
+
+export async function getBuildingById(buildingId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("buildings")
+      .select("*")
+      .eq("id", buildingId)
+      .single()
+
+    if (error) throw error
+    return data || null
+  } catch (error) {
+    console.error("Error fetching building:", error)
+    return null
+  }
+}
+
+// NOTIFICATIONS QUERIES
+export async function getNotificationTemplates(buildingId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("notification_templates")
+      .select("*")
+      .eq("building_id", buildingId)
+      .order("created_at", { ascending: false })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("Error fetching notification templates:", error)
+    return []
+  }
+}
+
+export async function updateNotificationTemplate(templateId: string, template: any) {
+  try {
+    const { data, error } = await supabase
+      .from("notification_templates")
+      .update(template)
+      .eq("id", templateId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error updating notification template:", error)
+    throw error
+  }
+}
+
 

@@ -512,6 +512,7 @@ export function DashboardApp() {
             )}
             {activeView === "settings" && (
               <SettingsView
+                buildingId={buildingId}
                 onNavigate={handleNavigate}
                 onSystemSubscription={() => setActiveView("system-subscription")}
               />
@@ -537,7 +538,7 @@ export function DashboardApp() {
             )}
             {activeView === "building-verification" && selectedBuildingVerification && (
               <BuildingVerificationView
-                building={selectedBuildingVerification}
+                buildingId={buildingId}
                 onBack={() => navigate("dashboard")}
               />
             )}
