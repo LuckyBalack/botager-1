@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/lib/auth-context"
 
 import { AppSidebar, AppSidebarMobile, type ViewKey, type BuildingSelection } from "@/components/app-sidebar"
 import { AppHeader, type UserRole } from "@/components/app-header"
@@ -27,6 +28,10 @@ import { MaintenanceView } from "@/components/views/maintenance-view"
 import { MarketplaceView } from "@/components/views/marketplace-view"
 import { SettingsView } from "@/components/views/settings-view"
 import { LeaseSettlementView } from "@/components/views/lease-settlement-view"
+import { UtilityTrackingView } from "@/components/views/utility-tracking-view"
+import { LeaseSettlementDetailView } from "@/components/views/lease-settlement-detail-view"
+import { SpaceMapView } from "@/components/views/space-map-view"
+import { WaitlistView } from "@/components/views/waitlist-view"
 import { SystemSubscriptionView } from "@/components/views/system-subscription-view"
 import { SystemAdminView } from "@/components/views/system-admin-view"
 import { PlatformFinancialsView } from "@/components/views/platform-financials-view"
@@ -46,9 +51,10 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
   SheetDescription,
+  SheetTitle,
 } from "@/components/ui/sheet"
+import { toast } from "sonner"
 import type { TenantViewKey } from "@/components/tenant-sidebar"
 import { useResponsive } from "@/hooks/use-responsive"
 
@@ -58,6 +64,10 @@ type ActiveView =
   | "add-tenant"
   | "system-subscription"
   | "lease-settlement"
+  | "lease-settlement-detail"
+  | "utility-tracking"
+  | "space-map"
+  | "waitlist"
   | "listing-detail"
   | "maintenance-ticket-detail"
   | "invoice-detail"
@@ -65,7 +75,7 @@ type ActiveView =
 type DetailKind = "tenant" | "property" | "listing" | "maintenance-ticket" | "invoice" | "building"
 type Selected = { kind: DetailKind; id: string } | null
 
-const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", string> = {
+const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement" | "lease-settlement-detail" | "utility-tracking" | "space-map" | "waitlist", string> = {
   dashboard: "Dashboard",
   properties: "Properties",
   tenants: "Tenants",
@@ -75,18 +85,46 @@ const titleMap: Record<ViewKey | "system-subscription" | "lease-settlement", str
   settings: "Settings",
   "system-subscription": "System Subscription",
   "lease-settlement": "Final Lease Settlement",
+  "lease-settlement-detail": "Lease Settlement Details",
+  "utility-tracking": "Utility Meter Readings",
+  "space-map": "Floor Plan & Space Map",
+  "waitlist": "Prospective Tenants & Waitlist",
 }
 
 export function DashboardApp() {
   const { isTablet } = useResponsive()
+  const { user, setBuildingId: setAuthBuildingId } = useAuth()
   
-  const [userRole, setUserRole] = useState<UserRole>("admin")
+  // Get role from authenticated user
+  const [userRole, setUserRole] = useState<UserRole>("landlord")
+  
+  // Set role from authenticated user on mount
+  useEffect(() => {
+    if (user?.role) {
+      setUserRole(user.role as UserRole)
+    }
+  }, [user?.role])
   const [activeView, setActiveView] = useState<ActiveView>("dashboard")
   const [tenantView, setTenantView] = useState<TenantViewKey>("my-lease")
   const [systemAdminView, setSystemAdminView] = useState<SystemAdminViewKey>("moderation")
   const [selected, setSelected] = useState<Selected>(null)
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingSelection>("abuki")
+  const [buildingId, setBuildingId] = useState<string | null>(null)
   const [cameFromAdmin, setCameFromAdmin] = useState(false)
+  
+  // Map building selection to buildingId (In real app, this would come from building config)
+  useEffect(() => {
+    const buildingIdMap: Record<BuildingSelection, string> = {
+      "abuki": "abuki-building-001",
+      "tower": "tower-building-001",
+      "plaza": "plaza-building-001",
+    }
+    const id = buildingIdMap[selectedBuilding] || null
+    setBuildingId(id)
+    if (id) {
+      setAuthBuildingId(id)
+    }
+  }, [selectedBuilding, setAuthBuildingId])
   
   // Mobile navigation state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -139,7 +177,7 @@ export function DashboardApp() {
 
   const openLeaseSettlement = (tenantId: string) => {
     setSelected({ kind: "tenant", id: tenantId })
-    setActiveView("lease-settlement")
+    setActiveView("lease-settlement-detail")
   }
 
   const openListingDetail = (id: string) => {
@@ -283,7 +321,6 @@ export function DashboardApp() {
           <AppHeader
             title={systemAdminTitleMap[systemAdminView]}
             userRole={userRole}
-            onRoleToggle={handleRoleToggle}
             onMenuToggle={() => setMobileMenuOpen(true)}
             sidebarCollapsed={effectiveCollapsed}
             onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -319,7 +356,6 @@ export function DashboardApp() {
           <AppHeader
             title={tenantTitleMap[tenantView]}
             userRole={userRole}
-            onRoleToggle={handleRoleToggle}
             showMenuButton={false}
             sidebarCollapsed={effectiveCollapsed}
             onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -413,7 +449,6 @@ export function DashboardApp() {
           showAddTenant={showAddTenant}
           onAddTenant={openAddTenant}
           userRole={userRole}
-          onRoleToggle={handleRoleToggle}
           onMenuToggle={() => setMobileMenuOpen(true)}
           sidebarCollapsed={effectiveCollapsed}
           onSidebarToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -427,13 +462,36 @@ export function DashboardApp() {
               <DashboardView onNavigate={handleNavigate} />
             )}
             {activeView === "properties" && (
-              <PropertiesView onSelectProperty={openPropertyDetail} />
+              <PropertiesView 
+                buildingId={buildingId}
+                onSelectProperty={openPropertyDetail}
+                onNavigateToSpaceMap={() => setActiveView("space-map")}
+              />
             )}
             {activeView === "tenants" && (
-              <TenantsView onSelectTenant={openTenantDetail} />
+              <TenantsView 
+                onSelectTenant={openTenantDetail}
+                onNavigateToWaitlist={() => setActiveView("waitlist")}
+              />
             )}
-            {activeView === "billing" && <BillingView />}
-            {activeView === "maintenance" && <MaintenanceView />}
+            {activeView === "billing" && (
+              <BillingView 
+                buildingId={buildingId}
+                onOpenInvoiceDetail={openInvoiceDetail}
+                onNavigateToUtilities={() => setActiveView("utility-tracking")}
+              />
+            )}
+            {activeView === "maintenance" && (
+              <MaintenanceView 
+                buildingId={buildingId}
+                onSelectTicket={openMaintenanceTicketDetail}
+                onNewRequest={() => {
+                  toast.success("New Request", {
+                    description: "Maintenance request form would open here",
+                  })
+                }}
+              />
+            )}
             {activeView === "accounting" && <AccountingView />}
             {activeView === "documents" && <DocumentsView />}
             {activeView === "messages" && <MessagesView />}
@@ -478,6 +536,15 @@ export function DashboardApp() {
                 onBack={() => navigate("dashboard")}
               />
             )}
+            {activeView === "utility-tracking" && <UtilityTrackingView />}
+            {activeView === "lease-settlement-detail" && (
+              <LeaseSettlementDetailView
+                onClose={() => navigate("tenants")}
+                onFinalize={() => navigate("tenants")}
+              />
+            )}
+            {activeView === "space-map" && <SpaceMapView />}
+            {activeView === "waitlist" && <WaitlistView />}
           </div>
         </main>
       </div>

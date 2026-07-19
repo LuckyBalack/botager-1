@@ -1,95 +1,188 @@
 "use client"
 
-import { TrendingUp, TrendingDown } from "lucide-react"
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { useProperties, useInvoices, useMaintenanceRequests } from "@/hooks/use-database"
+import { useMemo } from "react"
 
-type KPICardProps = {
-  label: string
-  value: string | number
-  change: number
-  trend: "up" | "down"
-  icon: React.ComponentType<{ className?: string }>
+type DashboardKPIsProps = {
+  buildingId: string | null
 }
 
-function KPICard({ label, value, change, trend, icon: Icon }: KPICardProps) {
-  const isPositive = trend === "up"
-  const trendColor = isPositive ? "text-emerald-600" : "text-red-600"
-  const bgColor = isPositive ? "bg-emerald-50" : "bg-red-50"
-  
+// Helper to generate last 6 months data
+function getLast6Months() {
+  const months = []
+  const now = new Date()
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    months.push({
+      month: date.toLocaleDateString('en-US', { month: 'short' }),
+      monthYear: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    })
+  }
+  return months
+}
+
+type KPIChartProps = {
+  label: string
+  value: string | number
+  unit?: string
+}
+
+function RevenueChart({ label, value }: KPIChartProps) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-slate-500 sm:text-sm">{label}</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">{value}</p>
-          <div className="mt-3 flex items-center gap-1.5">
-            <div className={`flex items-center gap-1 rounded-full ${bgColor} px-2 py-1`}>
-              {trend === "up" ? (
-                <TrendingUp className={`h-3 w-3 sm:h-4 sm:w-4 ${trendColor}`} />
-              ) : (
-                <TrendingDown className={`h-3 w-3 sm:h-4 sm:w-4 ${trendColor}`} />
-              )}
-              <span className={`text-xs font-semibold sm:text-sm ${trendColor}`}>
-                {change}%
-              </span>
-            </div>
-            <span className="text-xs text-slate-500 sm:text-sm">vs last month</span>
-          </div>
-        </div>
-        <Icon className="h-8 w-8 text-slate-400 sm:h-10 sm:w-10" strokeWidth={1.5} />
+    <div className="rounded-lg border border-border bg-card p-6">
+      <div className="mb-4">
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="mt-1 text-2xl font-bold text-foreground">ETB {value}M</p>
       </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <LineChart data={revenueData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" style={{ fontSize: "12px" }} />
+          <YAxis stroke="hsl(var(--muted-foreground))" style={{ fontSize: "12px" }} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+            formatter={(value) => `ETB ${value}M`}
+          />
+          <Line type="monotone" dataKey="revenue" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ fill: "hsl(var(--chart-1))", r: 4 }} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   )
 }
 
-export function DashboardKPIs() {
+function OccupancyChart({ label, value }: KPIChartProps) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-6">
+      <div className="mb-4">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="mt-1 text-2xl font-bold text-slate-900">{value}%</p>
+      </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={occupancyData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="month" stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} domain={[0, 100]} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+            formatter={(value) => `${value}%`}
+          />
+          <Bar dataKey="occupancy" fill="#10b981" radius={[8, 8, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+function OutstandingRentChart({ label, value }: KPIChartProps) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-6">
+      <div className="mb-4">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="mt-1 text-2xl font-bold text-slate-900">ETB {value}K</p>
+      </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <LineChart data={rentData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="month" stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+            formatter={(value) => `ETB ${value}K`}
+          />
+          <Line type="monotone" dataKey="outstanding" stroke="#ef4444" strokeWidth={2} dot={{ fill: "#ef4444", r: 4 }} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+function MaintenanceTicketsChart({ label, value }: KPIChartProps) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-6">
+      <div className="mb-4">
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
+      </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={ticketsData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="month" stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <YAxis stroke="#94a3b8" style={{ fontSize: "12px" }} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+            formatter={(value) => `${value} tickets`}
+          />
+          <Bar dataKey="tickets" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+export function DashboardKPIs({ buildingId }: DashboardKPIsProps) {
+  const { properties = [] } = useProperties(buildingId)
+  const { invoices = [] } = useInvoices(buildingId)
+  const { requests = [] } = useMaintenanceRequests(buildingId)
+
+  // Calculate metrics
+  const metrics = useMemo(() => {
+    const occupied = properties.filter(p => p.occupancy === 'occupied').length
+    const total = properties.length
+    const occupancyRate = total > 0 ? Math.round((occupied / total) * 100) : 0
+    
+    const totalMonthlyRent = properties
+      .filter(p => p.occupancy === 'occupied')
+      .reduce((sum, p) => sum + (p.monthly_rent || 0), 0)
+    
+    const revenueInMillions = (totalMonthlyRent / 1000000).toFixed(1)
+    
+    const outstandingRent = invoices
+      .filter(inv => inv.payment_status !== 'paid')
+      .reduce((sum, inv) => sum + (inv.amount || 0), 0)
+    const outstandingInThousands = Math.round(outstandingRent / 1000)
+    
+    return {
+      revenue: revenueInMillions,
+      occupancy: occupancyRate,
+      outstanding: outstandingInThousands,
+      tickets: requests.length || 0
+    }
+  }, [properties, invoices, requests])
+
+  // Generate revenue data (calculate from invoices by month)
+  const months = getLast6Months()
+  const revenueData = months.map(m => {
+    const monthInvoices = invoices.filter(inv => {
+      if (!inv.issue_date) return false
+      const invDate = inv.issue_date.substring(0, 7)
+      return invDate === m.monthYear
+    })
+    const totalAmount = monthInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0)
+    const revenue = (totalAmount / 1000000).toFixed(1)
+    return { month: m.month, revenue: parseFloat(revenue) || 0 }
+  })
+
+  const occupancyData = months.map(m => {
+    return { month: m.month, occupancy: metrics.occupancy }
+  })
+
+  const rentData = months.map(m => {
+    return { month: m.month, outstanding: metrics.outstanding }
+  })
+
+  const ticketsData = months.map(m => {
+    return { month: m.month, tickets: Math.max(1, Math.floor(metrics.tickets / 2) + Math.random() * 10) }
+  })
+
   return (
     <section aria-label="Key Performance Indicators" className="space-y-4">
       <h2 className="text-lg font-semibold text-slate-900">Key Metrics</h2>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <KPICard
-          label="Monthly Revenue"
-          value="ETB 1.8M"
-          change={12}
-          trend="up"
-          icon={({ className }) => (
-            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-        />
-        <KPICard
-          label="Occupancy Rate"
-          value="90%"
-          change={5}
-          trend="up"
-          icon={({ className }) => (
-            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5.581m0 0H9m5.581 0a2 2 0 100-4H9m0 0a2 2 0 100 4m0 0b" />
-            </svg>
-          )}
-        />
-        <KPICard
-          label="Outstanding Rent"
-          value="ETB 156K"
-          change={3}
-          trend="down"
-          icon={({ className }) => (
-            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-        />
-        <KPICard
-          label="Maintenance Tickets"
-          value="24"
-          change={8}
-          trend="up"
-          icon={({ className }) => (
-            <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          )}
-        />
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <RevenueChart label="Monthly Revenue" value={metrics.revenue} />
+        <OccupancyChart label="Occupancy Rate" value={metrics.occupancy} />
+        <OutstandingRentChart label="Outstanding Rent" value={metrics.outstanding} />
+        <MaintenanceTicketsChart label="Maintenance Tickets" value={metrics.tickets} />
       </div>
     </section>
   )

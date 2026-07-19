@@ -1,11 +1,11 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { ListToolbar } from "@/components/list-toolbar"
 import { TablePagination } from "@/components/table-pagination"
 import { LeasePill } from "@/components/status-pills"
 import { AddPropertyView } from "@/components/views/add-property-view"
-import { properties, getTenantNameForProperty, type Property } from "@/lib/data"
+import { useProperties } from "@/hooks/use-database"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -35,10 +35,13 @@ const leaseOptions = [
 ]
 
 type PropertiesViewProps = {
+  buildingId: string | null
   onSelectProperty?: (id: string) => void
+  onNavigateToSpaceMap?: () => void
 }
 
-export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
+export function PropertiesView({ buildingId, onSelectProperty, onNavigateToSpaceMap }: PropertiesViewProps) {
+  const { properties: dbProperties, loading } = useProperties(buildingId)
   const [search, setSearch] = useState("")
   const [floor, setFloor] = useState("all")
   const [lease, setLease] = useState("all")
@@ -46,7 +49,14 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
   const [viewMode, setViewMode] = useState<"list" | "map">("list")
   const [selectedPropertyIds, setSelectedPropertyIds] = useState<Set<string>>(new Set())
   const [showAddPropertyForm, setShowAddPropertyForm] = useState(false)
-  const [propertiesList, setPropertiesList] = useState<Property[]>(properties)
+  const [propertiesList, setPropertiesList] = useState([])
+  
+  // Update local state when database properties load
+  useEffect(() => {
+    if (dbProperties?.length > 0) {
+      setPropertiesList(dbProperties)
+    }
+  }, [dbProperties])
   
   // Pricing Logic State
   const [isDimensionBased, setIsDimensionBased] = useState(false)
@@ -196,7 +206,7 @@ export function PropertiesView({ onSelectProperty }: PropertiesViewProps) {
                 <Button
                   variant={viewMode === "map" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setViewMode("map")}
+                  onClick={onNavigateToSpaceMap}
                   className={`h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm ${viewMode === "map" ? "bg-slate-900" : ""}`}
                 >
                   <LayoutGrid className="mr-1 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" />

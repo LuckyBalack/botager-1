@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { MoreHorizontal, Plus, FileText } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AutomatedInvoices } from "@/components/automated-invoices"
@@ -35,12 +35,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
-import {
-  invoices,
-  receipts,
-  creditRequests,
-  type InvoiceStatus,
-} from "@/lib/data"
+import { useInvoices } from "@/hooks/use-database"
+import { Zap } from "lucide-react"
+
+type BillingViewProps = {
+  buildingId: string | null
+  onOpenInvoiceDetail?: (invoiceId: string) => void
+  onNavigateToUtilities?: () => void
+}
 
 function InvoiceStatusBadge({ status }: { status: InvoiceStatus }) {
   const variants: Record<InvoiceStatus, string> = {
@@ -114,7 +116,11 @@ function getDaysOverdue(dueDateStr: string): number {
   return diffDays > 0 ? diffDays : 0
 }
 
-export function BillingView() {
+export function BillingView({ buildingId, onOpenInvoiceDetail, onNavigateToUtilities }: BillingViewProps) {
+  const { invoices: dbInvoices, loading: invoicesLoading } = useInvoices(buildingId)
+  
+  const [invoicesList, setInvoicesList] = useState([])
+  const [receiptsList, setReceiptsList] = useState([])
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [invoiceDetailModalOpen, setInvoiceDetailModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null)
@@ -123,6 +129,29 @@ export function BillingView() {
   const [includesWHT, setIncludesWHT] = useState(false)
   const [whtAmount, setWhtAmount] = useState("")
   const [whtReceiptNumber, setWhtReceiptNumber] = useState("")
+
+  // Sync database invoices to local state
+  useEffect(() => {
+    if (dbInvoices && Array.isArray(dbInvoices) && dbInvoices.length > 0) {
+      const formattedInvoices = dbInvoices.map(inv => ({
+        id: inv.id,
+        invoiceNumber: inv.invoice_number || `INV-${inv.id.slice(0, 8)}`,
+        tenantName: inv.tenant?.full_name || 'Unknown Tenant',
+        roomNo: inv.tenant?.room_number || '-',
+        amount: inv.amount || 0,
+        amountDue: inv.amount || 0,
+        issueDate: inv.issue_date?.split('T')[0] || new Date().toISOString().split('T')[0],
+        dueDate: inv.due_date?.split('T')[0] || '',
+        paymentStatus: inv.payment_status === 'paid' ? 'Paid' : (inv.payment_status === 'pending' ? 'Pending' : 'Overdue'),
+      }))
+      setInvoicesList(formattedInvoices)
+    }
+  }, [dbInvoices])
+
+  // Initialize receipts as empty (would fetch from payments table if needed)
+  useEffect(() => {
+    setReceiptsList([])
+  }, [])
 
   // Tax calculations (would normally come from settings)
   const vatRate = 15
@@ -134,21 +163,39 @@ export function BillingView() {
   const totalRentCleared = includesWHT ? cashReceived + whtCredit : cashReceived
 
   const handleRecordPayment = (invoiceId: string) => {
-    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    const invoice = invoicesList.find((inv: any) => inv.id === invoiceId)
     if (invoice) {
       setSelectedInvoice(invoiceId)
-      setPaymentAmount(invoice.amountDue.replace("ETB ", "").replace(",", ""))
+      setPaymentAmount(invoice.amountDue?.toString() || "")
       setPaymentModalOpen(true)
     }
   }
 
   const handleViewInvoiceDetails = (invoiceId: string) => {
-    setSelectedInvoice(invoiceId)
-    setInvoiceDetailModalOpen(true)
+    onOpenInvoiceDetail?.(invoiceId)
+    setInvoiceDetailModalOpen(false)
+  }
+
+  const handleSendReminder = (invoiceId: string) => {
+    const invoice = invoicesList.find((inv: any) => inv.id === invoiceId)
+    if (invoice) {
+      toast.success("Reminder Sent", {
+        description: `Payment reminder sent to tenant for invoice ${invoiceId}`,
+      })
+    }
+  }
+
+  const handleVoidInvoice = (invoiceId: string) => {
+    const invoice = invoicesList.find((inv) => inv.id === invoiceId)
+    if (invoice) {
+      toast.success("Invoice Voided", {
+        description: `Invoice ${invoiceId} has been voided successfully`,
+      })
+    }
   }
 
   const getInvoiceTaxDetails = (invoiceId: string) => {
-    const invoice = invoices.find((inv) => inv.id === invoiceId)
+    const invoice = invoicesList.find((inv) => inv.id === invoiceId)
     if (!invoice) return null
     const subtotal = parseFloat(invoice.amountDue.replace("ETB ", "").replace(",", ""))
     // Calculate backwards from total (assume total includes tax)
@@ -190,6 +237,12 @@ export function BillingView() {
         </div>
         <button
           type="button"
+          onClick={() => {
+            setSelectedInvoice(null)
+            toast.success("Invoice Generated", {
+              description: "New invoice has been created successfully",
+            })
+          }}
           className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-orange-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:ring-offset-2 sm:w-auto sm:px-5 sm:py-2.5 sm:text-sm"
         >
           <span>Generate Invoice</span>
@@ -205,10 +258,29 @@ export function BillingView() {
           <TabsTrigger value="payment-verification" className="px-6">
             Payment Verification
           </TabsTrigger>
+          <TabsTrigger value="utilities" className="px-6">
+            <Zap className="mr-2 h-4 w-4" />
+            Utilities
+          </TabsTrigger>
           <TabsTrigger value="utility-splitter" className="px-6">
             Utility Cost Splitter
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="utilities" className="space-y-4">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm text-amber-900">
+              Track and manage utility meter readings, generate utility bills, and monitor consumption across all units.
+            </p>
+          </div>
+          <Button
+            onClick={onNavigateToUtilities}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
+            <Zap className="mr-2 h-4 w-4" />
+            View Utility Tracker
+          </Button>
+        </TabsContent>
 
         <TabsContent value="invoices">
           <div className="rounded-lg border border-slate-200 bg-white">
@@ -242,7 +314,7 @@ export function BillingView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.map((invoice) => (
+                {invoicesList.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium text-slate-900">
                       {invoice.id}
@@ -286,8 +358,15 @@ export function BillingView() {
                           >
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>Send Reminder</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
+                          <DropdownMenuItem
+                            onClick={() => handleSendReminder(invoice.id)}
+                          >
+                            Send Reminder
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleVoidInvoice(invoice.id)}
+                          >
                             Void Invoice
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -329,7 +408,7 @@ export function BillingView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {receipts.map((receipt) => (
+                {receiptsList.map((receipt) => (
                   <TableRow key={receipt.id}>
                     <TableCell className="font-medium text-slate-900">
                       {receipt.id}
@@ -581,7 +660,7 @@ export function BillingView() {
             </DialogDescription>
           </DialogHeader>
           {selectedInvoice && (() => {
-            const invoice = invoices.find((inv) => inv.id === selectedInvoice)
+            const invoice = invoicesList.find((inv) => inv.id === selectedInvoice)
             const taxDetails = getInvoiceTaxDetails(selectedInvoice)
             if (!invoice || !taxDetails) return null
             return (

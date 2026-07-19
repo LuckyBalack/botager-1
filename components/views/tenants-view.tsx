@@ -1,14 +1,14 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { ListToolbar } from "@/components/list-toolbar"
 import { TablePagination } from "@/components/table-pagination"
 import { LeasePill, PaymentPill } from "@/components/status-pills"
-import { tenants } from "@/lib/data"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ResponsiveTable, HiddenOnMobileCell, HiddenOnMobileHeader } from "@/components/responsive-table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LeaseApplicationsComponent } from "@/components/lease-applications"
+import { useTenants, useProperties } from "@/hooks/use-database"
 
 const leaseOptions = [
   { value: "all", label: "All statuses" },
@@ -26,29 +26,50 @@ const paymentOptions = [
 
 type TenantsViewProps = {
   onSelectTenant?: (id: string) => void
+  onNavigateToWaitlist?: () => void
 }
 
-export function TenantsView({ onSelectTenant }: TenantsViewProps) {
+export function TenantsView({ onSelectTenant, onNavigateToWaitlist }: TenantsViewProps) {
+  const { properties, loading: propertiesLoading } = useProperties()
+  const selectedProperty = properties?.[0]
+  const { tenants: dbTenants, loading: tenantsLoading } = useTenants(selectedProperty?.id || null)
+  
   const [search, setSearch] = useState("")
   const [lease, setLease] = useState("all")
   const [payment, setPayment] = useState("all")
   const [page, setPage] = useState(1)
+  const [tenantsList, setTenantsList] = useState([])
+
+  // Sync database tenants to local state
+  useEffect(() => {
+    if (dbTenants && Array.isArray(dbTenants) && dbTenants.length > 0) {
+      setTenantsList(dbTenants)
+    }
+  }, [dbTenants])
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return tenants.filter((t) => {
-      const fullName = `${t.firstName} ${t.lastName}`.toLowerCase()
+    return tenantsList.filter((t: any) => {
+      const fullName = `${t.firstName || t.first_name || ''} ${t.lastName || t.last_name || ''}`.toLowerCase()
       const matchesSearch =
         !q ||
         fullName.includes(q) ||
-        t.email.toLowerCase().includes(q) ||
-        t.companyName.toLowerCase().includes(q) ||
-        t.roomNo.toLowerCase().includes(q)
-      const matchesLease = lease === "all" || t.lease === lease
-      const matchesPayment = payment === "all" || t.payment === payment
+        (t.email || '').toLowerCase().includes(q) ||
+        (t.companyName || t.company_name || '').toLowerCase().includes(q) ||
+        (t.roomNo || t.room_no || '').toLowerCase().includes(q)
+      const matchesLease = lease === "all" || (t.lease || '') === lease
+      const matchesPayment = payment === "all" || (t.payment || '') === payment
       return matchesSearch && matchesLease && matchesPayment
     })
-  }, [search, lease, payment])
+  }, [search, lease, payment, tenantsList])
+
+  if (propertiesLoading || tenantsLoading) {
+    return <div className="text-center text-slate-500">Loading tenant data...</div>
+  }
+
+  if (!selectedProperty) {
+    return <div className="text-center text-slate-500">No properties found. Create a property first.</div>
+  }
 
   return (
     <div className="flex flex-col">
@@ -56,6 +77,7 @@ export function TenantsView({ onSelectTenant }: TenantsViewProps) {
         <TabsList className="mb-6 bg-slate-100">
           <TabsTrigger value="active-tenants" className="px-6">Active Tenants</TabsTrigger>
           <TabsTrigger value="applications" className="px-6">Lease Applications</TabsTrigger>
+          <TabsTrigger value="waitlist" className="px-6">Waitlist</TabsTrigger>
         </TabsList>
 
         <TabsContent value="active-tenants">
@@ -169,6 +191,25 @@ export function TenantsView({ onSelectTenant }: TenantsViewProps) {
 
         <TabsContent value="applications">
           <LeaseApplicationsComponent onReview={(appId) => console.log("Reviewing application:", appId)} />
+        </TabsContent>
+
+        <TabsContent value="waitlist">
+          <div className="rounded-lg border border-slate-200 bg-white p-6">
+            <div className="text-center space-y-4">
+              <h3 className="text-lg font-semibold text-slate-900">Prospective Tenants & Waitlist</h3>
+              <p className="text-sm text-slate-600">View and manage leads from your waitlist</p>
+              {onNavigateToWaitlist ? (
+                <button
+                  onClick={onNavigateToWaitlist}
+                  className="inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
+                >
+                  View Waitlist
+                </button>
+              ) : (
+                <p className="text-xs text-slate-500">Waitlist feature unavailable</p>
+              )}
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
