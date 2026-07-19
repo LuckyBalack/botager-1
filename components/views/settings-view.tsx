@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Upload, User, Bell, Shield, Palette, Globe, CreditCard, Users, Receipt, Plus, Trash2, Crown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -22,46 +22,141 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { taxRules as initialTaxRules, type TaxRule } from "@/lib/data"
+import { getTaxRulesByBuilding, createOrUpdateTaxRule, deleteTaxRule, getNotificationTemplates, updateNotificationTemplate } from "@/lib/db"
 import type { ViewKey } from "@/components/app-sidebar"
 
+interface TaxRule {
+  id: string
+  name: string
+  rate: number
+  active: boolean
+}
+
+interface NotificationTemplate {
+  id: string
+  language: string
+  template_text: string
+}
+
 interface SettingsViewProps {
+  buildingId: string | null
   onNavigate: (view: ViewKey) => void
   onSystemSubscription?: () => void
 }
 
-export function SettingsView({ onNavigate, onSystemSubscription }: SettingsViewProps) {
-  const [taxRulesList, setTaxRulesList] = useState<TaxRule[]>(initialTaxRules)
+export function SettingsView({ buildingId, onNavigate, onSystemSubscription }: SettingsViewProps) {
+  const [taxRulesList, setTaxRulesList] = useState<TaxRule[]>([])
   const [autoApplyTax, setAutoApplyTax] = useState(true)
   const [addTaxModalOpen, setAddTaxModalOpen] = useState(false)
   const [newTaxName, setNewTaxName] = useState("")
   const [newTaxRate, setNewTaxRate] = useState("")
   const [isVatRegistered, setIsVatRegistered] = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [templates, setTemplates] = useState<NotificationTemplate[]>([])
+  const [templateEn, setTemplateEn] = useState("")
+  const [templateAm, setTemplateAm] = useState("")
+  const [savingTemplates, setSavingTemplates] = useState(false)
 
-  const handleToggleTax = (id: string) => {
-    setTaxRulesList(
-      taxRulesList.map((tax) =>
-        tax.id === id ? { ...tax, active: !tax.active } : tax
-      )
-    )
-  }
+  // Load tax rules and templates on mount
+  useEffect(() => {
+    if (!buildingId) return
 
-  const handleDeleteTax = (id: string) => {
-    setTaxRulesList(taxRulesList.filter((tax) => tax.id !== id))
-  }
-
-  const handleAddTax = () => {
-    if (newTaxName && newTaxRate) {
-      const newTax: TaxRule = {
-        id: `tax-${Date.now()}`,
-        name: newTaxName,
-        rate: parseFloat(newTaxRate),
-        active: true,
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const [taxRules, notifTemplates] = await Promise.all([
+          getTaxRulesByBuilding(buildingId),
+          getNotificationTemplates(buildingId),
+        ])
+        setTaxRulesList(taxRules || [])
+        setTemplates(notifTemplates || [])
+        
+        // Set template text from database
+        const enTemplate = notifTemplates?.find(t => t.language === 'en')
+        const amTemplate = notifTemplates?.find(t => t.language === 'am')
+        if (enTemplate) setTemplateEn(enTemplate.template_text)
+        if (amTemplate) setTemplateAm(amTemplate.template_text)
+      } catch (error) {
+        console.error("Error loading settings:", error)
+      } finally {
+        setLoading(false)
       }
-      setTaxRulesList([...taxRulesList, newTax])
-      setNewTaxName("")
-      setNewTaxRate("")
-      setAddTaxModalOpen(false)
+    }
+
+    loadData()
+  }, [buildingId])
+
+  const handleToggleTax = async (id: string) => {
+    const tax = taxRulesList.find(t => t.id === id)
+    if (!tax || !buildingId) return
+    
+    try {
+      await createOrUpdateTaxRule(buildingId, { ...tax, active: !tax.active })
+      setTaxRulesList(
+        taxRulesList.map((t) =>
+          t.id === id ? { ...t, active: !t.active } : t
+        )
+      )
+    } catch (error) {
+      console.error("Error updating tax rule:", error)
+    }
+  }
+
+  const handleDeleteTax = async (id: string) => {
+    if (!buildingId) return
+    
+    try {
+      await deleteTaxRule(id)
+      setTaxRulesList(taxRulesList.filter((tax) => tax.id !== id))
+    } catch (error) {
+      console.error("Error deleting tax rule:", error)
+    }
+  }
+
+  const handleAddTax = async () => {
+    if (newTaxName && newTaxRate && buildingId) {
+      try {
+        const newTax: TaxRule = {
+          id: `tax-${Date.now()}`,
+          name: newTaxName,
+          rate: parseFloat(newTaxRate),
+          active: true,
+        }
+        await createOrUpdateTaxRule(buildingId, newTax)
+        setTaxRulesList([...taxRulesList, newTax])
+        setNewTaxName("")
+        setNewTaxRate("")
+        setAddTaxModalOpen(false)
+      } catch (error) {
+        console.error("Error adding tax rule:", error)
+      }
+    }
+  }
+
+  const handleSaveTemplates = async () => {
+    if (!buildingId) return
+    setSavingTemplates(true)
+    try {
+      const updates = []
+      if (templateEn) {
+        const enTemp = templates.find(t => t.language === 'en')
+        if (enTemp) {
+          updates.push(updateNotificationTemplate(enTemp.id, { template_text: templateEn }))
+        }
+      }
+      if (templateAm) {
+        const amTemp = templates.find(t => t.language === 'am')
+        if (amTemp) {
+          updates.push(updateNotificationTemplate(amTemp.id, { template_text: templateAm }))
+        }
+      }
+      if (updates.length > 0) {
+        await Promise.all(updates)
+      }
+    } catch (error) {
+      console.error("Error saving templates:", error)
+    } finally {
+      setSavingTemplates(false)
     }
   }
 
@@ -425,7 +520,9 @@ export function SettingsView({ onNavigate, onSystemSubscription }: SettingsViewP
             <textarea
               id="sms-template-en"
               className="w-full min-h-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              defaultValue="Dear [TenantName], Your rent for [PropertyName] is due on [DueDate]. Amount: ETB [Amount]. Please pay on time to avoid penalties."
+              value={templateEn}
+              onChange={(e) => setTemplateEn(e.target.value)}
+              placeholder="Dear [TenantName], Your rent for [PropertyName] is due on [DueDate]. Amount: ETB [Amount]. Please pay on time to avoid penalties."
             />
             <p className="text-xs text-slate-500 mt-1">Use [TenantName], [PropertyName], [DueDate], [Amount] as placeholders</p>
           </div>
@@ -436,13 +533,19 @@ export function SettingsView({ onNavigate, onSystemSubscription }: SettingsViewP
             <textarea
               id="sms-template-am"
               className="w-full min-h-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
-              defaultValue="ውድ [ተከራይ]፣ የ[ንብረት] ኪራይዎ በ[ፈጸም] መቅጠር ይታገሳል። መጠን: ETB [ወጪ]። ዘግይታ ማስከተልን ለማስወገድ በጊዜ ይክፈሉ።"
+              value={templateAm}
+              onChange={(e) => setTemplateAm(e.target.value)}
+              placeholder="ውድ [ተከራይ]፣ የ[ንብረት] ኪራይዎ በ[ፈጸም] መቅጠር ይታገሳል። መጠን: ETB [ወጪ]። ዘግይታ ማስከተልን ለማስወገድ በጊዜ ይክፈሉ።"
             />
             <p className="text-xs text-slate-500 mt-1">Use [ተከራይ], [ንብረት], [ፈጸም], [ወጪ] as placeholders</p>
           </div>
 
-          <Button className="w-full bg-orange-500 hover:bg-orange-600">
-            Save Notification Templates
+          <Button 
+            onClick={handleSaveTemplates}
+            disabled={savingTemplates}
+            className="w-full bg-orange-500 hover:bg-orange-600"
+          >
+            {savingTemplates ? "Saving..." : "Save Notification Templates"}
           </Button>
         </CardContent>
       </Card>

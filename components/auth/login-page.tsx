@@ -20,21 +20,20 @@ export function LoginPage() {
     e.preventDefault()
     setError("")
 
-    if (!email || !password) {
-      setError("Please fill in all fields")
-      return
-    }
+    // Use provided email or default to admin demo
+    const loginEmail = email || "admin@mamulka.com"
+    const loginPassword = password || "admin123"
 
     // Simulate user detection by email domain
-    const role = email.includes("admin") ? "admin" : email.includes("landlord") ? "landlord" : "tenant"
+    const role = loginEmail.includes("admin") ? "admin" : loginEmail.includes("landlord") ? "landlord" : "tenant"
 
     login({
       id: "user-" + Date.now(),
-      name: email.split("@")[0],
-      email,
+      name: loginEmail.split("@")[0],
+      email: loginEmail,
       phone: "+251912345678",
       role,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${loginEmail}`,
     })
 
     // Navigate to home - DashboardApp will render based on authenticated user's role

@@ -1,7 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { FileText, Mail, MapPin, Phone, AlertTriangle, CheckCircle2, Clock } from "lucide-react"
-import type { Tenant } from "@/lib/data"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,13 +11,78 @@ import { LeasePill, PaymentPill } from "@/components/status-pills"
 import { TenantEmergencyContacts } from "@/components/tenant-emergency-contacts"
 import { TenantVerificationStatus } from "@/components/tenant-verification-status"
 import { LeaseSummary } from "@/components/lease-summary"
+import { getTenantWithDetails, getTenantDocuments } from "@/lib/db"
+import { toast } from "sonner"
+
+type Tenant = {
+  id: string
+  full_name: string
+  avatar?: string
+  company_name?: string
+  phone: string
+  email: string
+  region: string
+  subcity: string
+  room_number: string
+  floor: string
+  square_footage: string
+  house_number: string
+  woreda: string
+  lease: string
+  payment: string
+  lease_start_date: string
+  lease_expiration_date: string
+  last_pay_day: string
+  outstanding_balance: string
+  lease_duration: string
+  rent_amount: string
+  outstanding_balance_secondary: string
+  trade_license_file?: string
+  lease_agreement_file?: string
+}
 
 type TenantDetailViewProps = {
-  tenant: Tenant
+  tenantId: string
   onTerminateLease?: (tenantId: string) => void
 }
 
-export function TenantDetailView({ tenant, onTerminateLease }: TenantDetailViewProps) {
+export function TenantDetailView({ tenantId, onTerminateLease }: TenantDetailViewProps) {
+  const [tenant, setTenant] = useState<Tenant | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [documents, setDocuments] = useState([])
+
+  // Load tenant details and documents
+  useEffect(() => {
+    if (!tenantId) return
+
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const [tenantData, docs] = await Promise.all([
+          getTenantWithDetails(tenantId),
+          getTenantDocuments(tenantId),
+        ])
+        setTenant(tenantData)
+        setDocuments(docs || [])
+      } catch (error) {
+        console.error("Error loading tenant:", error)
+        toast.error("Error loading tenant details")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [tenantId])
+
+  if (loading) {
+    return <div className="text-center p-8">Loading tenant details...</div>
+  }
+
+  if (!tenant) {
+    return <div className="text-center p-8 text-red-600">Tenant not found</div>
+  }
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Left Column - Tenant Info */}
@@ -27,15 +92,15 @@ export function TenantDetailView({ tenant, onTerminateLease }: TenantDetailViewP
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={tenant.avatar} alt={`${tenant.firstName} ${tenant.lastName}`} />
+                <AvatarImage src={tenant.avatar} alt={tenant.full_name} />
                 <AvatarFallback className="text-xl">
-                  {tenant.firstName[0]}{tenant.lastName[0]}
+                  {tenant.full_name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               <h2 className="mt-4 text-xl font-semibold text-slate-900">
-                {tenant.firstName} {tenant.lastName}
+                {tenant.full_name}
               </h2>
-              <p className="text-sm text-slate-500">{tenant.companyName}</p>
+              <p className="text-sm text-slate-500">{tenant.company_name}</p>
               
               <div className="mt-4 flex gap-2">
                 <LeasePill status={tenant.lease} />
@@ -71,24 +136,28 @@ export function TenantDetailView({ tenant, onTerminateLease }: TenantDetailViewP
             <CardTitle className="text-base">Documents</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50">
-                <FileText className="h-5 w-5 text-red-600" />
+            {tenant.trade_license_file && (
+              <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50">
+                  <FileText className="h-5 w-5 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-900">Trade License</p>
+                  <p className="text-xs text-slate-500">{tenant.trade_license_file}</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-slate-900">Trade License</p>
-                <p className="text-xs text-slate-500">{tenant.tradeLicenseFile}</p>
+            )}
+            {tenant.lease_agreement_file && (
+              <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-900">Lease Agreement</p>
+                  <p className="text-xs text-slate-500">{tenant.lease_agreement_file}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-lg border border-slate-200 p-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-                <FileText className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-slate-900">Lease Agreement</p>
-                <p className="text-xs text-slate-500">{tenant.leaseAgreementFile}</p>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -100,15 +169,15 @@ export function TenantDetailView({ tenant, onTerminateLease }: TenantDetailViewP
         <TenantVerificationStatus />
         
         <LeaseAgreementCard
-          leaseStartDate={tenant.leaseStartDate}
-          leaseExpirationDate={tenant.leaseExpirationDate}
-          lastPayDay={tenant.lastPayDay}
-          outstandingBalance={tenant.outstandingBalance}
-          leaseDuration={tenant.leaseDuration}
-          rentAmount={tenant.rentAmount}
-          outstandingBalanceSecondary={tenant.outstandingBalanceSecondary}
-          companyName={tenant.companyName}
-          leaseAgreementFile={tenant.leaseAgreementFile}
+          leaseStartDate={tenant.lease_start_date}
+          leaseExpirationDate={tenant.lease_expiration_date}
+          lastPayDay={tenant.last_pay_day}
+          outstandingBalance={tenant.outstanding_balance}
+          leaseDuration={tenant.lease_duration}
+          rentAmount={tenant.rent_amount}
+          outstandingBalanceSecondary={tenant.outstanding_balance_secondary}
+          companyName={tenant.company_name || ""}
+          leaseAgreementFile={tenant.lease_agreement_file}
         />
 
         {/* Property Details Card */}
@@ -120,7 +189,7 @@ export function TenantDetailView({ tenant, onTerminateLease }: TenantDetailViewP
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <div>
                 <p className="text-xs text-slate-500">Room No.</p>
-                <p className="mt-1 text-sm font-medium text-slate-900">{tenant.roomNo}</p>
+                <p className="mt-1 text-sm font-medium text-slate-900">{tenant.room_number}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">Floor</p>
@@ -128,11 +197,11 @@ export function TenantDetailView({ tenant, onTerminateLease }: TenantDetailViewP
               </div>
               <div>
                 <p className="text-xs text-slate-500">Square Footage</p>
-                <p className="mt-1 text-sm font-medium text-slate-900">{tenant.squareFootage}</p>
+                <p className="mt-1 text-sm font-medium text-slate-900">{tenant.square_footage}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">House No.</p>
-                <p className="mt-1 text-sm font-medium text-slate-900">{tenant.houseNo}</p>
+                <p className="mt-1 text-sm font-medium text-slate-900">{tenant.house_number}</p>
               </div>
             </div>
           </CardContent>
@@ -159,7 +228,7 @@ export function TenantDetailView({ tenant, onTerminateLease }: TenantDetailViewP
               </div>
               <div>
                 <p className="text-xs text-slate-500">House No.</p>
-                <p className="mt-1 text-sm font-medium text-slate-900">{tenant.houseNo}</p>
+                <p className="mt-1 text-sm font-medium text-slate-900">{tenant.house_number}</p>
               </div>
             </div>
           </CardContent>

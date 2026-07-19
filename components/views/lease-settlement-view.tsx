@@ -74,12 +74,30 @@ export function LeaseSettlementView({ tenant, onClose }: LeaseSettlementViewProp
     setDeductions(deductions.filter((d) => d.id !== id))
   }
 
-  const handleFinalizeSettlement = () => {
-    setConfirmModalOpen(false)
-    toast.success("Account Closed Successfully", {
-      description: `${tenant.firstName} ${tenant.lastName}'s lease has been terminated. Room ${tenant.roomNo} is now marked as Vacant.`,
-    })
-    onClose()
+  const handleFinalizeSettlement = async () => {
+    try {
+      // Update tenant status to archived
+      await supabase
+        .from("tenants")
+        .update({ status: "archived" })
+        .eq("id", tenant.id)
+
+      // Update property to vacant
+      await supabase
+        .from("properties")
+        .update({ occupancy: "available" })
+        .eq("room_number", tenant.room_number)
+
+      setConfirmModalOpen(false)
+      toast.success("Account Closed Successfully", {
+        description: `${tenant.full_name}'s lease has been terminated. Room ${tenant.room_number} is now marked as Vacant.`,
+      })
+      onClose()
+    } catch (error) {
+      toast.error("Error finalizing settlement", {
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+      })
+    }
   }
 
   return (
@@ -90,7 +108,7 @@ export function LeaseSettlementView({ tenant, onClose }: LeaseSettlementViewProp
           Final Lease Settlement
         </h1>
         <p className="text-lg text-slate-600">
-          {tenant.firstName} {tenant.lastName} - Room {tenant.roomNo}
+          {tenant.full_name} - Room {tenant.room_number}
         </p>
       </div>
 
@@ -104,15 +122,15 @@ export function LeaseSettlementView({ tenant, onClose }: LeaseSettlementViewProp
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <div>
                 <p className="text-xs text-slate-500">Company</p>
-                <p className="mt-1 font-medium text-slate-900">{tenant.companyName}</p>
+                <p className="mt-1 font-medium text-slate-900">{tenant.company_name || "N/A"}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">Room</p>
-                <p className="mt-1 font-medium text-slate-900">{tenant.roomNo}</p>
+                <p className="mt-1 font-medium text-slate-900">{tenant.room_number}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Lease Duration</p>
-                <p className="mt-1 font-medium text-slate-900">{tenant.leaseDuration}</p>
+                <p className="text-xs text-slate-500">Tenant Since</p>
+                <p className="mt-1 font-medium text-slate-900">{new Date(tenant.created_at).toLocaleDateString()}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-500">Move-Out Date</p>
@@ -294,7 +312,7 @@ export function LeaseSettlementView({ tenant, onClose }: LeaseSettlementViewProp
           <DialogHeader>
             <DialogTitle>Confirm Lease Settlement</DialogTitle>
             <DialogDescription>
-              This will archive the tenant record and mark Room {tenant.roomNo} as Vacant.
+              This will archive the tenant record and mark Room {tenant.room_number} as Vacant.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -303,12 +321,12 @@ export function LeaseSettlementView({ tenant, onClose }: LeaseSettlementViewProp
                 <div>
                   <p className="text-sm text-slate-500">Tenant</p>
                   <p className="font-medium text-slate-900">
-                    {tenant.firstName} {tenant.lastName}
+                    {tenant.full_name}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">Room</p>
-                  <p className="font-medium text-slate-900">{tenant.roomNo}</p>
+                  <p className="font-medium text-slate-900">{tenant.room_number}</p>
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">Settlement Type</p>

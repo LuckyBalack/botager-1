@@ -390,4 +390,313 @@ export async function getTaxRulesByBuilding(buildingId: string) {
   }
 }
 
+export async function createOrUpdateTaxRule(buildingId: string, rule: any) {
+  try {
+    const { data, error } = await supabase
+      .from("tax_rules")
+      .upsert([
+        {
+          building_id: buildingId,
+          ...rule,
+          updated_at: new Date().toISOString(),
+        },
+      ])
+      .select()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error saving tax rule:", error)
+    throw error
+  }
+}
+
+export async function deleteTaxRule(ruleId: string) {
+  try {
+    const { error } = await supabase
+      .from("tax_rules")
+      .delete()
+      .eq("id", ruleId)
+
+    if (error) throw error
+  } catch (error) {
+    console.error("Error deleting tax rule:", error)
+    throw error
+  }
+}
+
+// BUILDINGS QUERIES
+export async function getAllBuildings() {
+  try {
+    const { data, error } = await supabase
+      .from("buildings")
+      .select("*, properties(id)")
+      .order("created_at", { ascending: false })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("Error fetching buildings:", error)
+    return []
+  }
+}
+
+export async function getBuildingById(buildingId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("buildings")
+      .select("*")
+      .eq("id", buildingId)
+      .single()
+
+    if (error) throw error
+    return data || null
+  } catch (error) {
+    console.error("Error fetching building:", error)
+    return null
+  }
+}
+
+// NOTIFICATIONS QUERIES
+export async function getNotificationTemplates(buildingId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("notification_templates")
+      .select("*")
+      .eq("building_id", buildingId)
+      .order("created_at", { ascending: false })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("Error fetching notification templates:", error)
+    return []
+  }
+}
+
+export async function updateNotificationTemplate(templateId: string, template: any) {
+  try {
+    const { data, error } = await supabase
+      .from("notification_templates")
+      .update(template)
+      .eq("id", templateId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error updating notification template:", error)
+    throw error
+  }
+}
+
+// PROPERTY DETAIL QUERIES
+export async function getPropertyById(propertyId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*, tenants(*)")
+      .eq("id", propertyId)
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error fetching property:", error)
+    return null
+  }
+}
+
+export async function getPropertyAssets(propertyId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("property_assets")
+      .select("*")
+      .eq("property_id", propertyId)
+      .order("created_at", { ascending: false })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("Error fetching property assets:", error)
+    return []
+  }
+}
+
+export async function createPropertyAsset(propertyId: string, asset: any) {
+  try {
+    const { data, error } = await supabase
+      .from("property_assets")
+      .insert([{ property_id: propertyId, ...asset }])
+      .select()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error creating property asset:", error)
+    throw error
+  }
+}
+
+// TENANT DETAIL QUERIES
+export async function getTenantWithDetails(tenantId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("tenants")
+      .select("*, properties(*)")
+      .eq("id", tenantId)
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error fetching tenant details:", error)
+    return null
+  }
+}
+
+export async function getTenantDocuments(tenantId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("tenant_documents")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("Error fetching tenant documents:", error)
+    return []
+  }
+}
+
+// MAINTENANCE TICKET DETAIL QUERIES
+export async function getMaintenanceTicketById(ticketId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("maintenance_tickets")
+      .select("*, properties(*), vendors(*)")
+      .eq("id", ticketId)
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error fetching maintenance ticket:", error)
+    return null
+  }
+}
+
+export async function getTicketMessages(ticketId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("ticket_messages")
+      .select("*")
+      .eq("ticket_id", ticketId)
+      .order("created_at", { ascending: true })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("Error fetching ticket messages:", error)
+    return []
+  }
+}
+
+export async function addTicketMessage(ticketId: string, message: any) {
+  try {
+    const { data, error } = await supabase
+      .from("ticket_messages")
+      .insert([{ ticket_id: ticketId, ...message }])
+      .select()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error adding ticket message:", error)
+    throw error
+  }
+}
+
+export async function updateMaintenanceTicketStatus(ticketId: string, status: string) {
+  try {
+    const { data, error } = await supabase
+      .from("maintenance_tickets")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", ticketId)
+      .select()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error updating ticket status:", error)
+    throw error
+  }
+}
+
+// INVOICE DETAIL QUERIES
+export async function getInvoiceById(invoiceId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("*, tenants(*), properties(*)")
+      .eq("id", invoiceId)
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error fetching invoice:", error)
+    return null
+  }
+}
+
+export async function getInvoiceLineItems(invoiceId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("invoice_line_items")
+      .select("*")
+      .eq("invoice_id", invoiceId)
+      .order("created_at", { ascending: true })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("Error fetching invoice line items:", error)
+    return []
+  }
+}
+
+export async function updateInvoiceStatus(invoiceId: string, status: string) {
+  try {
+    const { data, error } = await supabase
+      .from("invoices")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", invoiceId)
+      .select()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error updating invoice status:", error)
+    throw error
+  }
+}
+
+export async function emailInvoice(invoiceId: string, tenantEmail: string) {
+  try {
+    // Call backend function to send email
+    const { data, error } = await supabase.functions.invoke("send-invoice-email", {
+      body: { invoiceId, tenantEmail },
+    })
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error("Error emailing invoice:", error)
+    throw error
+  }
+}
 

@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Plus, Camera, Check, AlertTriangle, Package, Store, Eye, EyeOff, Zap, Droplet, Wind } from "lucide-react"
 import { LeaseAgreementCard } from "@/components/lease-agreement-card"
 import { LeasePill, PaymentPill } from "@/components/status-pills"
-import { getTenantById, getAssetsForProperty, type Property, type PropertyAsset, type AssetCondition } from "@/lib/data"
+import { getPropertyById, getPropertyAssets, createPropertyAsset } from "@/lib/db"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
@@ -34,11 +35,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { toast } from "sonner"
 import { Switch } from "@/components/ui/switch"
 
+type Property = {
+  id: string
+  room_number: string
+  floor: string | number
+  square_footage: string
+  rent_number: string
+  occupancy: string
+  lease_start_date: string
+  lease_expiration_date: string
+  last_pay_day: string
+  lease: string
+  payment: string
+  outstanding_balance: string
+  lease_duration: string
+  rent_amount: string
+  outstanding_balance_secondary: string
+  company_name: string
+  tenant_id?: string
+  lease_agreement_file?: string
+}
+
+type PropertyAsset = {
+  id: string
+  property_id: string
+  name: string
+  serial_number: string
+  condition: "New" | "Good" | "Damaged"
+  photo_url?: string
+  last_inspected: string
+}
+
 type PropertyDetailViewProps = {
-  property: Property
+  propertyId: string
   onTerminate?: () => void
   onExtend?: () => void
 }
@@ -79,19 +110,44 @@ function ConditionBadge({ condition }: { condition: AssetCondition }) {
   )
 }
 
-export function PropertyDetailView({ property, onTerminate, onExtend }: PropertyDetailViewProps) {
-  const tenant = property.tenantId ? getTenantById(property.tenantId) : undefined
+export function PropertyDetailView({ propertyId, onTerminate, onExtend }: PropertyDetailViewProps) {
+  const [property, setProperty] = useState<Property | null>(null)
+  const [loading, setLoading] = useState(true)
   const [addAssetModalOpen, setAddAssetModalOpen] = useState(false)
-  const [assetsList, setAssetsList] = useState<PropertyAsset[]>(getAssetsForProperty(property.id))
+  const [assetsList, setAssetsList] = useState<PropertyAsset[]>([])
   const [newAssetName, setNewAssetName] = useState("")
   const [newAssetSerial, setNewAssetSerial] = useState("")
-  const [newAssetCondition, setNewAssetCondition] = useState<AssetCondition>("New")
+  const [newAssetCondition, setNewAssetCondition] = useState<"New" | "Good" | "Damaged">("New")
   const [listedOnMarketplace, setListedOnMarketplace] = useState(false)
   const [linkedUtilities, setLinkedUtilities] = useState<{electricity: boolean, water: boolean, gas: boolean}>({
     electricity: false,
     water: false,
     gas: false,
   })
+
+  // Load property and assets on mount
+  useEffect(() => {
+    if (!propertyId) return
+
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const [propertyData, assets] = await Promise.all([
+          getPropertyById(propertyId),
+          getPropertyAssets(propertyId),
+        ])
+        setProperty(propertyData)
+        setAssetsList(assets || [])
+      } catch (error) {
+        console.error("Error loading property:", error)
+        toast.error("Error loading property details")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [propertyId])
 
   const handleMarketplaceToggle = (checked: boolean) => {
     setListedOnMarketplace(checked)
@@ -106,26 +162,39 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
     }
   }
 
-  const handleAddAsset = () => {
-    if (newAssetName && newAssetSerial) {
-      const newAsset: PropertyAsset = {
-        id: `asset-${Date.now()}`,
-        propertyId: property.id,
-        name: newAssetName,
-        serialNumber: newAssetSerial,
-        condition: newAssetCondition,
-        photoUrl: "/placeholder.svg",
-        lastInspected: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+  const handleAddAsset = async () => {
+    if (newAssetName && newAssetSerial && property) {
+      try {
+        const result = await createPropertyAsset(property.id, {
+          name: newAssetName,
+          serial_number: newAssetSerial,
+          condition: newAssetCondition,
+          last_inspected: new Date().toISOString(),
+        })
+        
+        if (result) {
+          setAssetsList([...assetsList, result[0]])
+          toast.success("Asset Added", {
+            description: `${newAssetName} has been added to the inventory.`,
+          })
+          setNewAssetName("")
+          setNewAssetSerial("")
+          setNewAssetCondition("New")
+          setAddAssetModalOpen(false)
+        }
+      } catch (error) {
+        toast.error("Error adding asset")
+        console.error("Error:", error)
       }
-      setAssetsList([...assetsList, newAsset])
-      toast.success("Asset Added", {
-        description: `${newAssetName} has been added to the inventory.`,
-      })
-      setNewAssetName("")
-      setNewAssetSerial("")
-      setNewAssetCondition("New")
-      setAddAssetModalOpen(false)
     }
+  }
+
+  if (loading) {
+    return <div className="text-center p-8">Loading property details...</div>
+  }
+
+  if (!property) {
+    return <div className="text-center p-8 text-red-600">Property not found</div>
   }
 
   return (
@@ -152,10 +221,10 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
         <TabsContent value="details" className="flex flex-col gap-10">
           {/* Top stat row */}
       <div className="grid grid-cols-2 gap-y-6 sm:grid-cols-3 lg:grid-cols-5">
-        <StatColumn label="Room Number" value={property.room} />
+        <StatColumn label="Room Number" value={property.room_number} />
         <StatColumn label="Floor" value={property.floor} />
-        <StatColumn label="Size" value={property.squareFootage} />
-        <StatColumn label="Rent Number" value={property.rentNumber} />
+        <StatColumn label="Size" value={property.square_footage} />
+        <StatColumn label="Rent Number" value={property.rent_number} />
         <StatColumn label="Status" value={property.occupancy} />
       </div>
 
@@ -166,11 +235,11 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-[auto_1fr] items-center gap-x-8 gap-y-4">
             <span className="text-sm text-slate-500">Lease Start Date:</span>
-            <span className="text-sm font-semibold text-slate-900">{property.leaseStartDate}</span>
+            <span className="text-sm font-semibold text-slate-900">{property.lease_start_date}</span>
             <span className="text-sm text-slate-500">Lease Expiration Date:</span>
-            <span className="text-sm font-semibold text-slate-900">{property.leaseExpirationDate}</span>
+            <span className="text-sm font-semibold text-slate-900">{property.lease_expiration_date}</span>
             <span className="text-sm text-slate-500">Last Pay Day</span>
-            <span className="text-sm font-semibold text-slate-900">{property.lastPayDay}</span>
+            <span className="text-sm font-semibold text-slate-900">{property.last_pay_day}</span>
           </div>
           <div className="mt-4 flex flex-col gap-3">
             <div className="flex items-center gap-3">
@@ -186,13 +255,13 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
 
         <div className="grid grid-cols-[1fr_auto] items-center gap-x-8 gap-y-4 self-start">
           <span className="text-sm text-slate-500">Outstanding balance</span>
-          <ValueChip>{property.outstandingBalance}</ValueChip>
+          <ValueChip>{property.outstanding_balance}</ValueChip>
           <span className="text-sm text-slate-500">Lease Duration</span>
-          <ValueChip>{property.leaseDuration}</ValueChip>
+          <ValueChip>{property.lease_duration}</ValueChip>
           <span className="text-sm text-slate-500">Rent Amount</span>
-          <ValueChip>{property.rentAmount}</ValueChip>
+          <ValueChip>{property.rent_amount}</ValueChip>
           <span className="text-sm text-slate-500">Outstanding balance</span>
-          <ValueChip>{property.outstandingBalanceSecondary}</ValueChip>
+          <ValueChip>{property.outstanding_balance_secondary}</ValueChip>
         </div>
       </div>
 
@@ -204,7 +273,7 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
           <div className="flex flex-wrap items-center gap-12">
             <div className="flex flex-col gap-1">
               <span className="text-sm text-slate-500">Company Name</span>
-              <span className="text-base font-semibold text-slate-900">{property.companyName}</span>
+              <span className="text-base font-semibold text-slate-900">{property.company_name}</span>
             </div>
             {tenant && (
               <div className="flex items-center gap-3">
@@ -225,7 +294,7 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
 
           <div className="flex flex-col gap-3">
             <span className="text-base font-semibold text-slate-900">Lease Agreement</span>
-            <LeaseAgreementCard filename={property.leaseAgreementFile} />
+            <LeaseAgreementCard filename={property.lease_agreement_file} />
           </div>
         </div>
       </div>
@@ -390,13 +459,13 @@ export function PropertyDetailView({ property, onTerminate, onExtend }: Property
                           {asset.name}
                         </TableCell>
                         <TableCell className="text-slate-600 font-mono text-sm">
-                          {asset.serialNumber}
+                          {asset.serial_number}
                         </TableCell>
                         <TableCell>
                           <ConditionBadge condition={asset.condition} />
                         </TableCell>
                         <TableCell className="text-slate-600">
-                          {asset.lastInspected}
+                          {new Date(asset.last_inspected).toLocaleDateString()}
                         </TableCell>
                       </TableRow>
                     ))}
