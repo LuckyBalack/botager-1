@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   ArrowLeft,
   Building2,
@@ -22,9 +22,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { MarketplaceListing } from "@/lib/data"
+import { getBuildingById } from "@/lib/db"
 
 type WorkspaceDetailViewProps = {
-  listing: MarketplaceListing
+  listing?: MarketplaceListing
+  buildingId?: string
   onBack: () => void
   onPreoccupy: () => void
   onSignIn?: () => void
@@ -33,16 +35,68 @@ type WorkspaceDetailViewProps = {
 }
 
 export function WorkspaceDetailView({
-  listing,
+  listing: initialListing,
+  buildingId,
   onBack,
   onPreoccupy,
   onSignIn,
   showBackToAdmin,
   onBackToAdmin,
 }: WorkspaceDetailViewProps) {
+  const [listing, setListing] = useState(initialListing)
+  const [loading, setLoading] = useState(buildingId && !initialListing)
   const [language, setLanguage] = useState<"en" | "am">("en")
   const [showPhone, setShowPhone] = useState(false)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
+
+  useEffect(() => {
+    if (buildingId && !initialListing) {
+      loadWorkspace()
+    }
+  }, [buildingId, initialListing])
+
+  async function loadWorkspace() {
+    if (!buildingId) return
+    try {
+      const building = await getBuildingById(buildingId)
+      if (building) {
+        setListing({
+          id: building.id,
+          buildingName: building.name,
+          description: building.description,
+          price: building.price || 0,
+          location: building.location,
+          spaceType: building.space_type || "Workspace",
+          images: building.images || [],
+          amenities: building.amenities || [],
+          buildingFeatures: building.building_features || [],
+          reviews: building.reviews || [],
+          contact: building.contact_phone,
+          owner: building.owner_name,
+        } as MarketplaceListing)
+      }
+    } catch (error) {
+      console.error("Error loading workspace:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-600">Loading workspace details...</p>
+      </div>
+    )
+  }
+
+  if (!listing) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-600">Workspace not found</p>
+      </div>
+    )
+  }
 
   const averageRating =
     listing.reviews && listing.reviews.length > 0

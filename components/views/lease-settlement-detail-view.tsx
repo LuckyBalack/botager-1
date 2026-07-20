@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ChevronDown, ChevronUp, Archive } from "lucide-react"
 import { toast } from "sonner"
+import { getTenantWithDetails, getLeasesByTenant, getInvoicesByTenant } from "@/lib/db"
 
 interface LeaseSettlementData {
   tenantName: string
@@ -21,13 +22,63 @@ interface LeaseSettlementData {
 }
 
 interface LeaseSettlementViewProps {
+  tenantId?: string
   data?: LeaseSettlementData
   onClose?: () => void
   onFinalize?: () => void
 }
 
 export function LeaseSettlementDetailView({
-  data = {
+  tenantId,
+  data,
+  onClose,
+  onFinalize,
+}: LeaseSettlementViewProps) {
+  const [leaseData, setLeaseData] = useState<LeaseSettlementData | null>(data || null)
+  const [loading, setLoading] = useState(tenantId ? true : false)
+  const [expandedSections, setExpandedSections] = useState({
+    deductions: true,
+    balance: true,
+  })
+
+  useEffect(() => {
+    if (tenantId) {
+      loadLeaseData()
+    }
+  }, [tenantId])
+
+  async function loadLeaseData() {
+    if (!tenantId) return
+    try {
+      const tenant = await getTenantWithDetails(tenantId)
+      if (tenant) {
+        const leases = await getLeasesByTenant(tenantId)
+        const currentLease = leases?.[0]
+
+        const invoices = await getInvoicesByTenant(tenantId)
+        const outstandingInvoices = invoices?.filter((inv: any) => inv.status !== "paid") || []
+        const outstandingRent = outstandingInvoices.reduce((sum: number, inv: any) => sum + (inv.amount_due || 0), 0)
+
+        setLeaseData({
+          tenantName: tenant.name || "Unknown Tenant",
+          roomNumber: currentLease?.room_number || "N/A",
+          startDate: currentLease?.start_date ? new Date(currentLease.start_date).toLocaleDateString() : "N/A",
+          endDate: currentLease?.end_date ? new Date(currentLease.end_date).toLocaleDateString() : "N/A",
+          originalDeposit: currentLease?.security_deposit || 0,
+          damageDeductions: [], // Would need to be fetched from a separate deductions table
+          outstandingRent,
+          outstandingUtilities: 0, // Would need to be fetched from utility readings
+        })
+      }
+    } catch (error) {
+      console.error("Error loading lease data:", error)
+      toast.error("Failed to load lease settlement data")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const displayData = leaseData || {
     tenantName: "Getachew Temesgen",
     roomNumber: "310",
     startDate: "Jan 1, 2023",
@@ -40,14 +91,7 @@ export function LeaseSettlementDetailView({
     ],
     outstandingRent: 5000,
     outstandingUtilities: 1500,
-  },
-  onClose,
-  onFinalize,
-}: LeaseSettlementViewProps) {
-  const [expandedSections, setExpandedSections] = useState({
-    deductions: true,
-    balance: true,
-  })
+  }
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({
@@ -56,17 +100,25 @@ export function LeaseSettlementDetailView({
     }))
   }
 
+  if (loading) {
+    return (
+      <div className="space-y-6 bg-gradient-to-br from-slate-50 to-white p-6 rounded-lg border border-slate-200">
+        <p className="text-slate-600">Loading lease settlement details...</p>
+      </div>
+    )
+  }
+
   // Calculations
-  const totalDeductions = data.damageDeductions.reduce((sum, d) => sum + d.amount, 0)
-  const totalOwed = data.outstandingRent + data.outstandingUtilities
-  const grossRefund = data.originalDeposit - totalDeductions
+  const totalDeductions = displayData.damageDeductions.reduce((sum, d) => sum + d.amount, 0)
+  const totalOwed = displayData.outstandingRent + displayData.outstandingUtilities
+  const grossRefund = displayData.originalDeposit - totalDeductions
   const finalRefund = Math.max(0, grossRefund - totalOwed)
   const balanceOwed = totalOwed > grossRefund ? totalOwed - grossRefund : 0
 
   const handleFinalize = () => {
     if (finalRefund > 0) {
       toast.success(`Refund of ETB ${finalRefund.toFixed(2)} processed!`, {
-        description: `Account for tenant in Room ${data.roomNumber} has been archived.`,
+        description: `Account for tenant in Room ${displayData.roomNumber} has been archived.`,
       })
     } else if (balanceOwed > 0) {
       toast.warning(`Tenant owes ETB ${balanceOwed.toFixed(2)}`, {
@@ -83,17 +135,17 @@ export function LeaseSettlementDetailView({
       {/* Header */}
       <div className="border-b border-slate-200 pb-6">
         <h1 className="text-3xl font-bold text-slate-900">
-          Final Lease Settlement: <span className="text-blue-600">{data.tenantName}</span>
+          Final Lease Settlement: <span className="text-blue-600">{displayData.tenantName}</span>
         </h1>
         <div className="mt-4 flex flex-wrap gap-4">
           <div>
             <p className="text-sm text-slate-600">Room Number</p>
-            <p className="font-semibold text-slate-900">{data.roomNumber}</p>
+            <p className="font-semibold text-slate-900">{displayData.roomNumber}</p>
           </div>
           <div>
             <p className="text-sm text-slate-600">Lease Period</p>
             <p className="font-semibold text-slate-900">
-              {data.startDate} to {data.endDate}
+              {displayData.startDate} to {displayData.endDate}
             </p>
           </div>
         </div>
@@ -105,7 +157,7 @@ export function LeaseSettlementDetailView({
           <div>
             <p className="text-sm font-medium text-blue-900">Original Security Deposit</p>
             <p className="text-2xl font-bold text-blue-600 mt-1">
-              ETB {data.originalDeposit.toFixed(2)}
+              ETB {displayData.originalDeposit.toFixed(2)}
             </p>
           </div>
           <Badge className="bg-blue-600 text-white">Held in Escrow</Badge>
@@ -128,9 +180,9 @@ export function LeaseSettlementDetailView({
 
         {expandedSections.deductions && (
           <div className="p-4 bg-white space-y-3">
-            {data.damageDeductions.length > 0 ? (
+            {displayData.damageDeductions.length > 0 ? (
               <>
-                {data.damageDeductions.map((deduction, idx) => (
+                {displayData.damageDeductions.map((deduction, idx) => (
                   <div key={idx} className="flex items-center justify-between">
                     <span className="text-slate-600">{deduction.description}</span>
                     <span className="font-semibold text-red-600">

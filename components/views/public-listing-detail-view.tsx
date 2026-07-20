@@ -1,17 +1,57 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { MapPin, Phone, Star, MapPinIcon, Wifi, Shield, Zap, Coffee, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { PublicListingDetail } from "@/lib/data"
+import { getMarketplaceListingsByBuilding } from "@/lib/db"
 
 type PublicListingDetailViewProps = {
-  listing: PublicListingDetail
+  listing?: PublicListingDetail
+  buildingId?: string
+  listingId?: string
   onBack?: () => void
 }
 
-export function PublicListingDetailView({ listing, onBack }: PublicListingDetailViewProps) {
+export function PublicListingDetailView({ listing: initialListing, buildingId, listingId, onBack }: PublicListingDetailViewProps) {
+  const [listing, setListing] = useState(initialListing)
+  const [loading, setLoading] = useState(buildingId && !initialListing)
+
+  useEffect(() => {
+    if (buildingId && !initialListing) {
+      loadListing()
+    }
+  }, [buildingId, initialListing])
+
+  async function loadListing() {
+    if (!buildingId) return
+    try {
+      const listings = await getMarketplaceListingsByBuilding(buildingId)
+      if (listings && listings.length > 0) {
+        const item = listings[0]
+        setListing({
+          buildingName: item.building_name || "Unknown Building",
+          location: item.location || "Addis Ababa",
+          size: `${item.size || 0} sqm`,
+          floor: `Floor ${item.floor || 1}`,
+          subcity: item.subcity || "Addis Ababa",
+          description: item.description || "No description available",
+          price: item.price || 0,
+          amenities: item.amenities || [],
+          buildingFeatures: item.building_features || [],
+          images: item.images || [],
+          reviews: item.reviews || [],
+        } as PublicListingDetail)
+      }
+    } catch (error) {
+      console.error("Error loading listing:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Icon mapping for amenities
   const amenityIcons: Record<string, React.ReactNode> = {
     WiFi: <Wifi className="h-6 w-6" aria-hidden="true" />,
@@ -20,9 +60,27 @@ export function PublicListingDetailView({ listing, onBack }: PublicListingDetail
     "Coffee Service": <Coffee className="h-6 w-6" aria-hidden="true" />,
   }
 
-  const averageRating = (
-    listing.reviews.reduce((sum, r) => sum + r.rating, 0) / listing.reviews.length
-  ).toFixed(1)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Loading listing details...</p>
+      </div>
+    )
+  }
+
+  if (!listing) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Listing not found</p>
+      </div>
+    )
+  }
+
+  const averageRating = listing.reviews && listing.reviews.length > 0
+    ? (
+        listing.reviews.reduce((sum, r) => sum + r.rating, 0) / listing.reviews.length
+      ).toFixed(1)
+    : "N/A"
 
   return (
     <div className="min-h-screen bg-background">
