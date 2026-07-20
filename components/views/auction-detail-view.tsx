@@ -18,9 +18,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { AuctionListing } from "@/lib/data"
+import { getMarketplaceListingsByBuilding } from "@/lib/db"
 
 type AuctionDetailViewProps = {
-  auction: AuctionListing
+  auction?: AuctionListing
+  buildingId?: string
   onBack: () => void
   onPlaceBid: () => void
   onSignIn?: () => void
@@ -69,17 +71,52 @@ function getRelativeTime(timestamp: string): string {
 }
 
 export function AuctionDetailView({
-  auction,
+  auction: initialAuction,
+  buildingId,
   onBack,
   onPlaceBid,
   onSignIn,
   showBackToAdmin,
   onBackToAdmin,
 }: AuctionDetailViewProps) {
+  const [auction, setAuction] = useState(initialAuction)
+  const [loading, setLoading] = useState(buildingId && !initialAuction)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(() =>
-    formatTimeRemaining(auction.auctionEndsAt)
+    auction ? formatTimeRemaining(auction.auctionEndsAt) : { text: "Loading...", color: "text-gray-600" }
   )
+
+  useEffect(() => {
+    if (buildingId && !initialAuction) {
+      loadAuction()
+    }
+  }, [buildingId, initialAuction])
+
+  async function loadAuction() {
+    if (!buildingId) return
+    try {
+      const listings = await getMarketplaceListingsByBuilding(buildingId)
+      const auctionListing = listings?.find((l: any) => l.is_auction)
+      if (auctionListing) {
+        setAuction({
+          id: auctionListing.id,
+          title: auctionListing.building_name,
+          description: auctionListing.description,
+          currentBid: auctionListing.current_bid || auctionListing.price,
+          minimumBid: auctionListing.price,
+          auctionEndsAt: auctionListing.auction_end_time || new Date().toISOString(),
+          images: auctionListing.images || [],
+          amenities: auctionListing.amenities || [],
+          location: auctionListing.location,
+          contact: auctionListing.contact || "N/A",
+        } as AuctionListing)
+      }
+    } catch (error) {
+      console.error("Error loading auction:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -95,6 +132,22 @@ export function AuctionDetailView({
 
   const prevImage = () => {
     setActiveImageIndex((prev) => (prev === 0 ? 0 : prev + 1))
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-600">Loading auction details...</p>
+      </div>
+    )
+  }
+
+  if (!auction) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <p className="text-slate-600">Auction not found</p>
+      </div>
+    )
   }
 
   return (
